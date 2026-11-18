@@ -1,11 +1,11 @@
 export const SITE = {
   website: "https://jdeng1999.github.io/",
-  author: "Andrés Ujpán",
+  author: "J. Deng (邓佳)",
   profile:
     (typeof process !== "undefined" && process.env?.PUBLIC_SOCIAL_GITHUB) ||
     (import.meta.env?.PUBLIC_SOCIAL_GITHUB ?? ""), // set in .env
-  desc: "A space where curiosity becomes code. Exploring web development, software architecture and everything that makes the tech world spin.",
-  title: "Astro Devosfera",
+  desc: "一名 Java 后端开发者，记录技术实践、项目探索与个人成长。",
+  title: "J. Deng (邓佳)",
   ogImage: "devosfera-og.webp", // located in the public folder
   lightAndDarkMode: true,
   postPerIndex: 6,
@@ -35,7 +35,7 @@ export const SITE = {
   dynamicOgImage: true,
   dir: "ltr", // "rtl" | "auto"
   lang: "en", // html lang code. Set this empty and default will be "en"
-  timezone: "America/Guatemala", // Default global timezone (IANA format) https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  timezone: "Asia/Shanghai", // Default global timezone (IANA format) https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   introAudio: {
     enabled: true, // show/hide intro player in home and compact player while navigating
     // src: path to file (relative to /public or absolute URL). Example: "/intro.mp3" or "https://example.com/stream"
