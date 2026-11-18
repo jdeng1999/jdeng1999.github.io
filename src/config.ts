@@ -1,5 +1,5 @@
 export const SITE = {
-  website: "https://devosfera.vercel.app/",
+  website: "https://jdeng1999.github.io/",
   author: "Andrés Ujpán",
   profile:
     (typeof process !== "undefined" && process.env?.PUBLIC_SOCIAL_GITHUB) ||
