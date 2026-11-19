@@ -1,5 +1,7 @@
 ---
 import type { MarkdownLayoutProps } from "astro";
+import { Image } from "astro:assets";
+import avatar from "@/assets/images/avatar.jpg";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import Breadcrumb from "@/components/Breadcrumb.astro";
@@ -28,7 +30,14 @@ const t = useTranslations(locale);
         <div class="avatar-ring">
           <div class="avatar-glow"></div>
           <div class="avatar-inner">
-            <span class="avatar-emoji">👨‍💻</span>
+            <Image
+              src={avatar}
+              alt={`${SITE.author} avatar`}
+              width={220}
+              height={220}
+              class="avatar-image"
+              loading="eager"
+            />
           </div>
         </div>
         <h1 class="hero-title">
@@ -155,6 +164,7 @@ const t = useTranslations(locale);
     width: 100%;
     height: 100%;
     border-radius: 50%;
+    overflow: hidden;
     background: var(--color-background);
     display: flex;
     align-items: center;
@@ -162,9 +172,12 @@ const t = useTranslations(locale);
     animation: ring-spin 6s linear infinite reverse;
   }
 
-  .avatar-emoji {
-    font-size: 2.8rem;
-    line-height: 1;
+  .avatar-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
   }
 
   .hero-title {
