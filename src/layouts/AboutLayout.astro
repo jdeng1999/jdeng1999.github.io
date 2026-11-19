@@ -224,6 +224,9 @@ const t = useTranslations(locale);
   }
 
   .badge {
+    /* Updated at runtime by the mousemove script; defaults keep the glow centered */
+    --bx: 50%;
+    --by: 50%;
     position: relative;
     overflow: hidden;
     padding: 0.45rem 1.1rem;
