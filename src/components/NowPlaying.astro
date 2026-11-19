@@ -1,23 +1,22 @@
 ---
 /**
- * NowPlaying — a custom, theme-aware Spotify card for the footer.
+ * NowPlaying — a custom, theme-aware music card for the footer.
  *
- * The official Spotify embed owns the whole iframe surface (artwork, buttons,
- * typography) and exposes no styling hooks, so this card is drawn by us. Real
- * playback is still handled by Spotify through their official iFrame API: the
- * embed itself is kept invisible behind the card and only its controller is
- * used (play/pause, seek, restart, progress). If the API is unavailable the
- * controls gracefully fall back to opening the track on Spotify.
+ * Playback order:
+ *   1. A local audio file (`public/audio/...`) gives every visitor the full
+ *      track, with no login and no 30-second preview limit.
+ *   2. If that file is missing, the card falls back to Spotify's official
+ *      iFrame API (which streams a 30s preview to anonymous visitors).
+ *
+ * The card also shows the current track's two-line lyric excerpt: the first
+ * line is crisp, the second dissolves downward with a mask.
  */
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import IconSpotify from "@/assets/icons/IconSpotify.svg";
+import { SITE } from "@/config";
 
 interface Props {
-  url: string;
-  title: string;
-  artist: string;
-  album?: string;
-  cover?: string;
-  duration?: number; // fallback duration in seconds, replaced by the API
   label?: string;
   openLabel?: string;
   playLabel?: string;
@@ -25,16 +24,12 @@ interface Props {
   restartLabel?: string;
   seekLabel?: string;
   previewLabel?: string;
+  previousLabel?: string;
+  nextLabel?: string;
   class?: string;
 }
 
 const {
-  url,
-  title,
-  artist,
-  album = "",
-  cover = "",
-  duration = 0,
   label = "On repeat",
   openLabel = "Open in Spotify",
   playLabel = "Play",
@@ -42,47 +37,82 @@ const {
   restartLabel = "Restart",
   seekLabel = "Seek",
   previewLabel = "Preview",
+  previousLabel = "Previous track",
+  nextLabel = "Next track",
   class: className = "",
 } = Astro.props;
-
-const trackId = url.match(
-  /open\.spotify\.com\/(?:intl-[a-z-]+\/)?track\/([A-Za-z0-9]+)/
-)?.[1];
 
 const formatTime = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
 
-const totalLabel = formatTime(duration);
+const tracks = SITE.spotify.tracks.map(track => {
+  const src = track.src ?? "";
+  const isRemote = /^https?:\/\//i.test(src);
+  const localPath =
+    src.startsWith("/") && !isRemote
+      ? fileURLToPath(new URL(`../../public${src}`, import.meta.url))
+      : "";
+  const isLocal =
+    Boolean(src) && (isRemote || (localPath && existsSync(localPath)));
+  const match = track.url.match(/track\/([A-Za-z0-9]+)/);
+
+  return {
+    title: track.title,
+    artist: track.artist,
+    album: track.album,
+    cover: track.cover,
+    url: track.url,
+    src,
+    isLocal: Boolean(isLocal),
+    spotifyUri: match ? `spotify:track:${match[1]}` : "",
+    duration: track.duration,
+    lyrics: [...track.lyrics],
+  };
+});
+
+const first = tracks[0];
+if (!first) {
+  throw new Error(
+    "NowPlaying requires at least one track in SITE.spotify.tracks"
+  );
+}
+
+const payload = {
+  tracks,
+  labels: {
+    open: openLabel,
+    play: playLabel,
+    pause: pauseLabel,
+    restart: restartLabel,
+    seek: seekLabel,
+    preview: previewLabel,
+    previous: previousLabel,
+    next: nextLabel,
+  },
+};
+
+const payloadJson = JSON.stringify(payload).replace(/</g, "\\u003c");
+const totalLabel = formatTime(first.duration);
 ---
 
 <aside
   class:list={["now-playing", className]}
   aria-label={label}
   data-np
-  data-np-uri={trackId ? `spotify:track:${trackId}` : ""}
-  data-np-url={url}
-  data-np-duration={String(duration)}
   data-np-playing="false"
-  data-label-play={playLabel}
-  data-label-pause={pauseLabel}
 >
   <div class="np-card">
     <div class="np-art">
-      {cover ? (
-        <img
-          src={cover}
-          alt=""
-          width="640"
-          height="640"
-          loading="lazy"
-          decoding="async"
-        />
-      ) : (
-        <span class="np-art-fallback" aria-hidden="true">
-          <IconSpotify class="np-art-icon" />
-        </span>
-      )}
-      <span class="np-art-sheen" aria-hidden="true" />
+      <img
+        data-np-cover
+        src={first.cover}
+        alt=""
+        width="640"
+        height="640"
+        loading="lazy"
+        decoding="async"
+      />
+      <span class="np-art-sheen" aria-hidden="true"></span>
     </div>
 
     <div class="np-body">
@@ -96,36 +126,49 @@ const totalLabel = formatTime(duration);
           <span>{label}</span>
         </p>
 
-        <a
-          class="np-open"
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={openLabel}
-          title={openLabel}
-        >
-          <IconSpotify class="np-open-icon" />
-          <span>Spotify</span>
-          <span class="np-open-arrow" aria-hidden="true">
-            ↗
+        <div class="np-head-right">
+          <span class="np-count" data-np-count>
+            01 / {String(tracks.length).padStart(2, "0")}
           </span>
-        </a>
+          <a
+            class="np-open"
+            data-np-link
+            href={first.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={openLabel}
+            title={openLabel}
+          >
+            <IconSpotify class="np-open-icon" />
+            <span>Spotify</span>
+            <span class="np-open-arrow" aria-hidden="true">
+              ↗
+            </span>
+          </a>
+        </div>
       </div>
 
       <div class="np-meta">
-        <p class="np-title" title={title}>
-          {title}
+        <p class="np-title" data-np-title title={first.title}>
+          {first.title}
         </p>
         <p class="np-sub">
-          <span>{artist}</span>
-          {album && (
-            <>
-              <span class="np-dot" aria-hidden="true">
-                ·
-              </span>
-              <span class="np-album">{album}</span>
-            </>
-          )}
+          <span data-np-artist>{first.artist}</span>
+          <span class="np-dot" aria-hidden="true">
+            ·
+          </span>
+          <span class="np-album" data-np-album>
+            {first.album}
+          </span>
+        </p>
+      </div>
+
+      <div class="np-lyrics" data-np-lyrics aria-live="polite">
+        <p class="np-lyric np-lyric-current" data-np-lyric-current>
+          {first.lyrics[0] ?? ""}
+        </p>
+        <p class="np-lyric np-lyric-next" data-np-lyric-next>
+          {first.lyrics[1] ?? ""}
         </p>
       </div>
 
@@ -140,7 +183,7 @@ const totalLabel = formatTime(duration);
           tabindex="0"
           aria-label={seekLabel}
           aria-valuemin="0"
-          aria-valuemax={String(duration)}
+          aria-valuemax={String(first.duration)}
           aria-valuenow="0"
           aria-valuetext="0:00"
         >
@@ -155,6 +198,19 @@ const totalLabel = formatTime(duration);
       </div>
 
       <div class="np-controls">
+        <button
+          type="button"
+          class="np-skip"
+          data-np-prev
+          aria-label={previousLabel}
+          title={previousLabel}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18.5 5.5v13l-9-6.5 9-6.5Z" />
+            <path d="M6.5 5.5v13" />
+          </svg>
+        </button>
+
         <button
           type="button"
           class="np-toggle"
@@ -181,6 +237,19 @@ const totalLabel = formatTime(duration);
 
         <button
           type="button"
+          class="np-skip"
+          data-np-next
+          aria-label={nextLabel}
+          title={nextLabel}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5.5 5.5v13l9-6.5-9-6.5Z" />
+            <path d="M17.5 5.5v13" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
           class="np-restart"
           data-np-restart
           aria-label={restartLabel}
@@ -194,10 +263,10 @@ const totalLabel = formatTime(duration);
 
         <a
           class="np-preview"
-          href={url}
+          data-np-preview
+          href={first.url}
           target="_blank"
           rel="noopener noreferrer"
-          data-np-preview
           title={openLabel}
           hidden
         >
@@ -208,23 +277,32 @@ const totalLabel = formatTime(duration);
     </div>
   </div>
 
-  <!-- Spotify's real player lives here; it is never shown. -->
+  <!-- Spotify's preview player lives here; it is never shown. -->
   <div class="np-embed" aria-hidden="true">
     <div data-np-embed></div>
   </div>
+  <audio class="np-audio" data-np-audio preload="metadata"></audio>
 </aside>
+
+<script
+  type="application/json"
+  data-np-data
+  is:inline
+  set:html={payloadJson}
+></script>
 
 <style>
   .now-playing {
+    position: relative;
     display: block;
     min-width: 0;
   }
 
   .np-card {
     display: grid;
-    grid-template-columns: 6.75rem minmax(0, 1fr);
+    grid-template-columns: 7rem minmax(0, 1fr);
     gap: 1rem;
-    min-height: 9.5rem;
+    min-height: 11rem;
     padding: 0.9rem;
     border: 0;
     border-radius: 1.15rem;
@@ -274,25 +352,12 @@ const totalLabel = formatTime(duration);
     object-position: 50% 32%;
   }
 
-  .np-art-fallback {
-    display: grid;
-    width: 100%;
-    height: 100%;
-    place-items: center;
-    color: color-mix(in srgb, var(--color-accent) 75%, transparent);
-  }
-
-  .np-art-icon {
-    width: 2rem;
-    height: 2rem;
-  }
-
   .np-art-sheen {
     position: absolute;
     inset: 0;
     background: linear-gradient(
       150deg,
-      rgba(255, 255, 255, 0.18),
+      rgba(255, 255, 255, 0.16),
       transparent 42%
     );
     mix-blend-mode: soft-light;
@@ -381,6 +446,21 @@ const totalLabel = formatTime(duration);
     }
   }
 
+  .np-head-right {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .np-count {
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+    color: color-mix(in srgb, var(--color-foreground) 34%, transparent);
+    white-space: nowrap;
+  }
+
   .np-open {
     display: inline-flex;
     flex: none;
@@ -419,7 +499,7 @@ const totalLabel = formatTime(duration);
 
   .np-meta {
     min-width: 0;
-    margin-top: 0.5rem;
+    margin-top: 0.45rem;
   }
 
   .np-title {
@@ -436,7 +516,7 @@ const totalLabel = formatTime(duration);
     display: flex;
     align-items: center;
     gap: 0.32rem;
-    margin-top: 0.16rem;
+    margin-top: 0.14rem;
     overflow: hidden;
     font-size: 0.72rem;
     line-height: 1.3;
@@ -454,12 +534,52 @@ const totalLabel = formatTime(duration);
     opacity: 0.5;
   }
 
+  .np-lyrics {
+    position: relative;
+    min-width: 0;
+    margin-top: 0.55rem;
+    padding-left: 0.62rem;
+    border-left: 1px solid
+      color-mix(in srgb, var(--color-accent) 32%, transparent);
+  }
+
+  .np-lyric {
+    overflow: hidden;
+    margin: 0;
+    font-size: 0.67rem;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .np-lyric-current {
+    color: color-mix(in srgb, var(--color-foreground) 76%, transparent);
+  }
+
+  .np-lyric-next {
+    margin-top: 0.08rem;
+    color: color-mix(in srgb, var(--color-foreground) 58%, transparent);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      rgba(0, 0, 0, 0.55) 55%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      rgba(0, 0, 0, 0.55) 55%,
+      transparent 100%
+    );
+  }
+
   .np-progress {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     margin-top: auto;
-    padding-top: 0.8rem;
+    padding-top: 0.7rem;
   }
 
   .np-time {
@@ -542,16 +662,55 @@ const totalLabel = formatTime(duration);
   .np-controls {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding-top: 0.65rem;
+    gap: 0.5rem;
+    padding-top: 0.6rem;
+  }
+
+  .np-skip {
+    display: inline-grid;
+    flex: none;
+    width: 1.55rem;
+    height: 1.55rem;
+    place-items: center;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: color-mix(in srgb, var(--color-foreground) 44%, transparent);
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .np-skip:hover {
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    color: var(--color-accent);
+    transform: translateY(-1px);
+  }
+
+  .np-skip:focus-visible,
+  .np-restart:focus-visible,
+  .np-toggle:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
+    outline-offset: 3px;
+  }
+
+  .np-skip svg {
+    width: 0.82rem;
+    height: 0.82rem;
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-width: 1.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .np-toggle {
     position: relative;
     display: inline-grid;
     flex: none;
-    width: 2rem;
-    height: 2rem;
+    width: 2.1rem;
+    height: 2.1rem;
     place-items: center;
     border: 0;
     border-radius: 999px;
@@ -572,11 +731,6 @@ const totalLabel = formatTime(duration);
 
   .np-toggle:active {
     transform: translateY(0);
-  }
-
-  .np-toggle:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
-    outline-offset: 3px;
   }
 
   .np-icon {
@@ -636,11 +790,6 @@ const totalLabel = formatTime(duration);
     background: color-mix(in srgb, var(--color-accent) 8%, transparent);
   }
 
-  .np-restart:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-    outline-offset: 1px;
-  }
-
   .np-restart svg {
     width: 0.82rem;
     height: 0.82rem;
@@ -687,7 +836,7 @@ const totalLabel = formatTime(duration);
     opacity: 0.75;
   }
 
-  /* Spotify's embed is used for audio only; it never paints the card. */
+  /* Spotify's preview embed is used for audio only; it never paints the card. */
   .np-embed {
     position: absolute;
     width: 1px;
@@ -698,8 +847,12 @@ const totalLabel = formatTime(duration);
     clip-path: inset(50%);
   }
 
-  .now-playing {
-    position: relative;
+  .np-audio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
   }
 
   .now-playing[data-np-loading="true"] .np-toggle {
@@ -716,16 +869,29 @@ const totalLabel = formatTime(duration);
     }
   }
 
-  @media (max-width: 26rem) {
+  @media (max-width: 28rem) {
     .np-card {
-      grid-template-columns: 4.5rem minmax(0, 1fr);
+      grid-template-columns: 5rem minmax(0, 1fr);
       gap: 0.8rem;
-      padding: 0.75rem;
-      min-height: 8.25rem;
+      padding: 0.8rem;
+      min-height: 10.5rem;
     }
 
     .np-title {
       font-size: 0.96rem;
+    }
+
+    .np-count {
+      display: none;
+    }
+
+    .np-lyric {
+      font-size: 0.63rem;
+    }
+
+    .np-skip {
+      width: 1.4rem;
+      height: 1.4rem;
     }
   }
 
@@ -734,7 +900,8 @@ const totalLabel = formatTime(duration);
     .np-seek-rail,
     .np-seek-thumb,
     .np-toggle,
-    .np-toggle-ring {
+    .np-toggle-ring,
+    .np-skip {
       transition: none;
     }
 
@@ -749,6 +916,35 @@ const totalLabel = formatTime(duration);
 </style>
 
 <script>
+  type MusicTrack = {
+    title: string;
+    artist: string;
+    album: string;
+    cover: string;
+    url: string;
+    src: string;
+    isLocal: boolean;
+    spotifyUri: string;
+    duration: number;
+    lyrics: string[];
+  };
+
+  type MusicLabels = {
+    open: string;
+    play: string;
+    pause: string;
+    restart: string;
+    seek: string;
+    preview: string;
+    previous: string;
+    next: string;
+  };
+
+  type MusicPayload = {
+    tracks: MusicTrack[];
+    labels: MusicLabels;
+  };
+
   type SpotifyPlaybackData = {
     isPaused: boolean;
     isBuffering: boolean;
@@ -767,6 +963,7 @@ const totalLabel = formatTime(duration);
       callback: (event: { data: SpotifyPlaybackData }) => void
     ) => void;
     destroy: () => void;
+    loadUri?: (uri: string) => void;
   };
 
   type SpotifyIframeApi = {
@@ -785,6 +982,45 @@ const totalLabel = formatTime(duration);
     SpotifyIframeApi?: SpotifyIframeApi;
     onSpotifyIframeApiReady?: (api: SpotifyIframeApi) => void;
   };
+
+  type MusicState = {
+    index: number;
+    count: number;
+    title: string;
+    artist: string;
+    album: string;
+    playing: boolean;
+    current: number;
+    duration: number;
+    source: "local" | "spotify";
+    isPreview: boolean;
+    isLocal: boolean;
+    lyrics: string[];
+  };
+
+  type BlogMusicApi = {
+    tracks: {
+      title: string;
+      artist: string;
+      album: string;
+      duration: number;
+      lyrics: string[];
+      isLocal: boolean;
+    }[];
+    getState: () => MusicState;
+    play: (index?: number) => void;
+    pause: () => void;
+    toggle: () => void;
+    next: () => void;
+    previous: () => void;
+    seek: (seconds: number) => void;
+  };
+
+  declare global {
+    interface Window {
+      __blogMusic?: BlogMusicApi;
+    }
+  }
 
   let spotifyApi: SpotifyIframeApi | null = null;
   let apiPromise: Promise<SpotifyIframeApi> | null = null;
@@ -835,99 +1071,190 @@ const totalLabel = formatTime(duration);
     return apiPromise;
   };
 
+  const readData = (): MusicPayload | null => {
+    const el = document.querySelector<HTMLScriptElement>("[data-np-data]");
+    if (!el?.textContent) return null;
+
+    try {
+      return JSON.parse(el.textContent) as MusicPayload;
+    } catch {
+      return null;
+    }
+  };
+
+  const formatTime = (ms: number) => {
+    const total = Math.max(0, Math.round(ms / 1000));
+    return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+  };
+
   const clamp = (value: number, min: number, max: number) =>
     Math.min(max, Math.max(min, value));
 
-  const setupPlayer = (root: HTMLElement) => {
-    if (root.dataset.npSetup === "true") return;
-    root.dataset.npSetup = "true";
+  const initNowPlaying = () => {
+    const root = document.querySelector<HTMLElement>("[data-np]");
+    if (!root || root.dataset.npReady === "true") return;
 
-    const uri = root.dataset.npUri ?? "";
-    const trackUrl = root.dataset.npUrl ?? "";
-    if (!uri) {
-      root.dataset.npUnavailable = "true";
-      return;
-    }
+    const data = readData();
+    if (!data?.tracks.length) return;
 
-    const embedHost = root.querySelector<HTMLElement>("[data-np-embed]");
+    root.dataset.npReady = "true";
+
+    const labels = data.labels;
+    const tracks = data.tracks;
+
+    const cover = root.querySelector<HTMLImageElement>("[data-np-cover]");
+    const titleEl = root.querySelector<HTMLElement>("[data-np-title]");
+    const artistEl = root.querySelector<HTMLElement>("[data-np-artist]");
+    const albumEl = root.querySelector<HTMLElement>("[data-np-album]");
+    const countEl = root.querySelector<HTMLElement>("[data-np-count]");
+    const linkEl = root.querySelector<HTMLAnchorElement>("[data-np-link]");
+    const lyricCurrent = root.querySelector<HTMLElement>(
+      "[data-np-lyric-current]"
+    );
+    const lyricNext = root.querySelector<HTMLElement>("[data-np-lyric-next]");
+    const lyricsEl = root.querySelector<HTMLElement>("[data-np-lyrics]");
     const toggle = root.querySelector<HTMLButtonElement>("[data-np-toggle]");
-    const seek = root.querySelector<HTMLElement>("[data-np-seek]");
-    const fill = root.querySelector<HTMLElement>("[data-np-fill]");
-    const currentText = root.querySelector<HTMLElement>("[data-np-current]");
-    const totalText = root.querySelector<HTMLElement>("[data-np-total]");
+    const prevButton = root.querySelector<HTMLButtonElement>("[data-np-prev]");
+    const nextButton = root.querySelector<HTMLButtonElement>("[data-np-next]");
     const restartButton =
       root.querySelector<HTMLButtonElement>("[data-np-restart]");
     const previewLink =
       root.querySelector<HTMLAnchorElement>("[data-np-preview]");
+    const seek = root.querySelector<HTMLElement>("[data-np-seek]");
+    const fill = root.querySelector<HTMLElement>("[data-np-fill]");
+    const currentText = root.querySelector<HTMLElement>("[data-np-current]");
+    const totalText = root.querySelector<HTMLElement>("[data-np-total]");
+    const embedHost = root.querySelector<HTMLElement>("[data-np-embed]");
+    const audio = root.querySelector<HTMLAudioElement>("[data-np-audio]");
 
     if (
-      !embedHost ||
+      !cover ||
+      !titleEl ||
+      !artistEl ||
+      !albumEl ||
+      !countEl ||
+      !linkEl ||
+      !lyricCurrent ||
+      !lyricNext ||
+      !lyricsEl ||
       !toggle ||
+      !prevButton ||
+      !nextButton ||
+      !restartButton ||
+      !previewLink ||
       !seek ||
       !fill ||
       !currentText ||
       !totalText ||
-      !restartButton ||
-      !previewLink
+      !embedHost ||
+      !audio
     ) {
       return;
     }
 
-    const playLabel = root.dataset.labelPlay ?? "Play";
-    const pauseLabel = root.dataset.labelPause ?? "Pause";
-
-    let controller: SpotifyEmbedController | null = null;
-    let duration = Number(root.dataset.npDuration ?? 0) * 1000;
-    let position = 0;
-    let dragging = false;
+    let index = 0;
+    let source: "local" | "spotify" = "local";
+    let isPlaying = false;
+    let isDragging = false;
+    let positionMs = 0;
+    let durationMs = tracks[0]!.duration * 1000;
     let requestedPlay = false;
     let connecting = false;
+    let spotifyController: SpotifyEmbedController | null = null;
+    let spotifyUri = "";
+    let localFailed = false;
 
-    const format = (ms: number) => {
-      const total = Math.max(0, Math.round(ms / 1000));
-      return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
-    };
+    const nowPlayingLabel = root.getAttribute("aria-label") ?? "On repeat";
 
-    const paintProgress = (ms: number) => {
-      const ratio = duration > 0 ? clamp(ms / duration, 0, 1) : 0;
-      seek.style.setProperty("--np-p", `${ratio * 100}%`);
-      seek.setAttribute("aria-valuenow", String(Math.round(ms / 1000)));
-      seek.setAttribute("aria-valuetext", format(ms));
-      currentText.textContent = format(ms);
-    };
-
-    const paintDuration = () => {
-      totalText.textContent = format(duration);
-      seek.setAttribute("aria-valuemax", String(Math.round(duration / 1000)));
+    const emitState = () => {
+      window.dispatchEvent(
+        new CustomEvent("blog-music:state", { detail: getState() })
+      );
     };
 
     const setPlaying = (playing: boolean) => {
-      root.dataset.npPlaying = playing ? "true" : "false";
+      isPlaying = playing;
+      root.dataset.npPlaying = String(playing);
       toggle.setAttribute("aria-pressed", String(playing));
-      toggle.setAttribute("aria-label", playing ? pauseLabel : playLabel);
+      toggle.setAttribute("aria-label", playing ? labels.pause : labels.play);
+      emitState();
     };
 
-    const renderPlayback = (data: SpotifyPlaybackData) => {
-      if (typeof data.duration === "number" && data.duration > 0) {
-        duration = data.duration;
-        paintDuration();
-      }
-
-      if (typeof data.position === "number") {
-        position = data.position;
-        if (!dragging) paintProgress(position);
-      }
-
-      // Anonymous listeners only get a 30s preview; surface that instead of
-      // silently shortening the timeline.
-      const isPreview = duration > 0 && duration <= 35000;
-      previewLink.hidden = !isPreview;
-
-      setPlaying(!data.isPaused);
+    const paintDuration = () => {
+      totalText.textContent = formatTime(durationMs);
+      seek.setAttribute("aria-valuemax", String(Math.round(durationMs / 1000)));
     };
 
-    const connect = async (): Promise<SpotifyEmbedController | null> => {
-      if (controller) return controller;
+    const paintProgress = (ms: number) => {
+      positionMs = clamp(ms, 0, Math.max(durationMs, 0));
+      const ratio = durationMs > 0 ? positionMs / durationMs : 0;
+      seek.style.setProperty("--np-p", `${ratio * 100}%`);
+      seek.setAttribute("aria-valuenow", String(Math.round(positionMs / 1000)));
+      seek.setAttribute("aria-valuetext", formatTime(positionMs));
+      currentText.textContent = formatTime(positionMs);
+    };
+
+    const updateLyrics = (track: MusicTrack) => {
+      lyricCurrent.textContent = track.lyrics[0] ?? "";
+      lyricNext.textContent = track.lyrics[1] ?? "";
+      lyricNext.hidden = !track.lyrics[1];
+      lyricsEl.hidden = track.lyrics.length === 0;
+    };
+
+    const updateTrackUi = (track: MusicTrack) => {
+      cover.src = track.cover;
+      cover.alt = "";
+      titleEl.textContent = track.title;
+      titleEl.title = track.title;
+      artistEl.textContent = track.artist;
+      albumEl.textContent = track.album;
+      linkEl.href = track.url;
+      previewLink.href = track.url;
+      countEl.textContent = `${String(index + 1).padStart(2, "0")} / ${String(
+        tracks.length
+      ).padStart(2, "0")}`;
+      updateLyrics(track);
+      durationMs = track.duration * 1000;
+      positionMs = 0;
+      paintDuration();
+      paintProgress(0);
+      previewLink.hidden = track.isLocal;
+      root.dataset.npSource = track.isLocal ? "local" : "spotify";
+    };
+
+    const stopLocalAudio = () => {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    };
+
+    const pauseSpotify = () => {
+      spotifyController?.pause();
+    };
+
+    const connectSpotify = async (
+      track: MusicTrack,
+      autoplay: boolean
+    ): Promise<SpotifyEmbedController | null> => {
+      if (!track.spotifyUri) {
+        root.dataset.npUnavailable = "true";
+        return null;
+      }
+
+      if (spotifyController) {
+        if (track.spotifyUri !== spotifyUri && spotifyController.loadUri) {
+          spotifyController.loadUri(track.spotifyUri);
+          spotifyUri = track.spotifyUri;
+        }
+
+        if (autoplay) {
+          requestedPlay = true;
+          spotifyController.play();
+        }
+
+        return spotifyController;
+      }
+
       if (connecting) return null;
       connecting = true;
       root.dataset.npLoading = "true";
@@ -941,21 +1268,41 @@ const totalLabel = formatTime(duration);
             12000
           );
 
+          const host = document.createElement("div");
+          embedHost.replaceChildren(host);
+
           api.createController(
-            embedHost,
-            { uri, width: "100%", height: 152 },
+            host,
+            {
+              uri: track.spotifyUri,
+              width: "100%",
+              height: 152,
+            },
             embed => {
               window.clearTimeout(guard);
-              controller = embed;
+              spotifyController = embed;
+              spotifyUri = track.spotifyUri;
               root.dataset.npLoading = "false";
               root.dataset.npUnavailable = "false";
               resolve();
 
               embed.addListener("playback_update", event => {
-                renderPlayback(event.data);
+                const playback = event.data;
+                if (playback.duration > 0) {
+                  durationMs = playback.duration;
+                  paintDuration();
+                }
+
+                if (typeof playback.position === "number" && !isDragging) {
+                  paintProgress(playback.position);
+                }
+
+                setPlaying(!playback.isPaused);
+                previewLink.hidden = false;
+                root.dataset.npSource = "spotify";
               });
 
-              if (requestedPlay) {
+              if (autoplay || requestedPlay) {
                 requestedPlay = false;
                 embed.play();
               }
@@ -965,17 +1312,114 @@ const totalLabel = formatTime(duration);
       } catch {
         root.dataset.npLoading = "false";
         root.dataset.npUnavailable = "true";
+        previewLink.hidden = false;
       } finally {
         connecting = false;
       }
 
-      return controller;
+      return spotifyController;
+    };
+
+    const activateTrack = (autoplay: boolean) => {
+      const track = tracks[index];
+      if (!track) return;
+
+      updateTrackUi(track);
+
+      if (track.isLocal && !localFailed) {
+        source = "local";
+        pauseSpotify();
+        audio.src = track.src;
+        audio.load();
+        root.dataset.npSource = "local";
+        previewLink.hidden = true;
+
+        if (autoplay) {
+          void audio.play().catch(() => {
+            localFailed = true;
+            source = "spotify";
+            void connectSpotify(track, true);
+          });
+        }
+        return;
+      }
+
+      source = "spotify";
+      stopLocalAudio();
+      previewLink.hidden = false;
+      root.dataset.npSource = "spotify";
+      if (autoplay) {
+        requestedPlay = true;
+        void connectSpotify(track, true);
+      }
+    };
+
+    const nextTrack = (forceAutoplay?: boolean) => {
+      const wasPlaying = forceAutoplay ?? isPlaying;
+      index = (index + 1) % tracks.length;
+      localFailed = false;
+      activateTrack(wasPlaying);
+    };
+
+    const previousTrack = () => {
+      const elapsed = positionMs / 1000;
+      if (elapsed > 3) {
+        seekToSeconds(0);
+        return;
+      }
+
+      const wasPlaying = isPlaying;
+      index = (index - 1 + tracks.length) % tracks.length;
+      localFailed = false;
+      activateTrack(wasPlaying);
+    };
+
+    const togglePlayback = () => {
+      if (source === "local") {
+        if (audio.paused) {
+          void audio.play().catch(() => {
+            localFailed = true;
+            const track = tracks[index];
+            if (track) {
+              source = "spotify";
+              previewLink.hidden = false;
+              void connectSpotify(track, true);
+            }
+          });
+        } else {
+          audio.pause();
+        }
+        return;
+      }
+
+      if (spotifyController) {
+        spotifyController.togglePlay();
+        return;
+      }
+
+      const track = tracks[index];
+      if (track) {
+        requestedPlay = true;
+        void connectSpotify(track, true);
+      }
+    };
+
+    const seekToSeconds = (seconds: number) => {
+      const ms = clamp(seconds * 1000, 0, durationMs);
+      paintProgress(ms);
+
+      if (source === "local") {
+        if (Number.isFinite(audio.duration)) {
+          audio.currentTime = Math.min(seconds, audio.duration);
+        }
+        return;
+      }
+
+      spotifyController?.seek(seconds);
     };
 
     const seekToRatio = (ratio: number) => {
-      position = ratio * duration;
-      paintProgress(position);
-      controller?.seek(position / 1000);
+      seekToSeconds((ratio * durationMs) / 1000);
     };
 
     const ratioFromPointer = (event: PointerEvent) => {
@@ -984,42 +1428,77 @@ const totalLabel = formatTime(duration);
       return clamp((event.clientX - rect.left) / rect.width, 0, 1);
     };
 
-    toggle.addEventListener("click", () => {
-      if (controller) {
-        controller.togglePlay();
-        return;
-      }
+    const getState = (): MusicState => {
+      const track = tracks[index]!;
+      return {
+        index,
+        count: tracks.length,
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        playing: isPlaying,
+        current: positionMs / 1000,
+        duration: durationMs / 1000,
+        source,
+        isPreview: source === "spotify",
+        isLocal: source === "local",
+        lyrics: track.lyrics,
+      };
+    };
 
-      if (root.dataset.npUnavailable === "true") {
-        window.open(trackUrl, "_blank", "noopener,noreferrer");
-        return;
+    // ── Local audio events ────────────────────────────────────────
+    audio.addEventListener("play", () => setPlaying(true));
+    audio.addEventListener("pause", () => setPlaying(false));
+    audio.addEventListener("ended", () => {
+      setPlaying(false);
+      nextTrack(true);
+    });
+    audio.addEventListener("loadedmetadata", () => {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        durationMs = audio.duration * 1000;
+        paintDuration();
       }
+    });
+    audio.addEventListener("timeupdate", () => {
+      if (!isDragging) paintProgress(audio.currentTime * 1000);
+    });
+    audio.addEventListener("error", () => {
+      if (source !== "local") return;
+      localFailed = true;
+      source = "spotify";
+      previewLink.hidden = false;
+      const track = tracks[index];
+      if (track) void connectSpotify(track, isPlaying);
+    });
 
-      requestedPlay = true;
-      void connect();
+    // ── Controls ──────────────────────────────────────────────────
+    toggle.addEventListener("click", togglePlayback);
+    prevButton.addEventListener("click", previousTrack);
+    nextButton.addEventListener("click", () => nextTrack());
+    restartButton.addEventListener("click", () => {
+      seekToSeconds(0);
+      if (source === "local") {
+        void audio.play().catch(() => {});
+      } else {
+        spotifyController?.play();
+      }
     });
 
     seek.addEventListener("pointerdown", event => {
-      if (!controller) {
-        requestedPlay = true;
-        void connect();
-        return;
-      }
-
-      dragging = true;
+      isDragging = true;
       seek.dataset.dragging = "true";
       seek.setPointerCapture?.(event.pointerId);
-      paintProgress(ratioFromPointer(event) * duration);
+      paintProgress(ratioFromPointer(event) * durationMs);
     });
 
     seek.addEventListener("pointermove", event => {
-      if (!dragging) return;
-      paintProgress(ratioFromPointer(event) * duration);
+      if (!isDragging) return;
+      paintProgress(ratioFromPointer(event) * durationMs);
     });
 
     const endDrag = (event: PointerEvent) => {
-      if (!dragging) return;
-      dragging = false;
+      if (!isDragging) return;
+      isDragging = false;
       delete seek.dataset.dragging;
       seekToRatio(ratioFromPointer(event));
 
@@ -1032,55 +1511,71 @@ const totalLabel = formatTime(duration);
     seek.addEventListener("pointercancel", endDrag);
 
     seek.addEventListener("keydown", event => {
-      if (!controller || duration <= 0) return;
-
-      let next = position / 1000;
+      let next = positionMs / 1000;
       if (event.key === "ArrowRight") next += 5;
       else if (event.key === "ArrowLeft") next -= 5;
       else if (event.key === "Home") next = 0;
-      else if (event.key === "End") next = duration / 1000;
+      else if (event.key === "End") next = durationMs / 1000;
       else return;
 
       event.preventDefault();
-      next = clamp(next, 0, duration / 1000);
-      position = next * 1000;
-      paintProgress(position);
-      controller.seek(next);
+      seekToSeconds(next);
     });
 
-    restartButton.addEventListener("click", () => {
-      if (!controller) {
-        requestedPlay = true;
-        void connect();
-        return;
-      }
-
-      position = 0;
-      paintProgress(0);
-      controller.seek(0);
-      controller.play();
-    });
-
+    // ── Initial track ─────────────────────────────────────────────
+    activateTrack(false);
     paintDuration();
     paintProgress(0);
 
-    // Warm the controller up when the footer comes into view, so the first
-    // click feels instant without loading Spotify on every page.
+    // Warm up Spotify only when the card enters the viewport.
     if ("IntersectionObserver" in window) {
       const observer = new IntersectionObserver(
         entries => {
           if (!entries.some(entry => entry.isIntersecting)) return;
           observer.disconnect();
-          void connect();
+          const track = tracks[index];
+          if (track && !track.isLocal) void connectSpotify(track, false);
         },
         { rootMargin: "240px 0px" }
       );
       observer.observe(root);
     }
-  };
 
-  const initNowPlaying = () => {
-    document.querySelectorAll<HTMLElement>("[data-np]").forEach(setupPlayer);
+    // ── Public API used by the hero terminal ──────────────────────
+    window.__blogMusic = {
+      tracks: tracks.map(track => ({
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        duration: track.duration,
+        lyrics: track.lyrics,
+        isLocal: track.isLocal,
+      })),
+      getState,
+      play: (nextIndex?: number) => {
+        if (typeof nextIndex === "number" && tracks[nextIndex]) {
+          const wasPlaying = isPlaying;
+          index = nextIndex;
+          localFailed = false;
+          activateTrack(wasPlaying);
+          if (!wasPlaying) togglePlayback();
+          return;
+        }
+
+        if (!isPlaying) togglePlayback();
+      },
+      pause: () => {
+        if (source === "local") audio.pause();
+        else spotifyController?.pause();
+      },
+      toggle: togglePlayback,
+      next: nextTrack,
+      previous: previousTrack,
+      seek: seekToSeconds,
+    };
+
+    emitState();
+    void nowPlayingLabel;
   };
 
   document.addEventListener("astro:page-load", initNowPlaying);

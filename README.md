@@ -1,10 +1,10 @@
-# Devosfera Blog
+# J. Deng — Blog
 
 Heavily customized version of the [AstroPaper](https://github.com/satnaing/astro-paper) theme with a new aesthetic, image galleries, global search modal, and dozens of visual and interactive improvements.
 
 **🌐 Clean template live demo:** [devosfera-blog.vercel.app](https://devosfera-blog.vercel.app)
 
-![Devosfera OG](public/devosfera-og.webp)
+![J. Deng OG](public/jdeng-og.png)
 
 > [!TIP]
 > **🌟 Real-World Showcase:**  
@@ -47,6 +47,7 @@ Heavily customized version of the [AstroPaper](https://github.com/satnaing/astro
 ### Modern design
 
 - Hero with animated prompt configurable from `heroTerminalPrompt` in `src/config.ts` (default: `~/ready-to-go $`)
+- Interactive terminal console from the hero prompt (`C` or click): `help`, `random`, `matrix`, `quote`, `theme`, `audio`, `music`, `whoami`, `neofetch`, `ls`, `date`, `echo`, `clear`, `exit`
 - Reusable `<AuroraHero>` section headers with interactive mouse-tracking aurora orbs
 - Global backdrop: grid + cursor glow + noise texture (all pages) optional and configurable from `src/config.ts`
 - Glassmorphism on navbar, cards and modals
@@ -84,10 +85,12 @@ Heavily customized version of the [AstroPaper](https://github.com/satnaing/astro
 - Stronger shared typing across blog/gallery entries (removed weak `any` usage)
 - Reduced duplicated route/slug logic by centralizing entry helpers
 
-### Branded audio player
+### Footer music card
 
-- Intro audio player in the hero with terminal aesthetic (wave bars, progress bar)
-- Fully togglable and configurable from `src/config.ts`
+- Custom theme-aware player with artwork, two-line lyric excerpt, progress, previous/next/restart and a Spotify link
+- Full-track playback for every visitor from local files in `public/audio/` (set `SITE.spotify.tracks[].src`); if a file is missing it falls back to Spotify's 30-second preview
+- Fully configurable from `SITE.spotify.tracks` in `src/config.ts`
+- The hero terminal can inspect and control it: `music info`, `music list`, `music play N`, `music next`, `music prev`, `music pause`, `music resume`, `music lyrics`, or `audio` to toggle
 
 ### Reading experience
 

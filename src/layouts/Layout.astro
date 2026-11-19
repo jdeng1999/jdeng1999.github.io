@@ -28,7 +28,7 @@ const {
   author = SITE.author,
   profile = SITE.profile,
   description = SITE.desc,
-  ogImage = SITE.ogImage ? `/${SITE.ogImage}` : "/devosfera-og.webp",
+  ogImage = SITE.ogImage ? `/${SITE.ogImage}` : "/jdeng-og.png",
   canonicalURL: canonicalURLProp,
   pubDatetime,
   modDatetime,
@@ -109,8 +109,8 @@ const finalStructuredData =
               name: author,
               description:
                 locale === "es"
-                  ? "Desarrollador, estudiante y videojugador. Creador de Astro Devosfera."
-                  : "Developer, student, and gamer. Creator of Astro Devosfera.",
+                  ? "Ingeniero de software enfocado en sistemas backend con Java."
+                  : "Software engineer focused on Java backend systems.",
               ...(profile && { url: profile }),
             },
           }

@@ -1,8 +1,8 @@
 ---
 /**
  * TechMarquee — a single, continuous ticker of the tech stack.
- * Logos are monochrome CSS masks so they adapt to both themes and the
- * active accent color. Hovering only scales the icon; the track never stops.
+ * Full-colour brand logos live in `public/tech/`, and each skill is rendered
+ * as a compact glass tile so the strip reads as a row of blocks.
  */
 interface Props {
   label?: string;
@@ -39,10 +39,14 @@ const items = [...stack, ...stack];
           class="marquee-item"
           aria-hidden={index >= stack.length ? "true" : undefined}
         >
-          <span
+          <img
             class="tech-logo"
-            style={`--tech-icon: url('/svg/${tech.icon}.svg')`}
-            aria-hidden="true"
+            src={`/tech/${tech.icon}.svg`}
+            alt=""
+            width="32"
+            height="32"
+            loading={index < stack.length ? "eager" : "lazy"}
+            decoding="async"
           />
           <span class="tech-name">{tech.name}</span>
         </div>
@@ -55,24 +59,25 @@ const items = [...stack, ...stack];
   .marquee {
     position: relative;
     overflow: hidden;
+    padding-block: 0.35rem;
     -webkit-mask-image: linear-gradient(
       to right,
       transparent 0,
-      black 3rem,
-      black calc(100% - 3rem),
+      black 2.5rem,
+      black calc(100% - 2.5rem),
       transparent 100%
     );
     mask-image: linear-gradient(
       to right,
       transparent 0,
-      black 3rem,
-      black calc(100% - 3rem),
+      black 2.5rem,
+      black calc(100% - 2.5rem),
       transparent 100%
     );
   }
 
   .marquee-track {
-    --marquee-duration: 44s;
+    --marquee-duration: 52s;
 
     display: flex;
     width: max-content;
@@ -94,43 +99,51 @@ const items = [...stack, ...stack];
     display: flex;
     flex: none;
     align-items: center;
-    gap: 0.625rem;
-    padding: 0.9rem 1.4rem;
+    gap: 0.7rem;
+    margin-right: 0.7rem;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid
+      color-mix(in srgb, var(--color-foreground) 9%, transparent);
+    border-radius: 0.8rem;
+    background: color-mix(
+      in srgb,
+      var(--color-foreground) 2.5%,
+      var(--color-background)
+    );
+    transition:
+      border-color 0.25s ease,
+      background-color 0.25s ease,
+      transform 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  .marquee-item:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 32%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    box-shadow: 0 10px 24px -20px
+      color-mix(in srgb, var(--color-accent) 80%, transparent);
+    transform: translateY(-1px);
   }
 
   .tech-logo {
-    --tech-icon: none;
-
     display: block;
     flex: none;
-    width: 1.3rem;
-    height: 1.3rem;
-    background-color: color-mix(
-      in srgb,
-      var(--color-foreground) 72%,
-      transparent
-    );
-    -webkit-mask-image: var(--tech-icon);
-    mask-image: var(--tech-icon);
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
-    -webkit-mask-size: contain;
-    mask-size: contain;
+    width: 1.55rem;
+    height: 1.55rem;
+    object-fit: contain;
     transition: transform 0.25s ease;
   }
 
   .tech-name {
     font-family: var(--font-firacode), ui-monospace, monospace;
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     letter-spacing: 0.01em;
     color: color-mix(in srgb, var(--color-foreground) 62%, transparent);
     white-space: nowrap;
   }
 
   .marquee-item:hover .tech-logo {
-    transform: scale(1.2);
+    transform: scale(1.1);
   }
 
   @media (min-width: 640px) {
@@ -152,17 +165,18 @@ const items = [...stack, ...stack];
     }
 
     .marquee-item {
-      gap: 0.75rem;
-      padding: 1rem 1.85rem;
+      gap: 0.8rem;
+      margin-right: 0.8rem;
+      padding: 0.7rem 1.1rem;
     }
 
     .tech-logo {
-      width: 1.5rem;
-      height: 1.5rem;
+      width: 1.85rem;
+      height: 1.85rem;
     }
 
     .tech-name {
-      font-size: 0.82rem;
+      font-size: 0.84rem;
     }
   }
 
@@ -180,6 +194,10 @@ const items = [...stack, ...stack];
 
     .marquee-item[aria-hidden="true"] {
       display: none;
+    }
+
+    .marquee-item:hover {
+      transform: none;
     }
   }
 </style>

@@ -1,0 +1,32 @@
+---
+/**
+ * SiteLogo — the compact text wordmark used in the header and footer.
+ */
+interface Props {
+  class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+---
+
+<span class:list={["site-logo", className]} aria-hidden="true">
+  <span class="site-logo-mark">J.</span>
+  <span class="site-logo-text">Deng</span>
+</span>
+
+<style>
+  .site-logo {
+    display: inline-flex;
+    align-items: baseline;
+    font-family: var(--font-wotfard), ui-sans-serif, sans-serif;
+    font-weight: 700;
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+    color: var(--color-foreground);
+    user-select: none;
+  }
+
+  .site-logo-mark {
+    color: var(--color-accent);
+  }
+</style>

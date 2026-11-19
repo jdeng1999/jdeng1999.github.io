@@ -6,7 +6,7 @@ export const SITE = {
     (import.meta.env?.PUBLIC_SOCIAL_GITHUB ?? ""), // set in .env
   desc: "一名 Java 后端开发者，记录技术实践、项目探索与个人成长。",
   title: "J. Deng (邓佳)",
-  ogImage: "devosfera-og.webp", // located in the public folder
+  ogImage: "jdeng-og.png", // located in the public folder
   lightAndDarkMode: true,
   postPerIndex: 6,
   postPerPage: 12,
@@ -37,7 +37,7 @@ export const SITE = {
   lang: "en", // html lang code. Set this empty and default will be "en"
   timezone: "Asia/Shanghai", // Default global timezone (IANA format) https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   introAudio: {
-    enabled: true, // show/hide intro player in home and compact player while navigating
+    enabled: false, // the hero/compact player is intentionally disabled; the footer music card is the only player
     // src: path to file (relative to /public or absolute URL). Example: "/intro.mp3" or "https://example.com/stream"
     src: "https://fluxfm.streamabc.net/flx-chillhop-mp3-128-8581707",
     // src: "/audio/intro-web.mp3",
@@ -46,15 +46,32 @@ export const SITE = {
     duration: 30, // duration in seconds (used for local files, ignored on streams)
   },
   spotify: {
-    enabled: true, // show/hide the custom "on repeat" Spotify card in the footer
-    // A single open.spotify.com/track/... URL. The card uses Spotify's official
-    // iFrame API for playback but renders its own theme-aware UI.
-    url: "https://open.spotify.com/track/479lquEL4Mzh3tQLtnHVfL",
-    title: "青花瓷",
-    artist: "周杰伦",
-    album: "我很忙",
-    cover: "/spotify/qinghuaci.jpg", // stored locally so it follows the theme
-    duration: 237, // fallback duration in seconds, refined by the player
+    enabled: true, // show/hide the custom music card in the footer
+    // To give every visitor the full song (not just Spotify's 30s preview),
+    // place the audio files in `public/audio/` and keep the `src` paths below.
+    // If a local file is missing, that track falls back to Spotify's preview.
+    tracks: [
+      {
+        title: "青花瓷",
+        artist: "周杰伦",
+        album: "我很忙",
+        cover: "/spotify/qinghuaci.jpg",
+        url: "https://open.spotify.com/track/479lquEL4Mzh3tQLtnHVfL",
+        src: "/audio/qinghuaci.mp3",
+        duration: 237, // fallback duration in seconds, refined by the player
+        lyrics: ["素胚勾勒出青花笔锋浓转淡", "瓶身描绘的牡丹一如你初妆"],
+      },
+      {
+        title: "兰亭序",
+        artist: "周杰伦",
+        album: "魔杰座",
+        cover: "/spotify/lantingxu.jpg",
+        url: "https://open.spotify.com/track/2k3NAOhrpY4DJJlt5XjDKF",
+        src: "/audio/lantingxu.mp3",
+        duration: 319,
+        lyrics: ["兰亭临帖 行书如行云流水", "月下门推 心细如你脚步碎"],
+      },
+    ],
   },
   likes: {
     enabled: true, // show/hide the local like button in the footer

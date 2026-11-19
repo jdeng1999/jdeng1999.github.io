@@ -1,0 +1,1804 @@
+---
+/**
+ * HeroTerminal — the clickable hero prompt + an interactive shell overlay.
+ *
+ * The public Astro Devosfera template only ships the prompt badge and the
+ * terminal i18n strings; the actual console is a custom extension of the
+ * creator's personal site. This component ports that idea: a themed overlay
+ * with a few useful commands (help, random, matrix, quote, theme, audio,
+ * whoami, neofetch, ls, date, echo, clear, exit).
+ */
+import { SITE } from "@/config";
+import { useTranslations } from "@/i18n/utils";
+
+interface Props {
+  posts: { title: string; href: string }[];
+}
+
+const { posts } = Astro.props;
+const locale = Astro.currentLocale || "en";
+const t = useTranslations(locale);
+
+const heroPrompt = SITE.heroTerminalPrompt;
+const title = t("terminal.title");
+const shellPrompt = `${title.replace(/[~\s]+$/, "")}~$`;
+
+const labels = {
+  title,
+  promptLabel: shellPrompt,
+  welcome: t("terminal.welcome"),
+  badgeHint: t("terminal.badgeHint"),
+  badgeKeyHint: t("terminal.badgeKeyHint"),
+  promptPlaceholder: t("terminal.promptPlaceholder"),
+  close: t("terminal.close"),
+  quickLabel: t("terminal.quickLabel"),
+  helpHeader: t("terminal.helpHeader"),
+  helpHelp: t("terminal.helpHelp"),
+  helpRandom: t("terminal.helpRandom"),
+  helpMatrix: t("terminal.helpMatrix"),
+  helpQuote: t("terminal.helpQuote"),
+  helpTheme: t("terminal.helpTheme"),
+  helpAudio: t("terminal.helpAudio"),
+  helpMusic: t("terminal.helpMusic"),
+  helpWhoami: t("terminal.helpWhoami"),
+  helpNeofetch: t("terminal.helpNeofetch"),
+  helpLs: t("terminal.helpLs"),
+  helpDate: t("terminal.helpDate"),
+  helpEcho: t("terminal.helpEcho"),
+  helpSudo: t("terminal.helpSudo"),
+  helpClear: t("terminal.helpClear"),
+  helpExit: t("terminal.helpExit"),
+  cmdNotFound: t("terminal.cmdNotFound"),
+  themeChanged: t("terminal.themeChanged"),
+  matrixRunning: t("terminal.matrixRunning"),
+  matrixDone: t("terminal.matrixDone"),
+  matrixReduced: t("terminal.matrixReduced"),
+  randomTriggered: t("terminal.randomTriggered"),
+  randomPicked: t("terminal.randomPicked"),
+  randomNoPosts: t("terminal.randomNoPosts"),
+  audioToggled: t("terminal.audioToggled"),
+  audioUnavailable: t("terminal.audioUnavailable"),
+  audioOn: t("terminal.audioOn"),
+  audioOff: t("terminal.audioOff"),
+  lsHeader: t("terminal.lsHeader"),
+  dateLabel: t("terminal.dateLabel"),
+  sudoDenied: t("terminal.sudoDenied"),
+  echoEmpty: t("terminal.echoEmpty"),
+  musicHeader: t("terminal.musicHeader"),
+  musicUsage: t("terminal.musicUsage"),
+  musicUnavailable: t("terminal.musicUnavailable"),
+  musicNoTracks: t("terminal.musicNoTracks"),
+  musicState: t("terminal.musicState"),
+  musicPlaying: t("terminal.musicPlaying"),
+  musicPaused: t("terminal.musicPaused"),
+  musicSource: t("terminal.musicSource"),
+  musicLocal: t("terminal.musicLocal"),
+  musicPreview: t("terminal.musicPreview"),
+  musicLyrics: t("terminal.musicLyrics"),
+  musicList: t("terminal.musicList"),
+  musicNotFound: t("terminal.musicNotFound"),
+  musicNow: t("terminal.musicNow"),
+};
+
+const accentNames =
+  locale === "es"
+    ? ["predeterminado", "violeta", "esmeralda", "ámbar", "rosa", "cian"]
+    : ["default", "violet", "emerald", "amber", "rose", "cyan"];
+
+const accentColors: (string | null)[] = [
+  null,
+  "#7c3aed",
+  "#059669",
+  "#d97706",
+  "#e11d48",
+  "#0891b2",
+];
+
+const quotes =
+  locale === "es"
+    ? [
+        "Haz que funcione, haz que esté bien, haz que sea rápido. — Kent Beck",
+        "La simplicidad es un requisito para la fiabilidad. — Edsger W. Dijkstra",
+        "Los programas deben escribirse para que las personas los lean, y solo incidentalmente para que las máquinas los ejecuten. — Harold Abelson",
+        "La mejor forma de predecir el futuro es inventarlo. — Alan Kay",
+        "Hablar es barato. Enséñame el código. — Linus Torvalds",
+        "Primero resuelve el problema. Luego escribe el código. — John Johnson",
+      ]
+    : [
+        "Make it work, make it right, make it fast. — Kent Beck",
+        "Simplicity is prerequisite for reliability. — Edsger W. Dijkstra",
+        "Programs must be written for people to read, and only incidentally for machines to execute. — Harold Abelson",
+        "The best way to predict the future is to invent it. — Alan Kay",
+        "Talk is cheap. Show me the code. — Linus Torvalds",
+        "First, solve the problem. Then, write the code. — John Johnson",
+      ];
+
+const quickCommands = [
+  { cmd: "help", icon: ">_" },
+  { cmd: "neofetch", icon: "🖥️" },
+  { cmd: "music", icon: "🎵" },
+  { cmd: "matrix", icon: "🕶️" },
+  { cmd: "random", icon: "🎲" },
+  { cmd: "theme", icon: "🎨" },
+];
+
+const payload = {
+  labels,
+  posts,
+  quotes,
+  accentNames,
+  accentColors,
+  author: SITE.author,
+  desc: SITE.desc,
+  website: SITE.website,
+  timezone: SITE.timezone,
+  locale,
+  prefix: locale === "es" ? "/es" : "",
+  stack: ["Astro 7", "Tailwind CSS 4", "TypeScript", "GitHub Pages"],
+};
+
+const payloadJson = JSON.stringify(payload).replace(/</g, "\\u003c");
+---
+
+<button
+  type="button"
+  class="terminal-badge mb-3 inline-flex cursor-pointer items-center gap-2 rounded-full border border-border/40 bg-muted/20 px-3.5 py-1.5 font-firacode text-xs transition-colors duration-300 hover:border-accent/60 hover:bg-accent/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:text-sm"
+  data-terminal-open
+  aria-haspopup="dialog"
+  aria-expanded="false"
+  aria-controls="hero-terminal"
+  aria-label={labels.badgeKeyHint}
+  title={labels.badgeKeyHint}
+>
+  <span class="relative flex h-2 w-2" aria-hidden="true">
+    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60"></span>
+    <span class="relative inline-flex h-2 w-2 rounded-full bg-accent"></span>
+  </span>
+  <span class="text-accent">{heroPrompt.prefix}</span>
+  <span>{heroPrompt.path}</span>
+  <span class="opacity-40">{heroPrompt.suffix}</span>
+  <kbd class="terminal-badge-key" aria-hidden="true">
+    c
+  </kbd>
+</button>
+
+<div id="hero-terminal" class="terminal-overlay" data-terminal hidden>
+  <div
+    class="terminal-backdrop"
+    data-terminal-backdrop
+    aria-hidden="true"
+  ></div>
+  <canvas
+    class="terminal-matrix"
+    data-terminal-matrix
+    aria-hidden="true"
+    hidden
+  ></canvas>
+
+  <section
+    class="terminal-window"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="hero-terminal-title"
+  >
+    <header class="terminal-bar">
+      <span class="terminal-dots" aria-hidden="true">
+        <i></i>
+        <i></i>
+        <i></i>
+      </span>
+      <div class="terminal-bar-center">
+        <span class="terminal-live-dot" aria-hidden="true"></span>
+        <p id="hero-terminal-title" class="terminal-bar-title">
+          {labels.title}
+        </p>
+      </div>
+      <div class="terminal-bar-actions">
+        <span class="terminal-session" aria-hidden="true">
+          SHELL · 01
+        </span>
+        <button
+          type="button"
+          class="terminal-close"
+          data-terminal-close
+          aria-label={labels.close}
+          title={labels.close}
+        >
+          ESC
+        </button>
+      </div>
+    </header>
+
+    <div class="terminal-screen" data-terminal-scroll>
+      <div
+        class="terminal-output"
+        data-terminal-output
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+      >
+        <p class="terminal-line terminal-line-welcome">
+          <span class="terminal-bolt" aria-hidden="true">
+            ⚡
+          </span>
+          {labels.welcome}
+        </p>
+      </div>
+
+      <form class="terminal-form" data-terminal-form autocomplete="off">
+        <label class="sr-only" for="hero-terminal-input">
+          {labels.promptPlaceholder}
+        </label>
+        <span class="terminal-prompt" aria-hidden="true">
+          {shellPrompt}
+        </span>
+        <input
+          id="hero-terminal-input"
+          class="terminal-input"
+          data-terminal-input
+          type="text"
+          name="command"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          enterkeyhint="go"
+          placeholder={labels.promptPlaceholder}
+        />
+      </form>
+    </div>
+
+    <footer class="terminal-quick" aria-label={labels.quickLabel}>
+      <span class="terminal-quick-label">{labels.quickLabel}</span>
+      {quickCommands.map(({ cmd, icon }) => (
+        <button type="button" class="terminal-chip" data-terminal-cmd={cmd}>
+          <span aria-hidden="true">{icon}</span>
+          <span>{cmd}</span>
+        </button>
+      ))}
+    </footer>
+
+    <footer class="terminal-statusbar" aria-hidden="true">
+      <span class="terminal-status">
+        <i class="terminal-status-dot"></i>
+        connected
+      </span>
+      <span class="terminal-status-meta">UTF-8 · Fira Code</span>
+      <span class="terminal-status-hint">↑↓ history · tab complete</span>
+    </footer>
+  </section>
+</div>
+
+<script
+  type="application/json"
+  data-terminal-data
+  is:inline
+  set:html={payloadJson}
+></script>
+
+<style is:global>
+  .terminal-badge {
+    font-family: var(--font-firacode), ui-monospace, monospace;
+  }
+
+  .terminal-badge-key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    padding: 0 0.25rem;
+    border: 1px solid
+      color-mix(in srgb, var(--color-foreground) 22%, transparent);
+    border-radius: 0.28rem;
+    background: color-mix(in srgb, var(--color-foreground) 3%, transparent);
+    font-size: 0.58rem;
+    line-height: 1;
+    color: color-mix(in srgb, var(--color-foreground) 45%, transparent);
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .terminal-badge:hover .terminal-badge-key {
+    border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    color: var(--color-accent);
+  }
+
+  @media (max-width: 640px) {
+    .terminal-badge-key {
+      display: none;
+    }
+  }
+
+  .terminal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: grid;
+    padding: 1rem;
+    place-items: center;
+  }
+
+  .terminal-overlay[hidden] {
+    display: none;
+  }
+
+  .terminal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, #030712 45%, transparent);
+    -webkit-backdrop-filter: blur(10px) saturate(130%);
+    backdrop-filter: blur(10px) saturate(130%);
+    animation: terminal-fade-in 0.2s ease-out;
+  }
+
+  .terminal-matrix {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+
+  .terminal-matrix.is-active {
+    opacity: 1;
+  }
+
+  .terminal-matrix[hidden] {
+    display: none;
+  }
+
+  .terminal-window {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    width: min(56rem, 100%);
+    max-height: min(84vh, 44rem);
+    max-height: min(84dvh, 44rem);
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 26%, transparent);
+    border-radius: 1.05rem;
+    background:
+      radial-gradient(
+        80% 110% at 100% 0%,
+        color-mix(in srgb, var(--color-accent) 12%, transparent),
+        transparent 58%
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--color-background) 93%, #05070d),
+        color-mix(in srgb, var(--color-background) 96%, #05070d)
+      );
+    color: var(--color-foreground);
+    box-shadow:
+      0 50px 140px -50px rgba(0, 0, 0, 0.8),
+      0 0 80px -40px color-mix(in srgb, var(--color-accent) 45%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--color-foreground) 4%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 7%, transparent);
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    animation: terminal-window-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .terminal-window::before {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-accent) 75%, transparent),
+      transparent
+    );
+    content: "";
+    pointer-events: none;
+  }
+
+  .terminal-window::after {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0 2px,
+      rgba(0, 0, 0, 0.03) 2px 3px
+    );
+    content: "";
+    pointer-events: none;
+  }
+
+  .terminal-bar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--color-foreground) 8%, transparent);
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-foreground) 5%, transparent),
+      color-mix(in srgb, var(--color-foreground) 2%, transparent)
+    );
+  }
+
+  .terminal-dots {
+    display: inline-flex;
+    flex: none;
+    gap: 0.3rem;
+  }
+
+  .terminal-dots i {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: #ff5f57;
+    box-shadow: 0 0 6px rgba(255, 95, 87, 0.35);
+  }
+
+  .terminal-dots i:nth-child(2) {
+    background: #febc2e;
+    box-shadow: 0 0 6px rgba(254, 188, 46, 0.35);
+  }
+
+  .terminal-dots i:nth-child(3) {
+    background: #28c840;
+    box-shadow: 0 0 6px rgba(40, 200, 64, 0.35);
+  }
+
+  .terminal-bar-center {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+  }
+
+  .terminal-live-dot {
+    flex: none;
+    width: 0.36rem;
+    height: 0.36rem;
+    border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+    animation: terminal-live 2.4s ease-in-out infinite;
+  }
+
+  .terminal-bar-title {
+    overflow: hidden;
+    margin: 0;
+    font-size: 0.67rem;
+    letter-spacing: 0.055em;
+    color: color-mix(in srgb, var(--color-foreground) 58%, transparent);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .terminal-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .terminal-session {
+    padding: 0.14rem 0.38rem;
+    border: 1px solid
+      color-mix(in srgb, var(--color-foreground) 10%, transparent);
+    border-radius: 0.28rem;
+    font-size: 0.5rem;
+    letter-spacing: 0.12em;
+    color: color-mix(in srgb, var(--color-foreground) 34%, transparent);
+    white-space: nowrap;
+  }
+
+  .terminal-close {
+    flex: none;
+    padding: 0.18rem 0.42rem;
+    border: 1px solid
+      color-mix(in srgb, var(--color-foreground) 14%, transparent);
+    border-radius: 0.3rem;
+    background: color-mix(in srgb, var(--color-foreground) 2%, transparent);
+    font-family: inherit;
+    font-size: 0.54rem;
+    letter-spacing: 0.09em;
+    color: color-mix(in srgb, var(--color-foreground) 48%, transparent);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .terminal-close:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    color: var(--color-accent);
+  }
+
+  .terminal-screen {
+    flex: 1;
+    min-height: 19rem;
+    margin: 0.7rem 0.7rem 0;
+    overflow-y: auto;
+    padding: 1rem 1.05rem 1.05rem;
+    border: 1px solid
+      color-mix(in srgb, var(--color-foreground) 8%, transparent);
+    border-radius: 0.65rem;
+    background:
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--color-foreground) 2%, transparent),
+        transparent 24%
+      ),
+      color-mix(in srgb, var(--color-background) 97%, #05070d);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 5%, transparent),
+      inset 0 -24px 50px -50px rgba(0, 0, 0, 0.35);
+    font-size: 0.78rem;
+    line-height: 1.7;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--color-accent) 40%, transparent)
+      transparent;
+  }
+
+  .terminal-output {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+  }
+
+  .terminal-line {
+    margin: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .terminal-line-welcome {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--color-foreground) 7%, transparent);
+    color: color-mix(in srgb, var(--color-foreground) 82%, transparent);
+  }
+
+  .terminal-bolt {
+    flex: none;
+    color: var(--color-accent);
+  }
+
+  .terminal-line-muted {
+    color: color-mix(in srgb, var(--color-foreground) 50%, transparent);
+  }
+
+  .terminal-line-accent {
+    color: var(--color-accent);
+  }
+
+  .terminal-line-success {
+    color: var(--color-accent);
+  }
+
+  .terminal-line-error {
+    color: color-mix(in srgb, #ef4444 85%, var(--color-foreground));
+  }
+
+  .terminal-link {
+    color: inherit;
+    text-decoration: none;
+    transition:
+      color 0.2s ease,
+      text-decoration-color 0.2s ease;
+  }
+
+  .terminal-link:hover,
+  .terminal-link:focus-visible {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-underline-offset: 0.18rem;
+  }
+
+  .terminal-line-command {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+    color: color-mix(in srgb, var(--color-foreground) 82%, transparent);
+  }
+
+  .terminal-line-command .terminal-prompt {
+    flex: none;
+  }
+
+  .terminal-prompt {
+    color: var(--color-accent);
+    white-space: nowrap;
+  }
+
+  .terminal-help {
+    display: grid;
+    gap: 0.1rem;
+    margin: 0.18rem 0 0.1rem;
+  }
+
+  .terminal-help-row {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: 0.65rem;
+    margin-inline: -0.35rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.3rem;
+    transition: background-color 0.18s ease;
+  }
+
+  .terminal-help-row:hover {
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+  }
+
+  .terminal-help-cmd {
+    color: var(--color-accent);
+  }
+
+  .terminal-help-desc {
+    color: color-mix(in srgb, var(--color-foreground) 62%, transparent);
+  }
+
+  .terminal-neofetch {
+    display: flex;
+    gap: 1.2rem;
+    align-items: center;
+    margin: 0.35rem 0;
+  }
+
+  .terminal-ascii {
+    flex: none;
+    margin: 0;
+    color: color-mix(in srgb, var(--color-accent) 78%, transparent);
+    font-size: 0.66rem;
+    line-height: 1.25;
+  }
+
+  .terminal-neofetch-info {
+    display: grid;
+    gap: 0.05rem;
+    min-width: 0;
+  }
+
+  .terminal-neofetch-key {
+    color: var(--color-accent);
+  }
+
+  .terminal-neofetch-val {
+    color: color-mix(in srgb, var(--color-foreground) 70%, transparent);
+  }
+
+  .terminal-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.7rem;
+    padding-top: 0.55rem;
+    border-top: 1px dashed
+      color-mix(in srgb, var(--color-foreground) 9%, transparent);
+    transition: border-color 0.2s ease;
+  }
+
+  .terminal-form:focus-within {
+    border-top-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  }
+
+  .terminal-form .terminal-prompt {
+    font-size: 0.72rem;
+  }
+
+  .terminal-input {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    caret-color: var(--color-accent);
+    font: inherit;
+    outline: none;
+  }
+
+  .terminal-input::placeholder {
+    color: color-mix(in srgb, var(--color-foreground) 28%, transparent);
+  }
+
+  .terminal-input:focus,
+  .terminal-input:focus-visible {
+    outline: none;
+  }
+
+  .terminal-screen::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .terminal-screen::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  }
+
+  .terminal-quick {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.55rem 0.8rem 0.65rem;
+    border-top: 1px solid
+      color-mix(in srgb, var(--color-foreground) 9%, transparent);
+    background: color-mix(in srgb, var(--color-foreground) 2.5%, transparent);
+    font-size: 0.6rem;
+  }
+
+  .terminal-quick-label {
+    margin-right: 0.15rem;
+    color: color-mix(in srgb, var(--color-foreground) 38%, transparent);
+  }
+
+  .terminal-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.52rem;
+    border: 1px solid
+      color-mix(in srgb, var(--color-foreground) 11%, transparent);
+    border-radius: 0.4rem;
+    background: color-mix(in srgb, var(--color-foreground) 2%, transparent);
+    font-family: inherit;
+    font-size: 0.62rem;
+    color: color-mix(in srgb, var(--color-foreground) 56%, transparent);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .terminal-chip:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+    color: var(--color-accent);
+    transform: translateY(-1px);
+  }
+
+  .terminal-statusbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.42rem 0.85rem;
+    border-top: 1px solid
+      color-mix(in srgb, var(--color-foreground) 7%, transparent);
+    background: color-mix(in srgb, var(--color-foreground) 2%, transparent);
+    font-size: 0.53rem;
+    letter-spacing: 0.055em;
+    color: color-mix(in srgb, var(--color-foreground) 36%, transparent);
+  }
+
+  .terminal-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: color-mix(in srgb, var(--color-foreground) 50%, transparent);
+  }
+
+  .terminal-status-dot {
+    width: 0.32rem;
+    height: 0.32rem;
+    border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  }
+
+  .terminal-status-meta {
+    margin-left: auto;
+  }
+
+  .terminal-status-hint {
+    color: color-mix(in srgb, var(--color-foreground) 28%, transparent);
+  }
+
+  .terminal-close:focus-visible,
+  .terminal-chip:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
+    outline-offset: 2px;
+  }
+
+  @keyframes terminal-live {
+    0%,
+    100% {
+      opacity: 0.65;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.12);
+    }
+  }
+
+  @keyframes terminal-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes terminal-window-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .terminal-overlay {
+      padding: 0.5rem;
+    }
+
+    .terminal-window {
+      max-height: min(88dvh, 46rem);
+    }
+
+    .terminal-screen {
+      min-height: 15rem;
+      padding: 0.8rem;
+      font-size: 0.72rem;
+    }
+
+    .terminal-help-row {
+      grid-template-columns: 5.6rem minmax(0, 1fr);
+      gap: 0.5rem;
+    }
+
+    .terminal-neofetch {
+      flex-direction: column;
+      gap: 0.55rem;
+      align-items: flex-start;
+    }
+
+    .terminal-ascii {
+      font-size: 0.6rem;
+    }
+
+    .terminal-status-meta,
+    .terminal-status-hint {
+      display: none;
+    }
+
+    .terminal-statusbar {
+      justify-content: flex-start;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminal-backdrop,
+    .terminal-window,
+    .terminal-matrix {
+      animation: none;
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { navigate } from "astro:transitions/client";
+
+  type TerminalLabels = {
+    title: string;
+    promptLabel: string;
+    welcome: string;
+    badgeHint: string;
+    badgeKeyHint: string;
+    promptPlaceholder: string;
+    close: string;
+    quickLabel: string;
+    helpHeader: string;
+    helpHelp: string;
+    helpRandom: string;
+    helpMatrix: string;
+    helpQuote: string;
+    helpTheme: string;
+    helpAudio: string;
+    helpMusic: string;
+    helpWhoami: string;
+    helpNeofetch: string;
+    helpLs: string;
+    helpDate: string;
+    helpEcho: string;
+    helpSudo: string;
+    helpClear: string;
+    helpExit: string;
+    cmdNotFound: string;
+    themeChanged: string;
+    matrixRunning: string;
+    matrixDone: string;
+    matrixReduced: string;
+    randomTriggered: string;
+    randomPicked: string;
+    randomNoPosts: string;
+    audioToggled: string;
+    audioUnavailable: string;
+    audioOn: string;
+    audioOff: string;
+    lsHeader: string;
+    dateLabel: string;
+    sudoDenied: string;
+    echoEmpty: string;
+    musicHeader: string;
+    musicUsage: string;
+    musicUnavailable: string;
+    musicNoTracks: string;
+    musicState: string;
+    musicPlaying: string;
+    musicPaused: string;
+    musicSource: string;
+    musicLocal: string;
+    musicPreview: string;
+    musicLyrics: string;
+    musicList: string;
+    musicNotFound: string;
+    musicNow: string;
+  };
+
+  type TerminalData = {
+    labels: TerminalLabels;
+    posts: { title: string; href: string }[];
+    quotes: string[];
+    accentNames: string[];
+    accentColors: (string | null)[];
+    author: string;
+    desc: string;
+    website: string;
+    timezone: string;
+    locale: string;
+    prefix: string;
+    stack: string[];
+  };
+
+  type TerminalCommand = {
+    aliases?: string[];
+    description: string;
+  };
+
+  type MusicTrackInfo = {
+    title: string;
+    artist: string;
+    album: string;
+    duration: number;
+    lyrics: string[];
+    isLocal: boolean;
+  };
+
+  type MusicState = {
+    index: number;
+    count: number;
+    title: string;
+    artist: string;
+    album: string;
+    playing: boolean;
+    current: number;
+    duration: number;
+    source: "local" | "spotify";
+    isPreview: boolean;
+    isLocal: boolean;
+    lyrics: string[];
+  };
+
+  type MusicApi = {
+    tracks: MusicTrackInfo[];
+    getState: () => MusicState;
+    play: (index?: number) => void;
+    pause: () => void;
+    toggle: () => void;
+    next: () => void;
+    previous: () => void;
+    seek: (seconds: number) => void;
+  };
+
+  const getMusicApi = () =>
+    (window as Window & { __blogMusic?: MusicApi }).__blogMusic;
+
+  const formatMusicTime = (seconds: number) => {
+    const total = Math.max(0, Math.round(seconds));
+    return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+  };
+
+  const readData = (): TerminalData | null => {
+    const el = document.querySelector<HTMLScriptElement>(
+      "[data-terminal-data]"
+    );
+    if (!el?.textContent) return null;
+
+    try {
+      return JSON.parse(el.textContent) as TerminalData;
+    } catch {
+      return null;
+    }
+  };
+
+  const isVisible = (el: Element) => {
+    if (el.getClientRects().length === 0) return false;
+    const style = window.getComputedStyle(el);
+    return style.display !== "none" && style.visibility !== "hidden";
+  };
+
+  const hasOpenModal = () =>
+    [...document.querySelectorAll('[aria-modal="true"]')].some(isVisible);
+
+  let shortcutBound = false;
+
+  const bindShortcut = () => {
+    if (shortcutBound) return;
+    shortcutBound = true;
+
+    document.addEventListener("keydown", event => {
+      if (event.defaultPrevented) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key.toLowerCase() !== "c") return;
+
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+      ) {
+        return;
+      }
+
+      if (hasOpenModal()) return;
+
+      const trigger = document.querySelector<HTMLButtonElement>(
+        "[data-terminal-open]"
+      );
+      if (!trigger) return;
+
+      event.preventDefault();
+      trigger.click();
+    });
+  };
+
+  const initTerminal = () => {
+    const overlay = document.querySelector<HTMLElement>("[data-terminal]");
+    const trigger = document.querySelector<HTMLButtonElement>(
+      "[data-terminal-open]"
+    );
+    if (!overlay || !trigger || overlay.dataset.ready === "true") return;
+
+    const data = readData();
+    if (!data) return;
+
+    overlay.dataset.ready = "true";
+    bindShortcut();
+
+    const labels = data.labels;
+    const windowEl = overlay.querySelector<HTMLElement>(".terminal-window");
+    const screen = overlay.querySelector<HTMLElement>("[data-terminal-scroll]");
+    const output = overlay.querySelector<HTMLElement>("[data-terminal-output]");
+    const form = overlay.querySelector<HTMLFormElement>("[data-terminal-form]");
+    const input = overlay.querySelector<HTMLInputElement>(
+      "[data-terminal-input]"
+    );
+    const backdrop = overlay.querySelector<HTMLElement>(
+      "[data-terminal-backdrop]"
+    );
+    const matrixCanvas = overlay.querySelector<HTMLCanvasElement>(
+      "[data-terminal-matrix]"
+    );
+
+    if (
+      !windowEl ||
+      !screen ||
+      !output ||
+      !form ||
+      !input ||
+      !backdrop ||
+      !matrixCanvas
+    ) {
+      return;
+    }
+
+    const commands: Record<string, TerminalCommand> = {
+      help: { aliases: ["?"], description: labels.helpHelp },
+      random: { aliases: ["roulette"], description: labels.helpRandom },
+      matrix: { aliases: ["rain"], description: labels.helpMatrix },
+      quote: { aliases: ["tip"], description: labels.helpQuote },
+      theme: { aliases: ["accent"], description: labels.helpTheme },
+      audio: { aliases: ["lofi"], description: labels.helpAudio },
+      music: {
+        aliases: ["track", "tracks", "song"],
+        description: labels.helpMusic,
+      },
+      whoami: { aliases: ["about"], description: labels.helpWhoami },
+      neofetch: { aliases: ["fetch"], description: labels.helpNeofetch },
+      ls: { aliases: ["dir"], description: labels.helpLs },
+      date: { description: labels.helpDate },
+      echo: { description: labels.helpEcho },
+      sudo: { description: labels.helpSudo },
+      clear: { aliases: ["cls"], description: labels.helpClear },
+      exit: { aliases: ["quit", "logout"], description: labels.helpExit },
+    };
+
+    const commandNames = Object.keys(commands);
+    const aliases: Record<string, string> = {};
+    Object.entries(commands).forEach(([name, command]) => {
+      command.aliases?.forEach(alias => {
+        aliases[alias] = name;
+      });
+    });
+
+    const history: string[] = [];
+    let historyIndex = 0;
+    let lastFocused: HTMLElement | null = null;
+
+    let matrixFrame: number | null = null;
+    let matrixTimer: number | null = null;
+    let matrixRunning = false;
+
+    let accentIndex = (() => {
+      const current = document.documentElement.style
+        .getPropertyValue("--accent")
+        .trim()
+        .toLowerCase();
+      const index = data.accentColors.findIndex(
+        color => color !== null && color.toLowerCase() === current
+      );
+      return index >= 0 ? index : 0;
+    })();
+
+    const scrollToBottom = () => {
+      screen.scrollTop = screen.scrollHeight;
+    };
+
+    const printLine = (text: string, className = "") => {
+      const line = document.createElement("p");
+      line.className = `terminal-line ${className}`.trim();
+      line.textContent = text;
+      output.append(line);
+      scrollToBottom();
+      return line;
+    };
+
+    const printCommand = (raw: string) => {
+      const line = document.createElement("p");
+      line.className = "terminal-line terminal-line-command";
+
+      const prompt = document.createElement("span");
+      prompt.className = "terminal-prompt";
+      prompt.textContent = labels.promptLabel;
+
+      const command = document.createElement("span");
+      command.textContent = raw;
+
+      line.append(prompt, command);
+      output.append(line);
+      scrollToBottom();
+    };
+
+    const printHelp = () => {
+      printLine(labels.helpHeader, "terminal-line-muted");
+
+      const list = document.createElement("div");
+      list.className = "terminal-help";
+
+      Object.entries(commands).forEach(([name, command]) => {
+        const row = document.createElement("p");
+        row.className = "terminal-help-row";
+
+        const key = document.createElement("span");
+        key.className = "terminal-help-cmd";
+        key.textContent = name;
+
+        const desc = document.createElement("span");
+        desc.className = "terminal-help-desc";
+        desc.textContent = command.description;
+
+        row.append(key, desc);
+        list.append(row);
+      });
+
+      output.append(list);
+      scrollToBottom();
+    };
+
+    const printNeofetch = () => {
+      const art = [
+        "   ▄▄▄▄▄▄▄   ",
+        "  █ ▄▄▄▄▄ █  ",
+        "  █ █▀▀▀█ █  ",
+        "  █ █▄▄▄█ █  ",
+        "  █▄▄▄▄▄▄▄█  ",
+      ].join("\n");
+
+      const info: [string, string][] = [
+        ["OS", "Astro 7 (static)"],
+        ["Shell", "J. Deng Shell v1.0"],
+        ["Theme", document.documentElement.dataset.theme ?? "dark"],
+        ["Posts", String(data.posts.length)],
+        ["Author", data.author],
+        ["Host", window.location.host || "localhost"],
+      ];
+
+      const wrap = document.createElement("div");
+      wrap.className = "terminal-neofetch";
+
+      const pre = document.createElement("pre");
+      pre.className = "terminal-ascii";
+      pre.textContent = art;
+      pre.setAttribute("aria-hidden", "true");
+
+      const infoEl = document.createElement("div");
+      infoEl.className = "terminal-neofetch-info";
+
+      info.forEach(([key, value]) => {
+        const line = document.createElement("p");
+        line.className = "terminal-line";
+
+        const keyEl = document.createElement("span");
+        keyEl.className = "terminal-neofetch-key";
+        keyEl.textContent = `${key}: `;
+
+        const valueEl = document.createElement("span");
+        valueEl.className = "terminal-neofetch-val";
+        valueEl.textContent = value;
+
+        line.append(keyEl, valueEl);
+        infoEl.append(line);
+      });
+
+      wrap.append(pre, infoEl);
+      output.append(wrap);
+      scrollToBottom();
+    };
+
+    const printWhoami = () => {
+      printLine(data.author, "terminal-line-accent");
+      printLine(data.desc);
+      printLine(data.website, "terminal-line-muted");
+      printLine(`Stack: ${data.stack.join(" · ")}`, "terminal-line-muted");
+    };
+
+    const printSections = () => {
+      printLine(labels.lsHeader, "terminal-line-muted");
+
+      const sections = [
+        ["about/", `${data.prefix}/about`],
+        ["archives/", `${data.prefix}/archives`],
+        ["galleries/", `${data.prefix}/galleries`],
+        ["posts/", `${data.prefix}/posts`],
+        ["tags/", `${data.prefix}/tags`],
+        ["rss.xml", `${data.prefix}/rss.xml`],
+      ];
+
+      const line = document.createElement("p");
+      line.className = "terminal-line terminal-line-accent";
+
+      sections.forEach(([name, href], index) => {
+        if (index > 0) line.append(document.createTextNode("   "));
+        const link = document.createElement("a");
+        link.className = "terminal-link";
+        link.href = href;
+        link.textContent = name;
+        line.append(link);
+      });
+
+      output.append(line);
+      scrollToBottom();
+    };
+
+    const openRandom = () => {
+      if (!data.posts.length) {
+        printLine(labels.randomNoPosts, "terminal-line-muted");
+        return;
+      }
+
+      const post = data.posts[Math.floor(Math.random() * data.posts.length)];
+      printLine(labels.randomTriggered, "terminal-line-muted");
+      printLine(
+        `${labels.randomPicked} ${post.title}`,
+        "terminal-line-success"
+      );
+
+      window.setTimeout(() => {
+        void navigate(post.href);
+      }, 900);
+    };
+
+    const cycleTheme = () => {
+      accentIndex = (accentIndex + 1) % data.accentColors.length;
+      const color = data.accentColors[accentIndex];
+      const name = data.accentNames[accentIndex] ?? String(accentIndex);
+
+      if (color) {
+        document.documentElement.style.setProperty("--accent", color);
+      } else {
+        document.documentElement.style.removeProperty("--accent");
+      }
+
+      printLine(`${labels.themeChanged} ${name}`, "terminal-line-success");
+    };
+
+    const printMusicInfo = (api: MusicApi) => {
+      const state = api.getState();
+      printLine(`${labels.musicNow}: ${state.title}`, "terminal-line-accent");
+      printLine(`${state.artist} · ${state.album}`);
+      printLine(
+        `${labels.musicState}: ${
+          state.playing ? labels.musicPlaying : labels.musicPaused
+        } · ${formatMusicTime(state.current)} / ${formatMusicTime(
+          state.duration
+        )}`,
+        "terminal-line-muted"
+      );
+      printLine(
+        `${labels.musicSource}: ${
+          state.isLocal ? labels.musicLocal : labels.musicPreview
+        }`,
+        "terminal-line-muted"
+      );
+    };
+
+    const runMusic = (argument: string) => {
+      const api = getMusicApi();
+      if (!api) {
+        printLine(labels.musicUnavailable, "terminal-line-muted");
+        return;
+      }
+
+      const [rawSub = "info", ...rest] = argument.split(/\s+/).filter(Boolean);
+      const sub = rawSub.toLowerCase();
+      const target = rest.join(" ");
+      const state = api.getState();
+
+      switch (sub) {
+        case "info":
+          printMusicInfo(api);
+          break;
+
+        case "detail": {
+          printMusicInfo(api);
+          printLine(
+            `${labels.musicList}: ${String(state.index + 1).padStart(2, "0")} / ${String(
+              state.count
+            ).padStart(2, "0")}`,
+            "terminal-line-muted"
+          );
+          printLine(
+            `${labels.musicLyrics}: ${state.title}`,
+            "terminal-line-muted"
+          );
+          state.lyrics.forEach((line, lineIndex) => {
+            printLine(
+              line,
+              lineIndex === 0 ? "terminal-line-accent" : "terminal-line-muted"
+            );
+          });
+          break;
+        }
+
+        case "list":
+          printLine(labels.musicList, "terminal-line-muted");
+          api.tracks.forEach((track, index) => {
+            const marker = index === state.index ? "▸" : " ";
+            printLine(
+              `${marker} ${String(index + 1).padStart(2, "0")}  ${
+                track.title
+              } — ${track.artist} · ${formatMusicTime(track.duration)} ${
+                track.isLocal ? "· local" : "· preview"
+              }`,
+              index === state.index ? "terminal-line-accent" : ""
+            );
+          });
+          break;
+
+        case "play": {
+          if (!target) {
+            api.play();
+            window.setTimeout(() => printMusicInfo(api), 300);
+            break;
+          }
+
+          const numeric = Number(target);
+          let nextIndex =
+            Number.isInteger(numeric) && numeric >= 1 ? numeric - 1 : -1;
+
+          if (nextIndex < 0) {
+            const query = target.toLowerCase();
+            nextIndex = api.tracks.findIndex(track =>
+              `${track.title} ${track.artist} ${track.album}`
+                .toLowerCase()
+                .includes(query)
+            );
+          }
+
+          if (nextIndex < 0 || !api.tracks[nextIndex]) {
+            printLine(
+              `${labels.musicNotFound} ${target}`,
+              "terminal-line-error"
+            );
+            break;
+          }
+
+          api.play(nextIndex);
+          window.setTimeout(() => printMusicInfo(api), 350);
+          break;
+        }
+
+        case "pause":
+          api.pause();
+          printLine(
+            `${labels.musicState}: ${labels.musicPaused}`,
+            "terminal-line-muted"
+          );
+          break;
+
+        case "resume":
+          api.play();
+          window.setTimeout(() => printMusicInfo(api), 300);
+          break;
+
+        case "next":
+          api.next();
+          window.setTimeout(() => printMusicInfo(api), 350);
+          break;
+
+        case "prev":
+        case "previous":
+          api.previous();
+          window.setTimeout(() => printMusicInfo(api), 350);
+          break;
+
+        case "lyrics":
+          printLine(
+            `${labels.musicLyrics}: ${state.title}`,
+            "terminal-line-muted"
+          );
+          state.lyrics.forEach((line, index) => {
+            printLine(
+              line,
+              index === 0 ? "terminal-line-accent" : "terminal-line-muted"
+            );
+          });
+          break;
+
+        default:
+          printLine(labels.musicUsage, "terminal-line-muted");
+      }
+    };
+
+    const toggleAudio = () => {
+      const api = getMusicApi();
+      if (!api) {
+        printLine(labels.audioUnavailable, "terminal-line-muted");
+        return;
+      }
+
+      const wasPlaying = api.getState().playing;
+      api.toggle();
+      printLine(labels.audioToggled, "terminal-line-muted");
+
+      const started = Date.now();
+      const poll = window.setInterval(() => {
+        const playing = api.getState().playing;
+        const elapsed = Date.now() - started;
+
+        if (playing !== wasPlaying || elapsed > 4000) {
+          window.clearInterval(poll);
+          printLine(
+            playing ? labels.audioOn : labels.audioOff,
+            playing ? "terminal-line-success" : "terminal-line-muted"
+          );
+        }
+      }, 250);
+    };
+
+    const clearMatrix = (immediate: boolean) => {
+      matrixRunning = false;
+
+      if (matrixFrame !== null) cancelAnimationFrame(matrixFrame);
+      if (matrixTimer !== null) window.clearTimeout(matrixTimer);
+      matrixFrame = null;
+      matrixTimer = null;
+
+      matrixCanvas.classList.remove("is-active");
+
+      const hide = () => {
+        if (matrixRunning) return;
+        matrixCanvas.hidden = true;
+        const ctx = matrixCanvas.getContext("2d");
+        ctx?.clearRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+      };
+
+      if (immediate) hide();
+      else window.setTimeout(hide, 420);
+    };
+
+    const startMatrix = () => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        printLine(labels.matrixReduced, "terminal-line-muted");
+        return;
+      }
+
+      clearMatrix(true);
+      matrixRunning = true;
+      matrixCanvas.hidden = false;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = overlay.clientWidth || window.innerWidth;
+      const height = overlay.clientHeight || window.innerHeight;
+
+      matrixCanvas.width = Math.floor(width * dpr);
+      matrixCanvas.height = Math.floor(height * dpr);
+      matrixCanvas.style.width = `${width}px`;
+      matrixCanvas.style.height = `${height}px`;
+
+      const ctx = matrixCanvas.getContext("2d");
+      if (!ctx) {
+        clearMatrix(true);
+        return;
+      }
+
+      const fontSize = 16 * dpr;
+      const columns = Math.ceil(matrixCanvas.width / fontSize);
+      const drops = Array.from({ length: columns }, () => Math.random() * -50);
+      const glyphs =
+        "アカサタナハマヤラワ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+      const accent =
+        window
+          .getComputedStyle(document.documentElement)
+          .getPropertyValue("--accent")
+          .trim() || "#008fec";
+
+      const draw = () => {
+        if (!matrixRunning) return;
+
+        ctx.fillStyle = "rgba(3, 7, 18, 0.12)";
+        ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+        ctx.fillStyle = accent;
+        ctx.font = `${fontSize}px "Fira Code", ui-monospace, monospace`;
+        ctx.textBaseline = "top";
+
+        for (let i = 0; i < drops.length; i++) {
+          const glyph = glyphs[Math.floor(Math.random() * glyphs.length)];
+          const x = i * fontSize;
+          const y = drops[i] * fontSize;
+
+          ctx.fillText(glyph, x, y);
+
+          if (y > matrixCanvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+          } else {
+            drops[i]++;
+          }
+        }
+
+        matrixFrame = requestAnimationFrame(draw);
+      };
+
+      ctx.fillStyle = "rgba(3, 7, 18, 1)";
+      ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+      matrixCanvas.classList.add("is-active");
+      draw();
+
+      matrixTimer = window.setTimeout(() => {
+        clearMatrix(false);
+        printLine(labels.matrixDone, "terminal-line-muted");
+      }, 4500);
+    };
+
+    const run = (raw: string) => {
+      const value = raw.trim();
+      if (!value) return;
+
+      printCommand(value);
+      history.push(value);
+      historyIndex = history.length;
+
+      const [rawCommand, ...rest] = value.split(/\s+/);
+      const command = rawCommand.toLowerCase();
+      const resolved = aliases[command] ?? command;
+      const argument = value.slice(rawCommand.length).trim();
+
+      switch (resolved) {
+        case "help":
+          printHelp();
+          break;
+        case "random":
+          openRandom();
+          break;
+        case "matrix":
+          printLine(labels.matrixRunning, "terminal-line-accent");
+          startMatrix();
+          break;
+        case "quote": {
+          const quote =
+            data.quotes[Math.floor(Math.random() * data.quotes.length)];
+          if (quote) printLine(quote, "terminal-line-accent");
+          break;
+        }
+        case "theme":
+          cycleTheme();
+          break;
+        case "audio":
+          toggleAudio();
+          break;
+        case "music":
+          runMusic(argument);
+          break;
+        case "whoami":
+          printWhoami();
+          break;
+        case "neofetch":
+          printNeofetch();
+          break;
+        case "ls":
+          printSections();
+          break;
+        case "date": {
+          try {
+            const formatted = new Intl.DateTimeFormat(data.locale, {
+              dateStyle: "full",
+              timeStyle: "medium",
+              timeZone: data.timezone,
+            }).format(new Date());
+            printLine(`${labels.dateLabel} ${formatted}`);
+          } catch {
+            printLine(new Date().toString());
+          }
+          break;
+        }
+        case "echo":
+          printLine(
+            argument || labels.echoEmpty,
+            argument ? "" : "terminal-line-muted"
+          );
+          break;
+        case "sudo":
+          printLine(labels.sudoDenied, "terminal-line-error");
+          break;
+        case "clear":
+          output.replaceChildren();
+          break;
+        case "exit":
+          close();
+          break;
+        default:
+          printLine(labels.cmdNotFound, "terminal-line-error");
+          if (rest.length) {
+            printLine(`> ${command} ${rest.join(" ")}`, "terminal-line-muted");
+          }
+      }
+    };
+
+    const open = () => {
+      if (!overlay.hidden) return;
+
+      lastFocused =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : trigger;
+
+      overlay.hidden = false;
+      trigger.setAttribute("aria-expanded", "true");
+
+      requestAnimationFrame(() => {
+        input.value = "";
+        input.focus();
+        scrollToBottom();
+      });
+    };
+
+    const close = () => {
+      if (overlay.hidden) return;
+
+      overlay.hidden = true;
+      trigger.setAttribute("aria-expanded", "false");
+      clearMatrix(true);
+      lastFocused?.focus();
+    };
+
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+
+      const focusable = Array.from(
+        windowEl.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter(isVisible);
+
+      if (!focusable.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    trigger.addEventListener("click", open);
+    backdrop.addEventListener("click", close);
+
+    overlay
+      .querySelectorAll<HTMLElement>("[data-terminal-close]")
+      .forEach(button => button.addEventListener("click", close));
+
+    overlay.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+        return;
+      }
+
+      trapFocus(event);
+    });
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const value = input.value;
+      input.value = "";
+      run(value);
+    });
+
+    input.addEventListener("keydown", event => {
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        if (!history.length) return;
+        historyIndex = Math.max(0, historyIndex - 1);
+        input.value = history[historyIndex] ?? "";
+        return;
+      }
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (!history.length) return;
+        historyIndex = Math.min(history.length, historyIndex + 1);
+        input.value = history[historyIndex] ?? "";
+        return;
+      }
+
+      if (event.key === "Tab" && input.value && !input.value.includes(" ")) {
+        const matches = commandNames.filter(name =>
+          name.startsWith(input.value.toLowerCase())
+        );
+        if (matches.length === 1) {
+          event.preventDefault();
+          input.value = matches[0];
+        }
+      }
+    });
+
+    overlay
+      .querySelectorAll<HTMLButtonElement>("[data-terminal-cmd]")
+      .forEach(button => {
+        button.addEventListener("click", () => {
+          const command = button.dataset.terminalCmd ?? "";
+          input.focus();
+          run(command);
+        });
+      });
+  };
+
+  document.addEventListener("astro:page-load", initTerminal);
+  initTerminal();
+</script>
