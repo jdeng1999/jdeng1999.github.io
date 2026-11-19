@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <body style="margin:0;background:#111;color:#0f0;font:12px monospace">
+    <pre id="out" style="margin:0;padding:8px;height:120px;overflow:auto"></pre>
+    <iframe id="f" src="/" style="width:390px;height:600px;border:0;display:block"></iframe>
+    <script>
+      const out = document.getElementById("out");
+      const f = document.getElementById("f");
+      const report = () => {
+        const d = f.contentDocument;
+        const w = f.contentWindow;
+        if (!d || !w) return;
+        const q = s => d.querySelector(s);
+        const rect = el => {
+          const r = el.getBoundingClientRect();
+          return `${Math.round(r.left)}..${Math.round(r.right)} (${Math.round(r.width)}x${Math.round(r.height)})`;
+        };
+        const card = q(".now-playing");
+        const embed = q(".now-playing-embed");
+        const frame = q(".now-playing-embed iframe");
+        const grid = q(".footer-wrapper .app-layout > div");
+        out.textContent = [
+          `innerWidth=${w.innerWidth} scrollWidth=${d.documentElement.scrollWidth}`,
+          `grid: ${grid ? rect(grid) : "?"}`,
+          `card: ${card ? rect(card) : "?"}`,
+          `embed: ${embed ? rect(embed) : "?"}`,
+          `iframe: ${frame ? rect(frame) : "?"}`,
+          `card style width=${card ? getComputedStyle(card).width : "?"}`,
+        ].join("\n");
+      };
+      f.addEventListener("load", () => {
+        [600, 1500, 3000].forEach(t => setTimeout(report, t));
+      });
+    </script>
+  </body>
+</html>

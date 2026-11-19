@@ -45,4 +45,19 @@ export const SITE = {
     label: "LOFI", // display label in player
     duration: 30, // duration in seconds (used for local files, ignored on streams)
   },
+  spotify: {
+    enabled: true, // show/hide the custom "on repeat" Spotify card in the footer
+    // A single open.spotify.com/track/... URL. The card uses Spotify's official
+    // iFrame API for playback but renders its own theme-aware UI.
+    url: "https://open.spotify.com/track/479lquEL4Mzh3tQLtnHVfL",
+    title: "青花瓷",
+    artist: "周杰伦",
+    album: "我很忙",
+    cover: "/spotify/qinghuaci.jpg", // stored locally so it follows the theme
+    duration: 237, // fallback duration in seconds, refined by the player
+  },
+  likes: {
+    enabled: true, // show/hide the local like button in the footer
+    base: 3744, // displayed count before the visitor likes the site
+  },
 } as const;
