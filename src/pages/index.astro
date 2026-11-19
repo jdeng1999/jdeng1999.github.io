@@ -12,6 +12,8 @@ import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import { SITE } from "@/config";
 import { SOCIALS } from "@/constants";
 import IntroAudio from "@/components/IntroAudio.astro";
+import CodeGlitch from "@/components/CodeGlitch.astro";
+import TechMarquee from "@/components/TechMarquee.astro";
 import { useTranslations } from "@/i18n/utils";
 
 const locale = Astro.currentLocale || "en";
@@ -44,74 +46,83 @@ const recentPosts = sortedPosts.filter(
       id="hero"
       class="hero-section relative pt-10 pb-14 sm:pt-14 sm:pb-20"
     >
-      <div class="relative z-10">
-        <!-- Terminal prompt badge -->
-        <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-border/40 bg-muted/20 px-3.5 py-1.5 font-firacode text-xs sm:text-sm">
-          <span class="relative flex h-2 w-2">
-            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60"></span>
-            <span class="relative inline-flex h-2 w-2 rounded-full bg-accent"></span>
-          </span>
-          <span class="text-accent">{SITE.heroTerminalPrompt.prefix}</span>
-          {SITE.heroTerminalPrompt.path}
-          <span class="opacity-40">{SITE.heroTerminalPrompt.suffix}</span>
+      <div class="relative z-10 lg:grid lg:grid-cols-[minmax(0,1fr)_clamp(15rem,20vw,21rem)] lg:items-center lg:gap-10 xl:gap-14">
+        <div class="hero-copy">
+          <!-- Terminal prompt badge -->
+          <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-border/40 bg-muted/20 px-3.5 py-1.5 font-firacode text-xs sm:text-sm">
+            <span class="relative flex h-2 w-2">
+              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60"></span>
+              <span class="relative inline-flex h-2 w-2 rounded-full bg-accent"></span>
+            </span>
+            <span class="text-accent">{SITE.heroTerminalPrompt.prefix}</span>
+            {SITE.heroTerminalPrompt.path}
+            <span class="opacity-40">{SITE.heroTerminalPrompt.suffix}</span>
+          </div>
+
+          <!-- Title -->
+          <h1 class="hero-title mb-3 text-5xl leading-[1.1] font-bold tracking-tight sm:text-6xl lg:text-7xl">
+            {SITE.title}
+            <a
+              target="_blank"
+              href={`${prefix}/rss.xml`}
+              class="ml-1 inline-block align-middle"
+              aria-label="RSS Feed"
+              title="RSS Feed"
+            >
+              <IconRss
+                width={22}
+                height={22}
+                class="stroke-accent stroke-3 opacity-40 transition-opacity duration-300 hover:opacity-100"
+              />
+            </a>
+          </h1>
+
+          {SITE.introAudio.enabled && (
+            <div class="mt-3">
+              <IntroAudio
+                src={SITE.introAudio.src}
+                label={SITE.introAudio.label}
+                duration={SITE.introAudio.duration}
+                isStream={SITE.introAudio.isStream}
+              />
+            </div>
+          )}
+
+          <!-- Description -->
+          <p class="mt-7 max-w-xl text-base leading-relaxed opacity-75 sm:text-lg">
+            {t("index.heroDesc")}
+          </p>
+          <div class="mt-8 flex flex-col sm:flex-row sm:items-center gap-4">
+            <p class="text-sm opacity-50 flex-shrink-0">
+              {t("index.writtenBy")}
+              <LinkButton
+                class="font-medium underline decoration-dashed underline-offset-4 hover:text-accent"
+                href={SITE.profile}
+                target="_blank"
+              >
+                {SITE.author}
+              </LinkButton>
+            </p>
+
+            {
+              // only display if at least one social link is enabled
+              SOCIALS.length > 0 && (
+                <div class="sm:border-l border-border/40 sm:pl-4">
+                  <Socials />
+                </div>
+              )
+            }
+          </div>
         </div>
 
-        <!-- Title -->
-        <h1 class="hero-title mb-3 text-5xl leading-[1.1] font-bold tracking-tight sm:text-6xl lg:text-7xl">
-          {SITE.title}
-          <a
-            target="_blank"
-            href={`${prefix}/rss.xml`}
-            class="ml-1 inline-block align-middle"
-            aria-label="RSS Feed"
-            title="RSS Feed"
-          >
-            <IconRss
-              width={22}
-              height={22}
-              class="stroke-accent stroke-3 opacity-40 transition-opacity duration-300 hover:opacity-100"
-            />
-          </a>
-        </h1>
-
-        {SITE.introAudio.enabled && (
-          <div class="mt-3">
-            <IntroAudio
-              src={SITE.introAudio.src}
-              label={SITE.introAudio.label}
-              duration={SITE.introAudio.duration}
-              isStream={SITE.introAudio.isStream}
-            />
-          </div>
-        )}
-
-        <!-- Description -->
-        <p class="mt-7 max-w-xl text-base leading-relaxed opacity-75 sm:text-lg">
-          {t("index.heroDesc")}
-        </p>
-        <div class="mt-8 flex flex-col sm:flex-row sm:items-center gap-4">
-          <p class="text-sm opacity-50 flex-shrink-0">
-            {t("index.writtenBy")}
-            <LinkButton
-              class="font-medium underline decoration-dashed underline-offset-4 hover:text-accent"
-              href={SITE.profile}
-              target="_blank"
-            >
-              {SITE.author}
-            </LinkButton>
-          </p>
-
-          {
-            // only display if at least one social link is enabled
-            SOCIALS.length > 0 && (
-              <div class="sm:border-l border-border/40 sm:pl-4">
-                <Socials />
-              </div>
-            )
-          }
+        <div class="hero-visual mx-auto mt-10 hidden w-full max-w-sm lg:block lg:mt-0 lg:max-w-none">
+          <CodeGlitch />
         </div>
       </div>
     </section>
+
+    <!-- ═══════════════════ TECH STACK ═══════════════════ -->
+    <TechMarquee label={t("index.techStack")} class="mb-12" />
 
     <!-- ═══════════════════ FEATURED ═══════════════════ -->
     {featuredPosts.length > 0 && (

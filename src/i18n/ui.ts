@@ -51,6 +51,7 @@ export const ui = {
     "index.heroDesc":
       "A space where curiosity turns into code. Exploring web development, software architecture, and everything that makes the tech world go round.",
     "index.featured": "Featured",
+    "index.techStack": "Tech Stack",
     "index.recent": "Recent",
     "index.exploreAll": "Explore all posts",
     // ── Surprise Me Roulette ──
@@ -223,6 +224,7 @@ export const ui = {
     "index.heroDesc":
       "Un espacio donde la curiosidad se convierte en código. Explorando desarrollo web, arquitectura de software y todo lo que hace girar al mundo tecnológico.",
     "index.featured": "Destacados",
+    "index.techStack": "Stack técnico",
     "index.recent": "Recientes",
     "index.exploreAll": "Explorar publicaciones",
     // ── Ruleta Sorpréndeme ──
