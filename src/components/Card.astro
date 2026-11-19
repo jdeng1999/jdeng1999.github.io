@@ -4,6 +4,7 @@ import type { ImageMetadata } from "astro";
 import { Image } from "astro:assets";
 import { slugifyStr } from "@/utils/slugify";
 import { getEntryPath, getGallerySlug } from "@/utils/contentEntry";
+import type { ContentEntry } from "@/utils/contentEntry";
 import { getFirstGalleryImage } from "@/utils/gallery";
 import { getReadingTime } from "@/utils/readingTime";
 import Datetime from "./Datetime.astro";
@@ -11,12 +12,20 @@ import IconGallery from "@/assets/icons/IconGallery.svg";
 import IconClock from "@/assets/icons/IconClock.svg";
 import { SITE } from "@/config";
 
+type EntryData =
+  CollectionEntry<"blog">["data"] | CollectionEntry<"galleries">["data"];
+
 type Props = {
   variant?: "h2" | "h3";
   featured?: boolean;
   loading?: "lazy" | "eager";
   fetchpriority?: "auto" | "high" | "low";
-} & (CollectionEntry<"blog"> | CollectionEntry<"galleries">);
+  id: ContentEntry["id"];
+  collection: ContentEntry["collection"];
+  data: EntryData;
+  body?: ContentEntry["body"];
+  filePath?: ContentEntry["filePath"];
+};
 
 const {
   variant: Heading = "h2",

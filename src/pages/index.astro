@@ -93,7 +93,7 @@ const recentPosts = sortedPosts.filter(
             {t("index.heroDesc")}
           </p>
           <div class="mt-8 flex flex-col sm:flex-row sm:items-center gap-4">
-            <p class="text-sm opacity-50 flex-shrink-0">
+            <p class="text-sm opacity-50 shrink-0">
               {t("index.writtenBy")}
               <LinkButton
                 class="font-medium underline decoration-dashed underline-offset-4 hover:text-accent"
@@ -147,7 +147,11 @@ const recentPosts = sortedPosts.filter(
             <Card
               variant="h3"
               featured={true}
-              {...data}
+              id={data.id}
+              collection={data.collection}
+              data={data.data}
+              body={data.body}
+              filePath={data.filePath}
               loading={index < 2 ? "eager" : "lazy"}
               fetchpriority={index < 2 ? "high" : "auto"}
             />
@@ -180,7 +184,11 @@ const recentPosts = sortedPosts.filter(
               index < SITE.postPerIndex && (
                 <Card
                   variant="h3"
-                  {...data}
+                  id={data.id}
+                  collection={data.collection}
+                  data={data.data}
+                  body={data.body}
+                  filePath={data.filePath}
                   loading={index < 2 ? "eager" : "lazy"}
                   fetchpriority={index < 2 ? "high" : "auto"}
                 />
@@ -226,7 +234,7 @@ const recentPosts = sortedPosts.filter(
   @keyframes shimmer {
     0%,
     100% {
-      background-position: 0% center;
+      background-position: 0 center;
     }
     50% {
       background-position: 100% center;

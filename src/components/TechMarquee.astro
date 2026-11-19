@@ -72,10 +72,12 @@ const items = [...stack, ...stack];
   }
 
   .marquee-track {
+    --marquee-duration: 44s;
+
     display: flex;
     width: max-content;
     align-items: center;
-    animation: marquee-scroll var(--marquee-duration, 44s) linear infinite;
+    animation: marquee-scroll var(--marquee-duration) linear infinite;
     will-change: transform;
   }
 
@@ -97,6 +99,8 @@ const items = [...stack, ...stack];
   }
 
   .tech-logo {
+    --tech-icon: none;
+
     display: block;
     flex: none;
     width: 1.3rem;
@@ -118,7 +122,7 @@ const items = [...stack, ...stack];
   }
 
   .tech-name {
-    font-family: var(--font-firacode);
+    font-family: var(--font-firacode), ui-monospace, monospace;
     font-size: 0.76rem;
     letter-spacing: 0.01em;
     color: color-mix(in srgb, var(--color-foreground) 62%, transparent);

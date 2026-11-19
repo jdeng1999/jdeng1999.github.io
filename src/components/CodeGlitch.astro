@@ -50,12 +50,10 @@ const { class: className = "" } = Astro.props;
     dispose?.();
     dispose = null;
 
-    const canvas = root?.querySelector<HTMLCanvasElement>(
-      "[data-glitch-canvas]"
-    );
+    const canvas = root?.querySelector("[data-glitch-canvas]");
     const stage = canvas?.parentElement;
 
-    if (!root || !canvas || !stage) return;
+    if (!root || !(canvas instanceof HTMLCanvasElement) || !stage) return;
 
     root.dataset.glitchReady = "true";
 
