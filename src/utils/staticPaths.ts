@@ -8,10 +8,14 @@ import getSortedPosts from "./getSortedPosts";
 import getUniqueTags from "./getUniqueTags";
 import postFilter from "./postFilter";
 
-type Locale = "en" | "es";
+type Locale = "en" | "es" | "zh";
 
-const isMatchingLocale = (id: string, locale: Locale) =>
-  id.startsWith(`${locale}/`) || (locale === "en" && !id.startsWith("es/"));
+const isMatchingLocale = (id: string, locale: Locale) => {
+  if (locale === "zh") return id.startsWith("en/");
+  return (
+    id.startsWith(`${locale}/`) || (locale === "en" && !id.startsWith("es/"))
+  );
+};
 
 export async function buildPostStaticPaths(locale: Locale) {
   const posts = await getCollection("blog", ({ id }) =>

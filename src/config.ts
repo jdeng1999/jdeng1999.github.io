@@ -71,6 +71,16 @@ export const SITE = {
         duration: 319,
         lyrics: ["兰亭临帖 行书如行云流水", "月下门推 心细如你脚步碎"],
       },
+      {
+        title: "发如雪",
+        artist: "周杰伦",
+        album: "十一月的萧邦",
+        cover: "/spotify/faruxue.jpg",
+        url: "https://open.spotify.com/track/1jEAOrekJF0h2Rvf6mpCLd",
+        src: "/audio/faruxue.mp3",
+        duration: 302,
+        lyrics: ["狼牙月 伊人憔悴", "我举杯 饮尽了风雪"],
+      },
     ],
   },
   likes: {

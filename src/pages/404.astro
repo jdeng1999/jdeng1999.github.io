@@ -30,7 +30,7 @@ const esT = useTranslations("es");
       </p>
       <LinkButton
         id="not-found-home"
-        href={locale === "es" ? "/es" : "/"}
+        href={locale === "es" ? "/es" : locale === "zh" ? "/zh" : "/"}
         class="my-6 text-lg underline decoration-dashed underline-offset-8"
         data-es-back={esT("404.back")}
       >
@@ -45,7 +45,12 @@ const esT = useTranslations("es");
 <script>
   document.addEventListener("astro:page-load", () => {
     const pathname = window.location.pathname;
-    if (pathname === "/es" || pathname.startsWith("/es/")) {
+    if (
+      pathname === "/es" ||
+      pathname.startsWith("/es/") ||
+      pathname === "/zh" ||
+      pathname.startsWith("/zh/")
+    ) {
       const titleEl = document.getElementById("not-found-title");
       const homeLink = document.getElementById(
         "not-found-home"

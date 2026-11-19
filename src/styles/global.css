@@ -24,6 +24,87 @@ html[data-theme="dark"] {
   --gallery-color: #a855f7;
 }
 
+/* Accent palette selected from the header / terminal. */
+html[data-theme="light"][data-accent="blue"] {
+  --accent: #1158d1;
+}
+
+html[data-theme="dark"][data-accent="blue"] {
+  --accent: #008fec;
+}
+
+html[data-theme="light"][data-accent="purple"] {
+  --accent: #7c3aed;
+}
+
+html[data-theme="dark"][data-accent="purple"] {
+  --accent: #a78bfa;
+}
+
+html[data-theme="light"][data-accent="green"] {
+  --accent: #059669;
+}
+
+html[data-theme="dark"][data-accent="green"] {
+  --accent: #34d399;
+}
+
+html[data-theme="light"][data-accent="amber"] {
+  --accent: #d97706;
+}
+
+html[data-theme="dark"][data-accent="amber"] {
+  --accent: #fbbf24;
+}
+
+html[data-theme="light"][data-accent="rose"] {
+  --accent: #e11d48;
+}
+
+html[data-theme="dark"][data-accent="rose"] {
+  --accent: #fb7185;
+}
+
+html[data-theme="light"][data-accent="cyan"] {
+  --accent: #0891b2;
+}
+
+html[data-theme="dark"][data-accent="cyan"] {
+  --accent: #22d3ee;
+}
+
+html[data-theme="light"][data-accent="teal"] {
+  --accent: #0d9488;
+}
+
+html[data-theme="dark"][data-accent="teal"] {
+  --accent: #2dd4bf;
+}
+
+html[data-theme="light"][data-accent="orange"] {
+  --accent: #ea580c;
+}
+
+html[data-theme="dark"][data-accent="orange"] {
+  --accent: #fb923c;
+}
+
+html[data-theme="light"][data-accent="pink"] {
+  --accent: #db2777;
+}
+
+html[data-theme="dark"][data-accent="pink"] {
+  --accent: #f472b6;
+}
+
+html[data-theme="light"][data-accent="indigo"] {
+  --accent: #4338ca;
+}
+
+html[data-theme="dark"][data-accent="indigo"] {
+  --accent: #818cf8;
+}
+
 @theme inline {
   --font-app: var(--font-wotfard);
   --font-sriracha: var(--font-sriracha);
@@ -103,22 +184,25 @@ i {
 
 /* Search input look */
 .premium-search input.pagefind-ui__search-input {
+  height: 3rem;
+  font-size: 0.9rem;
   font-weight: 400;
-  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
-  border-radius: 1rem;
+  line-height: 1.3;
+  border: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
+  border-radius: 0.8rem;
   background: color-mix(in srgb, var(--foreground) 3%, var(--background));
-  padding: 1rem 1rem 1rem 3.5rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px -5px
-    color-mix(in srgb, var(--background) 50%, transparent);
+  padding: 0.55rem 0.85rem 0.55rem 2.65rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 14px -8px
+    color-mix(in srgb, var(--background) 55%, transparent);
 }
 
 .premium-search input.pagefind-ui__search-input:focus-visible {
   outline: none;
-  border-color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
   box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent),
-    0 4px 30px color-mix(in srgb, var(--accent) 15%, transparent);
+    0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent),
+    0 4px 20px -8px color-mix(in srgb, var(--accent) 25%, transparent);
   background: color-mix(in srgb, var(--accent) 3%, var(--background));
 }
 
@@ -128,18 +212,22 @@ i {
 
 .premium-search form::before {
   background-color: var(--foreground);
-  opacity: 0.6;
-  width: 20px;
-  height: 20px;
-  left: 20px;
-  top: calc(50% - 10px);
+  opacity: 0.55;
+  width: 16px;
+  height: 16px;
+  left: 1rem;
+  top: calc(50% - 8px);
 }
 
-.premium-search .pagefind-ui__search-clear {
-  border-radius: 0.5rem;
-  padding: 0 1rem;
+.premium-search .pagefind-ui__search-clear.pagefind-ui__search-clear {
+  top: 50%;
+  right: 8px;
+  height: 2.2rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 0.45rem;
+  font-size: 0.7rem;
   background: color-mix(in srgb, var(--foreground) 5%, transparent);
-  right: 10px;
+  transform: translateY(-50%);
 }
 
 .premium-search .pagefind-ui__search-clear:hover {

@@ -7,6 +7,7 @@ tags:
   - javascript
   - desarrollo
 draft: false
+featured: true
 ---
 
 TypeScript continúa evolucionando a un ritmo rápido. Las versiones 5.x trajeron cambios que van más allá de las mejoras de rendimiento: rediseñan patrones que hemos estado usando durante años.

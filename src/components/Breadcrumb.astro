@@ -19,8 +19,9 @@ const breadcrumbs = buildBreadcrumbItems(Astro.url.pathname, {
 });
 
 const currentPageLabel =
-  breadcrumbs.at(-1)?.label ?? (locale === "es" ? "Inicio" : "Home");
-const prefix = locale === "es" ? "/es" : "";
+  breadcrumbs.at(-1)?.label ??
+  (locale === "es" ? "Inicio" : locale === "zh" ? "首页" : "Home");
+const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
 
 // Compile JSON-LD BreadcrumbList Schema for SEO
 const breadcrumbSchema = {
@@ -30,7 +31,7 @@ const breadcrumbSchema = {
     {
       "@type": "ListItem",
       position: 1,
-      name: locale === "es" ? "Inicio" : "Home",
+      name: locale === "es" ? "Inicio" : locale === "zh" ? "首页" : "Home",
       item: new URL(prefix || "/", SITE.website).toString(),
     },
     ...breadcrumbs.map((item, index) => ({
@@ -98,8 +99,10 @@ const breadcrumbSchema = {
             "breadcrumb-home",
             { "breadcrumb-link-soft": withBackButton },
           ]}
-          aria-label={locale === "es" ? "Inicio" : "Home"}
-          title={locale === "es" ? "Inicio" : "Home"}
+          aria-label={
+            locale === "es" ? "Inicio" : locale === "zh" ? "首页" : "Home"
+          }
+          title={locale === "es" ? "Inicio" : locale === "zh" ? "首页" : "Home"}
         >
           <span aria-hidden="true">~</span>
           <span class="visually-hidden">
@@ -311,7 +314,11 @@ const breadcrumbSchema = {
 
   function getDefaultBackUrl() {
     const pathname = window.location.pathname;
-    return pathname === "/es" || pathname.startsWith("/es/") ? "/es" : "/";
+    return pathname === "/es" || pathname.startsWith("/es/")
+      ? "/es"
+      : pathname === "/zh" || pathname.startsWith("/zh/")
+        ? "/zh"
+        : "/";
   }
 
   function toSafeBackPath(rawBackUrl: string | null, fallbackUrl: string) {

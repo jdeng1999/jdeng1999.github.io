@@ -21,7 +21,7 @@ const { title, description, pubDatetime, coverImage, tags } = entry.data;
 
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
-const prefix = locale === "es" ? "/es" : "";
+const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
 
 const images: GalleryImage[] = getGalleryImages(slug, locale, title);
 

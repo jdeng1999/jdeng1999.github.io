@@ -8,6 +8,7 @@ tags:
   - contenedores
   - backend
 draft: false
+featured: true
 ---
 
 `docker-compose up` es el primer comando que aprendes. Lo que viene después — redes, secretos, healthchecks, perfiles para diferentes entornos — es lo que separa una configuración funcional de una lista para producción.

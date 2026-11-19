@@ -19,12 +19,13 @@ import { getEntryPath } from "@/utils/contentEntry";
 
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
-const prefix = locale === "es" ? "/es" : "";
+const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
+const contentLocale = locale === "zh" ? "en" : locale;
 
 const [blogPosts, galleryPosts] = await Promise.all([
-  getCollection("blog", ({ id }) => id.startsWith(`${locale}/`)),
+  getCollection("blog", ({ id }) => id.startsWith(`${contentLocale}/`)),
   SITE.showGalleries && SITE.showGalleriesInIndex
-    ? getCollection("galleries", ({ id }) => id.startsWith(`${locale}/`))
+    ? getCollection("galleries", ({ id }) => id.startsWith(`${contentLocale}/`))
     : Promise.resolve([]),
 ]);
 const posts = [...blogPosts, ...galleryPosts];
@@ -43,65 +44,87 @@ const terminalPosts = sortedPosts.map(post => ({
 }));
 
 const whatIDo =
-  locale === "es"
+  locale === "zh"
     ? [
         {
-          title: "Ingeniería Backend",
+          title: "后端工程",
           icon: "server" as const,
           items: [
-            "Java y Spring Boot",
-            "APIs REST y arquitectura limpia",
-            "MySQL, Redis y Maven",
+            "Java 与 Spring Boot",
+            "REST API 与整洁架构",
+            "MySQL、Redis、Maven",
           ],
         },
         {
-          title: "Frontend e Interfaces",
+          title: "前端与界面",
           icon: "layout" as const,
-          items: [
-            "Astro y Tailwind CSS",
-            "Diseño responsive y accesible",
-            "Detalles de interacción",
-          ],
+          items: ["Astro 与 Tailwind CSS", "响应式与可访问布局", "交互细节"],
         },
         {
-          title: "DevOps y Entrega",
+          title: "DevOps 与交付",
           icon: "terminal" as const,
-          items: [
-            "Docker y Linux",
-            "Flujos de trabajo con Git",
-            "Builds y despliegues automatizados",
-          ],
+          items: ["Docker 与 Linux", "Git 工作流", "构建与部署自动化"],
         },
       ]
-    : [
-        {
-          title: "Backend Engineering",
-          icon: "server" as const,
-          items: [
-            "Java & Spring Boot services",
-            "REST APIs & clean architecture",
-            "MySQL, Redis & Maven",
-          ],
-        },
-        {
-          title: "Frontend & Interfaces",
-          icon: "layout" as const,
-          items: [
-            "Astro & Tailwind CSS",
-            "Responsive, accessible layouts",
-            "Interaction details",
-          ],
-        },
-        {
-          title: "DevOps & Delivery",
-          icon: "terminal" as const,
-          items: [
-            "Docker & Linux",
-            "Git workflows",
-            "Build & deploy automation",
-          ],
-        },
-      ];
+    : locale === "es"
+      ? [
+          {
+            title: "Ingeniería Backend",
+            icon: "server" as const,
+            items: [
+              "Java y Spring Boot",
+              "APIs REST y arquitectura limpia",
+              "MySQL, Redis y Maven",
+            ],
+          },
+          {
+            title: "Frontend e Interfaces",
+            icon: "layout" as const,
+            items: [
+              "Astro y Tailwind CSS",
+              "Diseño responsive y accesible",
+              "Detalles de interacción",
+            ],
+          },
+          {
+            title: "DevOps y Entrega",
+            icon: "terminal" as const,
+            items: [
+              "Docker y Linux",
+              "Flujos de trabajo con Git",
+              "Builds y despliegues automatizados",
+            ],
+          },
+        ]
+      : [
+          {
+            title: "Backend Engineering",
+            icon: "server" as const,
+            items: [
+              "Java & Spring Boot services",
+              "REST APIs & clean architecture",
+              "MySQL, Redis & Maven",
+            ],
+          },
+          {
+            title: "Frontend & Interfaces",
+            icon: "layout" as const,
+            items: [
+              "Astro & Tailwind CSS",
+              "Responsive, accessible layouts",
+              "Interaction details",
+            ],
+          },
+          {
+            title: "DevOps & Delivery",
+            icon: "terminal" as const,
+            items: [
+              "Docker & Linux",
+              "Git workflows",
+              "Build & deploy automation",
+            ],
+          },
+        ];
 
 const whatIcons = {
   server: `<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01M11 7.5h2M11 16.5h2"/>`,
@@ -114,145 +137,143 @@ const whatIcons = {
   <Header />
 
   <main id="main-content" data-layout="index" class="relative app-layout">
-    <!-- ═══════════════════ HERO ═══════════════════ -->
-    <section
-      id="hero"
-      class="hero-section relative pt-8 pb-10 sm:pt-10 sm:pb-14"
-    >
-      <div class="relative z-10">
-        <div class="hero-copy">
-          <!-- Terminal prompt badge + interactive shell -->
-          <HeroTerminal posts={terminalPosts} />
+    <div class="home-intro">
+      <!-- ═══════════════════ HERO ═══════════════════ -->
+      <section
+        id="hero"
+        class="hero-section relative pt-2 pb-5 sm:pt-3 sm:pb-7"
+      >
+        <div class="relative z-10">
+          <div class="hero-copy">
+            <!-- Terminal prompt badge + interactive shell -->
+            <HeroTerminal posts={terminalPosts} />
 
-          <p class="hero-greeting">
-            <span class="hero-greeting-dot" aria-hidden="true"></span>
-            {t("index.heroGreeting")}
-            <span class="hero-name">J. Deng</span>
-          </p>
+            <p class="hero-greeting">
+              <span class="hero-greeting-dot" aria-hidden="true"></span>
+              {t("index.heroGreeting")}
+              <span class="hero-name">J. Deng</span>
+            </p>
 
-          <div class="hero-role-grid">
-            <h1 class="hero-role">
-              <span class="hero-role-line">Software</span>
-              <span class="hero-role-line hero-role-accent">Engineer</span>
-            </h1>
+            <div class="hero-role-grid">
+              <h1 class="hero-role">
+                <span class="hero-role-line">Software</span>
+                <span class="hero-role-line hero-role-accent">Engineer</span>
+              </h1>
 
-            <div class="hero-intro-panel">
-              <p class="hero-intro">
-                {t("index.heroIntroBefore")}
-                <span class="shiny-accent">
-                  {t("index.heroIntroHighlight")}
-                </span>
-                {t("index.heroIntroAfter")}
-              </p>
-
-              <div class="hero-meta-row">
-                <p class="hero-written">
-                  {t("index.writtenBy")}
-                  <LinkButton
-                    class="font-medium underline decoration-dashed underline-offset-4 hover:text-accent"
-                    href={SITE.profile}
-                    target="_blank"
-                  >
-                    {SITE.author}
-                  </LinkButton>
+              <div class="hero-intro-panel">
+                <p class="hero-intro">
+                  {t("index.heroIntroBefore")}
+                  <span class="shiny-accent">
+                    {t("index.heroIntroHighlight")}
+                  </span>
+                  {t("index.heroIntroAfter")}
+                  <span class="hero-intro-tail">
+                    {t("index.heroIntroTail")}
+                  </span>
                 </p>
 
-                {SOCIALS.length > 0 && (
-                  <div class="hero-socials">
-                    <Socials />
-                    <a
+                <div class="hero-meta-row">
+                  <p class="hero-written">
+                    {t("index.writtenBy")}
+                    <LinkButton
+                      class="font-medium underline decoration-dashed underline-offset-4 hover:text-accent"
+                      href={SITE.profile}
                       target="_blank"
-                      href={`${prefix}/rss.xml`}
-                      class="hero-rss"
-                      aria-label="RSS Feed"
-                      title="RSS Feed"
                     >
-                      <IconRss width={16} height={16} />
-                    </a>
-                  </div>
-                )}
+                      {SITE.author}
+                    </LinkButton>
+                  </p>
+
+                  {SOCIALS.length > 0 && (
+                    <div class="hero-socials">
+                      <Socials />
+                      <a
+                        target="_blank"
+                        href={`${prefix}/rss.xml`}
+                        class="hero-rss"
+                        aria-label="RSS Feed"
+                        title="RSS Feed"
+                      >
+                        <IconRss width={16} height={16} />
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </section>
+
+      <!-- ═══════════════════ TECH STACK ═══════════════════ -->
+      <div class="home-intro-bottom">
+        <TechMarquee label={t("index.techStack")} />
       </div>
-    </section>
 
-    <!-- ═══════════════════ TECH STACK ═══════════════════ -->
-    <TechMarquee label={t("index.techStack")} class="mb-10" />
-
-    <!-- ═══════════════════ WHAT I DO ═══════════════════ -->
-    <section id="what-i-do" class="what-section relative mb-12">
-      <div class="what-head">
-        <div class="what-head-copy">
-          <p class="what-kicker">{locale === "es" ? "ENFOQUE" : "FOCUS"}</p>
-          <h2 class="what-title">{t("index.whatIDo")}</h2>
+      <!-- ═══════════════════ WHAT I DO ═══════════════════ -->
+      <section id="what-i-do" class="what-section relative">
+        <div class="what-head">
+          <div class="what-head-copy">
+            <h2 class="what-title">{t("index.whatIDo")}</h2>
+          </div>
+          <div class="what-head-line" aria-hidden="true"></div>
         </div>
-        <p class="what-sub">{t("index.whatIDoSub")}</p>
-      </div>
 
-      <div class="what-grid">
-        <div class="what-list">
-          {whatIDo.map((item, index) => (
-            <details class="what-item" open={index === 0}>
-              <summary>
-                <span class="what-icon" aria-hidden="true">
+        <div class="what-grid">
+          <div class="what-list">
+            {whatIDo.map((item, index) => (
+              <details class="what-item" open={index === 0}>
+                <summary>
+                  <span class="what-icon" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      set:html={whatIcons[item.icon]}
+                    />
+                  </span>
+                  <span class="what-item-title">{item.title}</span>
                   <svg
+                    class="what-chevron"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    stroke-width="1.6"
+                    stroke-width="1.8"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    set:html={whatIcons[item.icon]}
-                  />
-                </span>
-                <span class="what-item-title">{item.title}</span>
-                <svg
-                  class="what-chevron"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </summary>
-              <ul class="what-items">
-                {item.items.map(entry => (
-                  <li>
-                    <span class="what-bullet" aria-hidden="true" />
-                    <span>{entry}</span>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          ))}
-        </div>
-
-        <div class="what-visual">
-          <div class="what-visual-frame">
-            <div class="what-visual-head">
-              <span class="what-live-dot" aria-hidden="true"></span>
-              {locale === "es" ? "VISTA DE CÓDIGO" : "CODE PREVIEW"}
-            </div>
-            <CodeGlitch />
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </summary>
+                <ul class="what-items">
+                  {item.items.map(entry => (
+                    <li>
+                      <span class="what-bullet" aria-hidden="true" />
+                      <span>{entry}</span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
           </div>
-          <p class="what-visual-note">
-            {t("index.whatIDoFocus")}
-            <span>Java · Spring Boot · Astro</span>
-          </p>
+
+          <div class="what-visual">
+            <div class="what-visual-rain">
+              <CodeGlitch />
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
 
     <!-- ═══════════════════ FEATURED ═══════════════════ -->
     {featuredPosts.length > 0 && (
-      <section id="featured" class="pb-6">
-        <div class="mb-6 flex items-center gap-3">
+      <section id="featured" class="featured-section pb-6">
+        <div class="mb-5 flex items-center gap-3">
           <h2 class="flex items-center gap-2 text-sm font-bold tracking-widest text-accent uppercase">
             <svg
               class="size-4"
@@ -265,23 +286,96 @@ const whatIcons = {
             {t("index.featured")}
           </h2>
           <div class="h-px flex-1 bg-border/20" />
+          {featuredPosts.length > 2 && (
+            <div class="featured-controls">
+              <span class="featured-counter" data-featured-counter>
+                01 / {String(featuredPosts.length).padStart(2, "0")}
+              </span>
+              <button
+                type="button"
+                class="featured-arrow"
+                data-featured-prev
+                aria-label={
+                  locale === "es"
+                    ? "Anterior"
+                    : locale === "zh"
+                      ? "上一篇"
+                      : "Previous"
+                }
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="featured-arrow"
+                data-featured-next
+                aria-label={
+                  locale === "es"
+                    ? "Siguiente"
+                    : locale === "zh"
+                      ? "下一篇"
+                      : "Next"
+                }
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
 
-        <ul class="grid gap-4 sm:grid-cols-2 [&>li]:my-0">
-          {featuredPosts.map((data, index) => (
-            <Card
-              variant="h3"
-              featured={true}
-              id={data.id}
-              collection={data.collection}
-              data={data.data}
-              body={data.body}
-              filePath={data.filePath}
-              loading={index < 2 ? "eager" : "lazy"}
-              fetchpriority={index < 2 ? "high" : "auto"}
-            />
-          ))}
-        </ul>
+        <div
+          class:list={[
+            "featured-rail",
+            featuredPosts.length > 2 && "is-scrollable",
+          ]}
+          data-featured-rail
+        >
+          <ul class="featured-track" role="list">
+            {featuredPosts.map((data, index) => (
+              <Card
+                variant="h3"
+                featured={true}
+                id={data.id}
+                collection={data.collection}
+                data={data.data}
+                body={data.body}
+                filePath={data.filePath}
+                loading={index < 2 ? "eager" : "lazy"}
+                fetchpriority={index < 2 ? "high" : "auto"}
+              />
+            ))}
+          </ul>
+        </div>
+
+        {featuredPosts.length > 2 && (
+          <div
+            class="featured-progress"
+            data-featured-progress
+            aria-hidden="true"
+          >
+            <span></span>
+          </div>
+        )}
       </section>
     )}
 
@@ -314,6 +408,7 @@ const whatIcons = {
                   data={data.data}
                   body={data.body}
                   filePath={data.filePath}
+                  sequence={index + 1}
                   loading={index < 2 ? "eager" : "lazy"}
                   fetchpriority={index < 2 ? "high" : "auto"}
                 />
@@ -333,11 +428,139 @@ const whatIcons = {
         </div>
       </section>
     )}
+
+    <!-- Bare scroll cue: only visible at the top of the home page -->
+    <button
+      type="button"
+      class="scroll-cue"
+      data-scroll-cue
+      data-visible="true"
+      aria-label={
+        locale === "es"
+          ? "Ir a los artículos"
+          : locale === "zh"
+            ? "前往文章"
+            : "Scroll to articles"
+      }
+      title={
+        locale === "es"
+          ? "Ir a los artículos"
+          : locale === "zh"
+            ? "前往文章"
+            : "Scroll to articles"
+      }
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </button>
   </main>
   <Footer />
 </Layout>
 
 <style>
+  /* ── First screen: hero + marquee + What I do ── */
+  .home-intro {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100svh - 4.5rem);
+    padding-bottom: 3.5rem;
+  }
+
+  .hero-section {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .home-intro-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    margin-top: clamp(0.9rem, 2vh, 1.7rem);
+  }
+
+  .what-section {
+    margin-top: clamp(1.9rem, 3.8vh, 3.1rem);
+  }
+
+  .scroll-cue {
+    position: fixed;
+    z-index: 30;
+    bottom: 1.4rem;
+    left: 50%;
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: color-mix(in srgb, var(--color-foreground) 38%, transparent);
+    cursor: pointer;
+    transform: translateX(-50%);
+    transition:
+      opacity 0.25s ease,
+      transform 0.25s ease,
+      color 0.2s ease;
+  }
+
+  .scroll-cue svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    animation: scroll-cue-bounce 2.4s ease-in-out infinite;
+  }
+
+  .scroll-cue:hover {
+    color: var(--color-accent);
+  }
+
+  .scroll-cue:focus-visible {
+    border-radius: 999px;
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    outline-offset: 3px;
+  }
+
+  .scroll-cue[data-visible="false"] {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(6px);
+  }
+
+  @keyframes scroll-cue-bounce {
+    0%,
+    100% {
+      transform: translateY(-1px);
+    }
+    50% {
+      transform: translateY(3px);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .scroll-cue {
+      bottom: calc(0.9rem + env(safe-area-inset-bottom));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .home-intro {
+      min-height: calc(100svh - 4.25rem);
+      padding-bottom: 3.25rem;
+    }
+  }
+
   /* ── Hero ── */
   .hero-copy {
     min-width: 0;
@@ -377,9 +600,10 @@ const whatIcons = {
 
   .hero-role {
     margin: 0;
+    padding-bottom: 0.05em;
     font-size: clamp(3.6rem, 8.4vw, 7.2rem);
     font-weight: 700;
-    line-height: 0.9;
+    line-height: 0.94;
     letter-spacing: -0.045em;
     text-wrap: balance;
   }
@@ -389,6 +613,8 @@ const whatIcons = {
   }
 
   .hero-role-accent {
+    padding-bottom: 0.14em;
+    margin-bottom: -0.14em;
     background: linear-gradient(
       120deg,
       var(--color-accent) 0%,
@@ -403,21 +629,65 @@ const whatIcons = {
   }
 
   .hero-intro-panel {
+    position: relative;
     align-self: end;
     max-width: 37rem;
-    padding-left: 1.4rem;
-    border-left: 1px solid
-      color-mix(in srgb, var(--color-accent) 26%, transparent);
+    padding-left: 1.7rem;
+  }
+
+  /* Tapered gradient rule: wide and bright at the top, thinning into nothing */
+  .hero-intro-panel::before {
+    position: absolute;
+    top: 0.2rem;
+    bottom: 0.35rem;
+    left: 0;
+    width: 2px;
+    background: linear-gradient(
+      to bottom,
+      var(--color-accent) 0%,
+      color-mix(in srgb, var(--color-accent) 62%, transparent) 42%,
+      color-mix(in srgb, var(--color-accent) 18%, transparent) 78%,
+      transparent 100%
+    );
+    clip-path: polygon(0 0, 100% 0, 68% 100%, 32% 100%);
+    content: "";
+  }
+
+  .hero-intro-panel::after {
+    position: absolute;
+    top: 0;
+    left: -1px;
+    width: 4px;
+    height: 4px;
+    border-radius: 1px;
+    background: var(--color-accent);
+    box-shadow: 0 0 10px 1px
+      color-mix(in srgb, var(--color-accent) 45%, transparent);
+    transform: rotate(45deg);
+    content: "";
   }
 
   .hero-intro {
     margin: 0;
-    font-size: 1rem;
-    line-height: 1.75;
-    color: color-mix(in srgb, var(--color-foreground) 68%, transparent);
+    font-size: 1.14rem;
+    line-height: 1.78;
+    letter-spacing: 0.002em;
+    color: color-mix(in srgb, var(--color-foreground) 72%, transparent);
+    text-wrap: pretty;
+  }
+
+  .hero-intro-tail {
+    font-family:
+      "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.16em;
+    letter-spacing: 0.005em;
+    color: color-mix(in srgb, var(--color-accent) 82%, var(--color-foreground));
   }
 
   .shiny-accent {
+    font-weight: 600;
     background: linear-gradient(
       120deg,
       var(--color-accent) 15%,
@@ -432,14 +702,28 @@ const whatIcons = {
   }
 
   .hero-meta-row {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.9rem 1.1rem;
-    margin-top: 1.4rem;
-    padding-top: 0.9rem;
-    border-top: 1px solid
-      color-mix(in srgb, var(--color-foreground) 9%, transparent);
+    gap: 0.9rem 1rem;
+    margin-top: 1.1rem;
+    padding-top: 0.85rem;
+  }
+
+  .hero-meta-row::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-accent) 28%, transparent),
+      color-mix(in srgb, var(--color-foreground) 7%, transparent) 45%,
+      transparent
+    );
+    content: "";
   }
 
   .hero-written {
@@ -452,9 +736,19 @@ const whatIcons = {
     display: flex;
     align-items: center;
     gap: 0.15rem;
-    padding-left: 1rem;
-    border-left: 1px solid
-      color-mix(in srgb, var(--color-foreground) 10%, transparent);
+  }
+
+  .hero-socials::before {
+    width: 1px;
+    height: 1.15rem;
+    margin-right: 0.9rem;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      color-mix(in srgb, var(--color-foreground) 18%, transparent),
+      transparent
+    );
+    content: "";
   }
 
   .hero-rss {
@@ -464,16 +758,15 @@ const whatIcons = {
     width: 1.6rem;
     height: 1.6rem;
     margin-left: 0.1rem;
-    border-radius: 999px;
     color: color-mix(in srgb, var(--color-foreground) 38%, transparent);
     transition:
       color 0.2s ease,
-      background-color 0.2s ease;
+      transform 0.2s ease;
   }
 
   .hero-rss:hover {
-    background: color-mix(in srgb, var(--color-accent) 10%, transparent);
     color: var(--color-accent);
+    transform: translateY(-1px);
   }
 
   .hero-rss :global(svg) {
@@ -490,11 +783,7 @@ const whatIcons = {
 
   @media (max-width: 1023px) {
     .hero-intro-panel {
-      padding-top: 1.25rem;
-      padding-left: 0;
-      border-top: 1px solid
-        color-mix(in srgb, var(--color-accent) 20%, transparent);
-      border-left: 0;
+      max-width: 100%;
     }
   }
 
@@ -505,19 +794,20 @@ const whatIcons = {
 
   .what-head {
     display: flex;
-    flex-wrap: wrap;
     align-items: end;
-    justify-content: space-between;
-    gap: 0.75rem 2rem;
-    margin-bottom: 1.1rem;
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
   }
 
-  .what-kicker {
-    margin: 0 0 0.3rem;
-    font-family: var(--font-firacode), ui-monospace, monospace;
-    font-size: 0.6rem;
-    letter-spacing: 0.2em;
-    color: var(--color-accent);
+  .what-head-line {
+    flex: 1;
+    height: 1px;
+    margin-bottom: 0.35rem;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-foreground) 9%, transparent),
+      transparent
+    );
   }
 
   .what-title {
@@ -525,15 +815,8 @@ const whatIcons = {
     font-size: clamp(1.65rem, 3.2vw, 2.35rem);
     font-weight: 700;
     line-height: 1.05;
-    letter-spacing: -0.03em;
-  }
-
-  .what-sub {
-    max-width: 25rem;
-    margin: 0;
-    font-size: 0.82rem;
-    line-height: 1.6;
-    color: color-mix(in srgb, var(--color-foreground) 48%, transparent);
+    letter-spacing: 0.015em;
+    word-spacing: 0.06em;
   }
 
   .what-grid {
@@ -544,7 +827,7 @@ const whatIcons = {
   .what-list {
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0.62rem;
     min-width: 0;
   }
 
@@ -577,8 +860,8 @@ const whatIcons = {
   .what-item summary {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.8rem 0.9rem;
+    gap: 0.65rem;
+    padding: 0.64rem 0.9rem;
     list-style: none;
     cursor: pointer;
   }
@@ -595,11 +878,11 @@ const whatIcons = {
   .what-icon {
     display: inline-grid;
     flex: none;
-    width: 2.2rem;
-    height: 2.2rem;
+    width: 1.85rem;
+    height: 1.85rem;
     place-items: center;
     border: 1px solid color-mix(in srgb, var(--color-accent) 18%, transparent);
-    border-radius: 0.55rem;
+    border-radius: 0.5rem;
     background: color-mix(in srgb, var(--color-accent) 9%, transparent);
     color: var(--color-accent);
   }
@@ -630,12 +913,12 @@ const whatIcons = {
   .what-items {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.3rem;
     margin: 0;
-    padding: 0 1rem 1rem 3.95rem;
+    padding: 0.02rem 0.9rem 0.78rem 3.35rem;
     list-style: none;
-    font-size: 0.78rem;
-    line-height: 1.5;
+    font-size: 0.76rem;
+    line-height: 1.38;
     color: color-mix(in srgb, var(--color-foreground) 56%, transparent);
     animation: what-items-in 0.22s ease-out;
   }
@@ -666,82 +949,321 @@ const whatIcons = {
   }
 
   .what-visual {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    justify-content: center;
+    gap: 0.45rem;
     min-width: 0;
-    padding: 0.65rem;
-    border: 1px solid
-      color-mix(in srgb, var(--color-foreground) 8%, transparent);
-    border-radius: 1rem;
-    background: color-mix(
-      in srgb,
-      var(--color-foreground) 2.5%,
-      var(--color-background)
-    );
+    padding: 0.25rem 0;
   }
 
-  .what-visual-frame {
+  .what-visual-rain {
     position: relative;
-    flex: 1;
-    overflow: hidden;
-    border: 1px solid
-      color-mix(in srgb, var(--color-foreground) 7%, transparent);
-    border-radius: 0.72rem;
-    background:
-      radial-gradient(
-        90% 120% at 100% 0%,
-        color-mix(in srgb, var(--color-accent) 10%, transparent),
-        transparent 60%
-      ),
-      color-mix(in srgb, var(--color-background) 96%, #05070d);
-  }
-
-  .what-visual-head {
     display: flex;
+    flex: 1;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.55rem 0.7rem;
-    border-bottom: 1px solid
-      color-mix(in srgb, var(--color-foreground) 7%, transparent);
-    font-family: var(--font-firacode), ui-monospace, monospace;
-    font-size: 0.52rem;
-    letter-spacing: 0.14em;
-    color: color-mix(in srgb, var(--color-foreground) 38%, transparent);
-  }
-
-  .what-live-dot {
-    width: 0.32rem;
-    height: 0.32rem;
-    border-radius: 999px;
-    background: #22c55e;
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
-  }
-
-  .what-visual-note {
-    margin: 0;
-    padding: 0 0.15rem 0.1rem;
-    font-family: var(--font-firacode), ui-monospace, monospace;
-    font-size: 0.58rem;
-    letter-spacing: 0.05em;
-    color: color-mix(in srgb, var(--color-foreground) 38%, transparent);
-  }
-
-  .what-visual-note span {
-    color: color-mix(in srgb, var(--color-accent) 78%, transparent);
+    min-height: 19rem;
+    background: radial-gradient(
+      68% 82% at 50% 46%,
+      color-mix(in srgb, var(--color-accent) 6%, transparent),
+      transparent 72%
+    );
+    -webkit-mask-image:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        #000 14%,
+        #000 86%,
+        transparent 100%
+      ),
+      linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        #000 14%,
+        #000 86%,
+        transparent 100%
+      ),
+      linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+    mask-composite: intersect;
   }
 
   @media (min-width: 1024px) {
     .what-grid {
-      grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       align-items: stretch;
+      gap: 2rem;
     }
   }
 
+  /* Keep the whole first screen (hero + marquee + What I do) visible on shorter viewports */
+  @media (max-height: 960px) and (min-width: 1024px) {
+    .hero-role {
+      font-size: clamp(3.2rem, 7vw, 6rem);
+    }
+
+    .what-visual-rain {
+      min-height: 13rem;
+    }
+  }
+
+  @media (max-height: 860px) and (min-width: 1024px) {
+    .hero-role {
+      font-size: clamp(3.2rem, 7vw, 6.1rem);
+    }
+
+    .what-visual-rain {
+      min-height: 12rem;
+    }
+  }
+
+  @media (max-height: 800px) {
+    .hero-role {
+      font-size: clamp(2.75rem, 5.9vw, 5rem);
+    }
+
+    .hero-greeting {
+      margin-top: 0.15rem;
+    }
+
+    .hero-role-grid {
+      margin-top: 0.85rem;
+    }
+
+    .hero-meta-row {
+      margin-top: 1rem;
+      padding-top: 0.8rem;
+    }
+
+    .what-head {
+      margin-bottom: 0.8rem;
+    }
+
+    .what-item summary {
+      padding: 0.6rem 0.85rem;
+    }
+
+    .what-visual-rain {
+      min-height: 11rem;
+    }
+  }
+
+  /* Very short viewports: favour showing the whole first screen */
+  @media (max-height: 820px) {
+    .hero-role {
+      font-size: clamp(2.6rem, 5.4vw, 4.7rem);
+    }
+
+    .hero-intro {
+      font-size: 1.04rem;
+      line-height: 1.62;
+    }
+
+    .hero-meta-row {
+      margin-top: 0.85rem;
+      padding-top: 0.65rem;
+    }
+
+    .home-intro-bottom {
+      margin-top: 0.7rem;
+    }
+
+    .what-section {
+      margin-top: 0.75rem;
+    }
+
+    .what-head {
+      margin-bottom: 0.6rem;
+    }
+
+    .what-title {
+      font-size: clamp(1.45rem, 2.6vw, 1.9rem);
+    }
+
+    .what-item summary {
+      padding: 0.48rem 0.8rem;
+    }
+
+    .what-icon {
+      width: 1.7rem;
+      height: 1.7rem;
+    }
+  }
+
+  /* ── Featured carousel ── */
+  #what-i-do,
+  #featured,
+  #recent-posts {
+    scroll-margin-top: 5.5rem;
+  }
+
+  .featured-controls {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .featured-counter {
+    margin-right: 0.3rem;
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 0.56rem;
+    letter-spacing: 0.1em;
+    color: color-mix(in srgb, var(--color-foreground) 34%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .featured-arrow {
+    display: inline-grid;
+    width: 1.7rem;
+    height: 1.7rem;
+    place-items: center;
+    border: 1px solid
+      color-mix(in srgb, var(--color-foreground) 10%, transparent);
+    border-radius: 999px;
+    background: transparent;
+    color: color-mix(in srgb, var(--color-foreground) 42%, transparent);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .featured-arrow:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    color: var(--color-accent);
+    transform: translateY(-1px);
+  }
+
+  .featured-arrow:disabled {
+    opacity: 0.3;
+    cursor: default;
+    transform: none;
+  }
+
+  .featured-arrow:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    outline-offset: 2px;
+  }
+
+  .featured-arrow svg {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+
+  .featured-rail {
+    position: relative;
+    margin-inline: -0.25rem;
+  }
+
+  .featured-track {
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    padding: 0.25rem;
+    list-style: none;
+  }
+
+  .featured-track > :global(li) {
+    flex: 0 0 calc(50% - 0.5rem);
+    min-width: 0;
+    margin: 0;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  /* More than two featured posts: horizontal rail with the next card peeking */
+  .featured-rail.is-scrollable .featured-track > :global(li) {
+    flex-basis: calc(47% - 0.5rem);
+  }
+
+  .featured-rail.is-scrollable {
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    cursor: grab;
+    will-change: scroll-position;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 1.2rem,
+      black calc(100% - 1.2rem),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 1.2rem,
+      black calc(100% - 1.2rem),
+      transparent 100%
+    );
+  }
+
+  .featured-rail.is-scrollable.is-dragging {
+    cursor: grabbing;
+    user-select: none;
+  }
+
+  .featured-rail.is-scrollable::-webkit-scrollbar {
+    display: none;
+  }
+
+  .featured-progress {
+    height: 1px;
+    margin: 0.8rem 0.5rem 0;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-foreground) 8%, transparent);
+  }
+
+  .featured-progress span {
+    display: block;
+    width: var(--featured-progress, 20%);
+    height: 100%;
+    border-radius: inherit;
+    background: color-mix(in srgb, var(--color-accent) 65%, transparent);
+    transition: width 0.18s ease;
+  }
+
   @media (max-width: 640px) {
-    .what-sub {
-      flex-basis: 100%;
-      max-width: 100%;
+    .featured-track {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .featured-track > :global(li) {
+      flex-basis: auto;
+      width: 100%;
+    }
+
+    .featured-rail.is-scrollable {
+      margin-inline: -0.25rem;
+    }
+
+    .featured-rail.is-scrollable .featured-track {
+      flex-direction: row;
+      gap: 0.75rem;
+    }
+
+    .featured-rail.is-scrollable .featured-track > :global(li) {
+      flex: 0 0 100%;
+      width: auto;
+    }
+
+    .featured-counter {
+      display: none;
+    }
+
+    .featured-arrow {
+      width: 1.6rem;
+      height: 1.6rem;
     }
   }
 
@@ -809,5 +1331,167 @@ const whatIcons = {
             });
         });
       });
+
+    // ── First-screen scroll cue ──
+    const cue = document.querySelector<HTMLButtonElement>("[data-scroll-cue]");
+    if (cue && cue.dataset.cueReady !== "true") {
+      cue.dataset.cueReady = "true";
+
+      const syncCue = () => {
+        const visible = window.scrollY < 48;
+        cue.dataset.visible = String(visible);
+        cue.tabIndex = visible ? 0 : -1;
+        cue.setAttribute("aria-hidden", String(!visible));
+      };
+
+      cue.addEventListener("click", () => {
+        const target =
+          document.querySelector("#featured") ??
+          document.querySelector("#recent-posts");
+        target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      window.addEventListener("scroll", syncCue, { passive: true });
+      syncCue();
+    }
+
+    // ── Featured rail: arrows, counter, progress ──
+    const rail = document.querySelector<HTMLElement>("[data-featured-rail]");
+    if (rail && rail.dataset.carouselReady !== "true") {
+      rail.dataset.carouselReady = "true";
+
+      const track = rail.querySelector<HTMLElement>(".featured-track");
+      const cards = track
+        ? Array.from(track.children).filter(
+            child => child instanceof HTMLElement
+          )
+        : [];
+      const prev = document.querySelector<HTMLButtonElement>(
+        "[data-featured-prev]"
+      );
+      const next = document.querySelector<HTMLButtonElement>(
+        "[data-featured-next]"
+      );
+      const counter = document.querySelector<HTMLElement>(
+        "[data-featured-counter]"
+      );
+      const progress = document.querySelector<HTMLElement>(
+        "[data-featured-progress]"
+      );
+
+      if (cards.length && rail.classList.contains("is-scrollable")) {
+        const pad = (value: number) => String(value).padStart(2, "0");
+        const gap = 16;
+
+        const update = () => {
+          const max = rail.scrollWidth - rail.clientWidth;
+          const cardWidth =
+            cards[0] instanceof HTMLElement
+              ? cards[0].getBoundingClientRect().width
+              : rail.clientWidth / 2;
+          const active = Math.min(
+            cards.length,
+            Math.max(1, Math.round(rail.scrollLeft / (cardWidth + gap)) + 1)
+          );
+
+          if (counter) {
+            counter.textContent = `${pad(active)} / ${pad(cards.length)}`;
+          }
+
+          progress?.style.setProperty(
+            "--featured-progress",
+            `${Math.max(6, max > 0 ? (rail.scrollLeft / max) * 100 : 0)}%`
+          );
+
+          if (prev) prev.disabled = rail.scrollLeft <= 8;
+          if (next) next.disabled = rail.scrollLeft >= max - 8;
+        };
+
+        const step = () => {
+          const cardWidth =
+            cards[0] instanceof HTMLElement
+              ? cards[0].getBoundingClientRect().width
+              : rail.clientWidth / 2;
+          return cardWidth + gap;
+        };
+
+        prev?.addEventListener("click", () =>
+          rail.scrollBy({ left: -step(), behavior: "smooth" })
+        );
+        next?.addEventListener("click", () =>
+          rail.scrollBy({ left: step(), behavior: "smooth" })
+        );
+        rail.addEventListener("scroll", () => requestAnimationFrame(update), {
+          passive: true,
+        });
+        window.addEventListener("resize", update);
+        update();
+
+        // ── Drag to slide (mouse / pen); touch keeps native momentum ──
+        let dragStartX = 0;
+        let dragStartLeft = 0;
+        let dragTargetLeft = 0;
+        let dragPointer = -1;
+        let dragging = false;
+        let dragFrame = 0;
+        let suppressClick = false;
+
+        rail.addEventListener("dragstart", event => event.preventDefault());
+
+        rail.addEventListener("pointerdown", event => {
+          if (event.pointerType === "touch" || event.button !== 0) return;
+          dragPointer = event.pointerId;
+          dragStartX = event.clientX;
+          dragStartLeft = rail.scrollLeft;
+          dragTargetLeft = dragStartLeft;
+          dragging = false;
+        });
+
+        rail.addEventListener("pointermove", event => {
+          if (event.pointerId !== dragPointer) return;
+          const dx = event.clientX - dragStartX;
+          if (!dragging) {
+            if (Math.abs(dx) < 5) return;
+            dragging = true;
+            rail.classList.add("is-dragging");
+          }
+          dragTargetLeft = dragStartLeft - dx;
+          if (dragFrame) return;
+          dragFrame = requestAnimationFrame(() => {
+            dragFrame = 0;
+            rail.scrollLeft = dragTargetLeft;
+          });
+        });
+
+        const endDrag = (event: PointerEvent) => {
+          if (event.pointerId !== dragPointer) return;
+          dragPointer = -1;
+          if (!dragging) return;
+          dragging = false;
+          cancelAnimationFrame(dragFrame);
+          dragFrame = 0;
+          rail.scrollLeft = dragTargetLeft;
+          rail.classList.remove("is-dragging");
+          suppressClick = true;
+          requestAnimationFrame(() => {
+            suppressClick = false;
+          });
+        };
+
+        rail.addEventListener("pointerup", endDrag);
+        rail.addEventListener("pointercancel", endDrag);
+        rail.addEventListener("pointerleave", endDrag);
+
+        rail.addEventListener(
+          "click",
+          event => {
+            if (!suppressClick) return;
+            event.preventDefault();
+            event.stopPropagation();
+          },
+          true
+        );
+      }
+    }
   });
 </script>

@@ -4,14 +4,20 @@
  */
 interface Props {
   class?: string;
+  cursor?: boolean;
 }
 
-const { class: className = "" } = Astro.props;
+const { class: className = "", cursor = false } = Astro.props;
 ---
 
 <span class:list={["site-logo", className]} aria-hidden="true">
   <span class="site-logo-mark">J.</span>
   <span class="site-logo-text">Deng</span>
+  {cursor && (
+    <span class="site-logo-cursor" aria-hidden="true">
+      _
+    </span>
+  )}
 </span>
 
 <style>
@@ -28,5 +34,29 @@ const { class: className = "" } = Astro.props;
 
   .site-logo-mark {
     color: var(--color-accent);
+  }
+
+  .site-logo-cursor {
+    margin-left: 0.04em;
+    color: var(--color-accent);
+    font-weight: 700;
+    animation: site-logo-blink 1.1s steps(1, end) infinite;
+  }
+
+  @keyframes site-logo-blink {
+    0%,
+    49% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-logo-cursor {
+      animation: none;
+    }
   }
 </style>

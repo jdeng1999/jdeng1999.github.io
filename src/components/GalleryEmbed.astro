@@ -26,7 +26,7 @@ type Props = {
 const { slug, limit = 6, showLink = true, cols = 3 } = Astro.props;
 
 const locale = Astro.currentLocale || "en";
-const prefix = locale === "es" ? "/es" : "";
+const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
 
 // ── 1. Find the collection entry by slug ────────────────────────────
 // Find ALL entries (including drafts) so the embed works in preview;

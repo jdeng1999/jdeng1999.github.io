@@ -27,7 +27,7 @@ const coverSrc = coverImage ?? fallbackImage;
 
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
-const prefix = locale === "es" ? "/es" : "";
+const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
 ---
 
 <a

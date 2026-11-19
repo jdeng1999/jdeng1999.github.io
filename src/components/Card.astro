@@ -25,6 +25,7 @@ type Props = {
   data: EntryData;
   body?: ContentEntry["body"];
   filePath?: ContentEntry["filePath"];
+  sequence?: number;
 };
 
 const {
@@ -37,13 +38,14 @@ const {
   filePath,
   collection,
   body,
+  sequence = 0,
 } = Astro.props;
 
 const { title, description, pubDatetime } = data;
 const modDatetime = "modDatetime" in data ? data.modDatetime : null;
 const tags = "tags" in data ? data.tags : [];
 const locale = Astro.currentLocale || "en";
-const prefix = locale === "es" ? "/es" : "";
+const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
 const href = prefix + getEntryPath({ collection, id, filePath });
 const isGallery = collection === "galleries";
 const headingId = `${collection}-${slugifyStr(String(id))}-title`;
@@ -87,6 +89,8 @@ if (SITE.showCoverImages) {
 <li
   data-post-card
   data-tags={tags.map((t: string) => slugifyStr(t)).join(",")}
+  data-sequence={sequence > 0 ? sequence : undefined}
+  data-tone={sequence > 0 ? sequence % 3 : undefined}
   class:list={[
     "card-glow group/card relative my-3 rounded-2xl",
     // Use overflow-hidden when cover image is shown so the image respects border-radius
@@ -142,6 +146,13 @@ if (SITE.showCoverImages) {
     class="card-glow-effect pointer-events-none absolute inset-0 z-0 rounded-2xl opacity-0 transition-opacity duration-300 group-focus-within/card:opacity-100 group-hover/card:opacity-100 motion-reduce:transition-none"
     aria-hidden="true"
   ></div>
+
+  {sequence > 0 && (
+    <span
+      class:list={["card-accent-line", `tone-${sequence % 3}`]}
+      aria-hidden="true"
+    />
+  )}
 
   <!-- Cover image — wrapped in <a> for clickability; aria-hidden so screen readers skip the duplicate link -->
   {coverSrc && (
@@ -224,6 +235,11 @@ if (SITE.showCoverImages) {
           {readingTime}
         </span>
       )}
+      {sequence > 0 && (
+        <span class="card-order" aria-hidden="true">
+          {String(sequence).padStart(2, "0")}
+        </span>
+      )}
     </div>
 
     <p
@@ -293,7 +309,82 @@ if (SITE.showCoverImages) {
     will-change: opacity;
   }
 
+  .card-accent-line {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: 1.4rem;
+    left: 1.4rem;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-accent) 34%, transparent),
+      transparent
+    );
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .card-accent-line.tone-1 {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-accent) 22%, transparent) 62%,
+      transparent
+    );
+  }
+
+  .card-accent-line.tone-2 {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-accent) 20%, transparent),
+      transparent 72%
+    );
+  }
+
+  [data-post-card][data-tone="0"] {
+    border-radius: 1.15rem;
+  }
+
+  [data-post-card][data-tone="1"] {
+    border-radius: 1.35rem;
+    background-image: linear-gradient(
+      115deg,
+      transparent 55%,
+      color-mix(in srgb, var(--color-accent) 4%, transparent)
+    );
+  }
+
+  [data-post-card][data-tone="2"] {
+    border-radius: 0.95rem;
+    background-image: linear-gradient(
+      245deg,
+      transparent 55%,
+      color-mix(in srgb, var(--color-accent) 3%, transparent)
+    );
+  }
+
+  .card-order {
+    margin-left: auto;
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 0.58rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.12em;
+    color: color-mix(in srgb, var(--color-foreground) 30%, transparent);
+    transition: color 0.25s ease;
+  }
+
+  :global(.group\/card:hover) .card-order,
+  :global(.group\/card:focus-within) .card-order {
+    color: color-mix(in srgb, var(--color-accent) 72%, transparent);
+  }
+
   @media (prefers-reduced-motion: reduce) {
+    .card-order {
+      transition: none;
+    }
+
     .card-glow-effect {
       background: none;
     }

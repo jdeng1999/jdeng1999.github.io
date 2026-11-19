@@ -101,178 +101,211 @@ const totalLabel = formatTime(first.duration);
   data-np
   data-np-playing="false"
 >
-  <div class="np-card">
-    <div class="np-art">
-      <img
-        data-np-cover
-        src={first.cover}
-        alt=""
-        width="640"
-        height="640"
-        loading="lazy"
-        decoding="async"
-      />
-      <span class="np-art-sheen" aria-hidden="true"></span>
-    </div>
+  <div class="np-stack">
+    {tracks.length > 1 && (
+      <button
+        type="button"
+        class="np-peek"
+        data-np-peek
+        aria-label={`${nextLabel}: ${tracks[1]!.title}`}
+        title={tracks[1]!.title}
+      >
+        <img
+          class="np-peek-cover"
+          data-np-peek-cover
+          src={tracks[1]!.cover}
+          alt=""
+          width="40"
+          height="40"
+          loading="lazy"
+          decoding="async"
+        />
+        <span class="np-peek-title" data-np-peek-title>
+          {tracks[1]!.title}
+        </span>
+        <span class="np-peek-arrow" aria-hidden="true">
+          ↗
+        </span>
+      </button>
+    )}
 
-    <div class="np-body">
-      <div class="np-head">
-        <p class="np-eyebrow">
-          <span class="np-eq" aria-hidden="true">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <i style={`--i: ${index}`} />
-            ))}
-          </span>
-          <span>{label}</span>
-        </p>
+    <div class="np-card">
+      <span class="np-ambient" aria-hidden="true">
+        <img data-np-ambient src={first.cover} alt="" width="96" height="96" />
+      </span>
 
-        <div class="np-head-right">
-          <span class="np-count" data-np-count>
-            01 / {String(tracks.length).padStart(2, "0")}
+      <div class="np-art">
+        <img
+          data-np-cover
+          src={first.cover}
+          alt=""
+          width="640"
+          height="640"
+          loading="lazy"
+          decoding="async"
+        />
+        <span class="np-art-sheen" aria-hidden="true"></span>
+      </div>
+
+      <div class="np-body">
+        <div class="np-head">
+          <p class="np-eyebrow">
+            <span class="np-eq" aria-hidden="true">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <i style={`--i: ${index}`} />
+              ))}
+            </span>
+            <span>{label}</span>
+          </p>
+
+          <div class="np-head-right">
+            <span class="np-count" data-np-count>
+              01 / {String(tracks.length).padStart(2, "0")}
+            </span>
+            <a
+              class="np-open"
+              data-np-link
+              href={first.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={openLabel}
+              title={openLabel}
+            >
+              <IconSpotify class="np-open-icon" />
+              <span>Spotify</span>
+              <span class="np-open-arrow" aria-hidden="true">
+                ↗
+              </span>
+            </a>
+          </div>
+        </div>
+
+        <div class="np-meta">
+          <p class="np-title" data-np-title title={first.title}>
+            {first.title}
+          </p>
+          <p class="np-sub">
+            <span data-np-artist>{first.artist}</span>
+            <span class="np-dot" aria-hidden="true">
+              ·
+            </span>
+            <span class="np-album" data-np-album>
+              {first.album}
+            </span>
+          </p>
+        </div>
+
+        <div class="np-lyrics" data-np-lyrics aria-live="polite">
+          <p class="np-lyric np-lyric-current" data-np-lyric-current>
+            {first.lyrics[0] ?? ""}
+          </p>
+          <p class="np-lyric np-lyric-next" data-np-lyric-next>
+            {first.lyrics[1] ?? ""}
+          </p>
+        </div>
+
+        <div class="np-progress">
+          <span class="np-time" data-np-current>
+            0:00
           </span>
+          <div
+            class="np-seek"
+            data-np-seek
+            role="slider"
+            tabindex="0"
+            aria-label={seekLabel}
+            aria-valuemin="0"
+            aria-valuemax={String(first.duration)}
+            aria-valuenow="0"
+            aria-valuetext="0:00"
+          >
+            <span class="np-seek-rail">
+              <span class="np-seek-fill" data-np-fill></span>
+            </span>
+            <span class="np-seek-thumb" aria-hidden="true"></span>
+          </div>
+          <span class="np-time" data-np-total>
+            {totalLabel}
+          </span>
+        </div>
+
+        <div class="np-controls">
+          <button
+            type="button"
+            class="np-skip"
+            data-np-prev
+            aria-label={previousLabel}
+            title={previousLabel}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18.5 5.5v13l-9-6.5 9-6.5Z" />
+              <path d="M6.5 5.5v13" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="np-toggle"
+            data-np-toggle
+            aria-label={playLabel}
+            aria-pressed="false"
+          >
+            <svg
+              class="np-icon np-icon-play"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.02-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z" />
+            </svg>
+            <svg
+              class="np-icon np-icon-pause"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M8.25 4.5h2.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1-.75-.75V5.25a.75.75 0 0 1 .75-.75Zm5 0h2.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1-.75-.75V5.25a.75.75 0 0 1 .75-.75Z" />
+            </svg>
+            <span class="np-toggle-ring" aria-hidden="true"></span>
+          </button>
+
+          <button
+            type="button"
+            class="np-skip"
+            data-np-next
+            aria-label={nextLabel}
+            title={nextLabel}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5.5 5.5v13l9-6.5-9-6.5Z" />
+              <path d="M17.5 5.5v13" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="np-restart"
+            data-np-restart
+            aria-label={restartLabel}
+            title={restartLabel}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4.5 5.25v4.5h4.5" />
+              <path d="M4.78 9.5a8 8 0 1 1 .3 5.6" />
+            </svg>
+          </button>
+
           <a
-            class="np-open"
-            data-np-link
+            class="np-preview"
+            data-np-preview
             href={first.url}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={openLabel}
             title={openLabel}
+            hidden
           >
-            <IconSpotify class="np-open-icon" />
-            <span>Spotify</span>
-            <span class="np-open-arrow" aria-hidden="true">
-              ↗
-            </span>
+            <span class="np-preview-dot" aria-hidden="true"></span>
+            {previewLabel}
           </a>
         </div>
-      </div>
-
-      <div class="np-meta">
-        <p class="np-title" data-np-title title={first.title}>
-          {first.title}
-        </p>
-        <p class="np-sub">
-          <span data-np-artist>{first.artist}</span>
-          <span class="np-dot" aria-hidden="true">
-            ·
-          </span>
-          <span class="np-album" data-np-album>
-            {first.album}
-          </span>
-        </p>
-      </div>
-
-      <div class="np-lyrics" data-np-lyrics aria-live="polite">
-        <p class="np-lyric np-lyric-current" data-np-lyric-current>
-          {first.lyrics[0] ?? ""}
-        </p>
-        <p class="np-lyric np-lyric-next" data-np-lyric-next>
-          {first.lyrics[1] ?? ""}
-        </p>
-      </div>
-
-      <div class="np-progress">
-        <span class="np-time" data-np-current>
-          0:00
-        </span>
-        <div
-          class="np-seek"
-          data-np-seek
-          role="slider"
-          tabindex="0"
-          aria-label={seekLabel}
-          aria-valuemin="0"
-          aria-valuemax={String(first.duration)}
-          aria-valuenow="0"
-          aria-valuetext="0:00"
-        >
-          <span class="np-seek-rail">
-            <span class="np-seek-fill" data-np-fill></span>
-          </span>
-          <span class="np-seek-thumb" aria-hidden="true"></span>
-        </div>
-        <span class="np-time" data-np-total>
-          {totalLabel}
-        </span>
-      </div>
-
-      <div class="np-controls">
-        <button
-          type="button"
-          class="np-skip"
-          data-np-prev
-          aria-label={previousLabel}
-          title={previousLabel}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M18.5 5.5v13l-9-6.5 9-6.5Z" />
-            <path d="M6.5 5.5v13" />
-          </svg>
-        </button>
-
-        <button
-          type="button"
-          class="np-toggle"
-          data-np-toggle
-          aria-label={playLabel}
-          aria-pressed="false"
-        >
-          <svg
-            class="np-icon np-icon-play"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.02-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14Z" />
-          </svg>
-          <svg
-            class="np-icon np-icon-pause"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path d="M8.25 4.5h2.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1-.75-.75V5.25a.75.75 0 0 1 .75-.75Zm5 0h2.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1-.75-.75V5.25a.75.75 0 0 1 .75-.75Z" />
-          </svg>
-          <span class="np-toggle-ring" aria-hidden="true"></span>
-        </button>
-
-        <button
-          type="button"
-          class="np-skip"
-          data-np-next
-          aria-label={nextLabel}
-          title={nextLabel}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5.5 5.5v13l9-6.5-9-6.5Z" />
-            <path d="M17.5 5.5v13" />
-          </svg>
-        </button>
-
-        <button
-          type="button"
-          class="np-restart"
-          data-np-restart
-          aria-label={restartLabel}
-          title={restartLabel}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4.5 5.25v4.5h4.5" />
-            <path d="M4.78 9.5a8 8 0 1 1 .3 5.6" />
-          </svg>
-        </button>
-
-        <a
-          class="np-preview"
-          data-np-preview
-          href={first.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          title={openLabel}
-          hidden
-        >
-          <span class="np-preview-dot" aria-hidden="true"></span>
-          {previewLabel}
-        </a>
       </div>
     </div>
   </div>
@@ -298,7 +331,88 @@ const totalLabel = formatTime(first.duration);
     min-width: 0;
   }
 
+  .np-stack {
+    position: relative;
+    padding-top: 1.6rem;
+  }
+
+  .np-peek {
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    right: 0.55rem;
+    left: 0.55rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    height: 2.9rem;
+    padding: 0.3rem 0.85rem 0;
+    overflow: hidden;
+    border: 1px solid
+      color-mix(in srgb, var(--color-foreground) 11%, transparent);
+    border-radius: 1.1rem;
+    background: color-mix(
+      in srgb,
+      var(--color-foreground) 7%,
+      var(--color-background)
+    );
+    color: color-mix(in srgb, var(--color-foreground) 48%, transparent);
+    font-family: inherit;
+    text-align: left;
+    transform: rotate(-1deg);
+    transform-origin: 50% 100%;
+    cursor: pointer;
+    transition:
+      transform 0.25s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .np-peek:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 34%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 7%, transparent);
+    color: var(--color-accent);
+    transform: rotate(0deg) translateY(-3px);
+  }
+
+  .np-peek:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    outline-offset: 2px;
+  }
+
+  .np-peek-cover {
+    display: block;
+    flex: none;
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: 0.26rem;
+    object-fit: cover;
+    object-position: 50% 30%;
+  }
+
+  .np-peek-title {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.63rem;
+    letter-spacing: 0.04em;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .np-peek-arrow {
+    flex: none;
+    margin-left: auto;
+    font-size: 0.55rem;
+    line-height: 1.2;
+    opacity: 0.5;
+  }
+
   .np-card {
+    position: relative;
+    z-index: 1;
+    isolation: isolate;
     display: grid;
     grid-template-columns: 7rem minmax(0, 1fr);
     gap: 1rem;
@@ -320,6 +434,62 @@ const totalLabel = formatTime(first.duration);
     transition:
       box-shadow 0.35s ease,
       background-color 0.35s ease;
+  }
+
+  /* Blurred cover glow that sits behind the card */
+  .np-ambient {
+    position: absolute;
+    z-index: -1;
+    inset: -14% -5% -22%;
+    overflow: hidden;
+    border-radius: 2rem;
+    opacity: 0.32;
+    filter: blur(34px) saturate(1.35);
+    transform: translateZ(0);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 20%,
+      rgba(0, 0, 0, 0.5) 60%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 20%,
+      rgba(0, 0, 0, 0.5) 60%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+
+  .np-ambient img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.85;
+  }
+
+  /* Hairline gradient border */
+  .np-card::after {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-accent) 55%, transparent),
+      color-mix(in srgb, var(--color-foreground) 6%, transparent) 38%,
+      transparent 62%,
+      color-mix(in srgb, var(--color-accent) 22%, transparent)
+    );
+    content: "";
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
   }
 
   .np-card:hover {
@@ -537,18 +707,33 @@ const totalLabel = formatTime(first.duration);
   .np-lyrics {
     position: relative;
     min-width: 0;
-    margin-top: 0.55rem;
-    padding-left: 0.62rem;
-    border-left: 1px solid
-      color-mix(in srgb, var(--color-accent) 32%, transparent);
+    margin-top: 0.65rem;
+    padding-left: 0.75rem;
+  }
+
+  .np-lyrics::before {
+    position: absolute;
+    top: 0.05rem;
+    left: 0;
+    width: 1px;
+    height: 2.4rem;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-accent) 38%, transparent),
+      transparent
+    );
+    content: "";
   }
 
   .np-lyric {
     overflow: hidden;
     margin: 0;
-    font-size: 0.67rem;
-    line-height: 1.5;
-    letter-spacing: 0.01em;
+    font-family:
+      "Noto Serif SC", "Songti SC", "Noto Serif CJK SC", "SimSun",
+      var(--font-app), serif;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    letter-spacing: 0.06em;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -1103,6 +1288,12 @@ const totalLabel = formatTime(first.duration);
     const tracks = data.tracks;
 
     const cover = root.querySelector<HTMLImageElement>("[data-np-cover]");
+    const ambient = root.querySelector<HTMLImageElement>("[data-np-ambient]");
+    const peek = root.querySelector<HTMLButtonElement>("[data-np-peek]");
+    const peekCover = root.querySelector<HTMLImageElement>(
+      "[data-np-peek-cover]"
+    );
+    const peekTitle = root.querySelector<HTMLElement>("[data-np-peek-title]");
     const titleEl = root.querySelector<HTMLElement>("[data-np-title]");
     const artistEl = root.querySelector<HTMLElement>("[data-np-artist]");
     const albumEl = root.querySelector<HTMLElement>("[data-np-album]");
@@ -1204,6 +1395,7 @@ const totalLabel = formatTime(first.duration);
     const updateTrackUi = (track: MusicTrack) => {
       cover.src = track.cover;
       cover.alt = "";
+      if (ambient) ambient.src = track.cover;
       titleEl.textContent = track.title;
       titleEl.title = track.title;
       artistEl.textContent = track.artist;
@@ -1213,6 +1405,16 @@ const totalLabel = formatTime(first.duration);
       countEl.textContent = `${String(index + 1).padStart(2, "0")} / ${String(
         tracks.length
       ).padStart(2, "0")}`;
+
+      if (peek && peekCover && peekTitle && tracks.length > 1) {
+        const peekTrack = tracks[(index + 1) % tracks.length]!;
+        peek.hidden = false;
+        peekCover.src = peekTrack.cover;
+        peekTitle.textContent = peekTrack.title;
+        peek.title = peekTrack.title;
+        peek.setAttribute("aria-label", `${labels.next}: ${peekTrack.title}`);
+      }
+
       updateLyrics(track);
       durationMs = track.duration * 1000;
       positionMs = 0;
@@ -1475,6 +1677,7 @@ const totalLabel = formatTime(first.duration);
     toggle.addEventListener("click", togglePlayback);
     prevButton.addEventListener("click", previousTrack);
     nextButton.addEventListener("click", () => nextTrack());
+    peek?.addEventListener("click", () => nextTrack(true));
     restartButton.addEventListener("click", () => {
       seekToSeconds(0);
       if (source === "local") {

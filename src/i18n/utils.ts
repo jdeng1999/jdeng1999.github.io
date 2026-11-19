@@ -14,16 +14,21 @@ export function getTargetLanguageUrl(pathname: string, targetLocale: string) {
   }
 
   // Strip existing locale prefix
-  if (path.startsWith("/es/") || path === "/es") {
-    path = path.slice(3);
-    if (!path.startsWith("/")) {
-      path = "/" + path;
-    }
+  if (
+    path.startsWith("/es/") ||
+    path === "/es" ||
+    path.startsWith("/zh/") ||
+    path === "/zh"
+  ) {
+    path = path.replace(/^\/(?:es|zh)(?=\/|$)/, "") || "/";
   }
 
   // Prepend new locale if not default
   if (targetLocale === "es") {
     return `/es${path === "/" ? "" : path}`;
+  }
+  if (targetLocale === "zh") {
+    return `/zh${path === "/" ? "" : path}`;
   }
   return path;
 }
@@ -38,9 +43,8 @@ export function isActive(currentPath: string, targetPath: string): boolean {
       ? currentPath.slice(0, -1)
       : currentPath;
 
-  if (normalizedCurrent.startsWith("/es/") || normalizedCurrent === "/es") {
-    normalizedCurrent = normalizedCurrent.slice(3) || "/";
-  }
+  normalizedCurrent =
+    normalizedCurrent.replace(/^\/(?:es|zh)(?=\/|$)/, "") || "/";
 
   const currentPathArray = normalizedCurrent.split("/").filter(p => p.trim());
   const targetPathArray = targetPath.split("/").filter(p => p.trim());

@@ -17,8 +17,11 @@ import { useTranslations } from "@/i18n/utils";
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
 
+const contentLocale = locale === "zh" ? "en" : locale;
+
 const isMatchingLocale = (id: string) =>
-  id.startsWith(`${locale}/`) || (locale === "en" && !id.startsWith("es/"));
+  id.startsWith(`${contentLocale}/`) ||
+  (locale === "en" && !id.startsWith("es/"));
 
 const [blogPosts, galleryPosts] = await Promise.all([
   getCollection(

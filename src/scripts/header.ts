@@ -2,6 +2,164 @@ let scrollCleanup: AbortController | null = null;
 let mobileNavCleanup: AbortController | null = null;
 let moreCleanup: AbortController | null = null;
 
+let appearanceBound = false;
+let soundBound = false;
+let soundEnabled = false;
+let audioContext: AudioContext | null = null;
+
+function readStored(key: string, fallback = "") {
+  try {
+    return localStorage.getItem(key) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStored(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    /* storage can be unavailable in private mode */
+  }
+}
+
+function playBlip(
+  frequency = 520,
+  duration = 0.045,
+  volume = 0.028,
+  type: OscillatorType = "sine"
+) {
+  try {
+    const AudioCtor =
+      window.AudioContext ||
+      (window as Window & { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+
+    if (!AudioCtor) return;
+    audioContext ??= new AudioCtor();
+
+    if (audioContext.state === "suspended") {
+      void audioContext.resume();
+    }
+
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = type;
+    oscillator.frequency.value = frequency;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(volume, now + 0.006);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + duration + 0.02);
+  } catch {
+    /* audio is best-effort */
+  }
+}
+
+function syncSoundToggles() {
+  document
+    .querySelectorAll<HTMLElement>("[data-sound-toggle]")
+    .forEach(button => {
+      button.classList.toggle("active", soundEnabled);
+      button.classList.toggle("muted", !soundEnabled);
+      button.setAttribute("aria-pressed", String(soundEnabled));
+
+      const label = button.querySelector<HTMLElement>("[data-sound-label]");
+      if (!label) return;
+
+      const on =
+        button.dataset.labelOn ?? button.getAttribute("data-label-on") ?? "On";
+      const off =
+        button.dataset.labelOff ??
+        button.getAttribute("data-label-off") ??
+        "Muted";
+      label.textContent = soundEnabled ? on : off;
+    });
+}
+
+function setupSoundFx() {
+  soundEnabled = readStored("sound-fx", "false") === "true";
+  syncSoundToggles();
+
+  if (soundBound) return;
+  soundBound = true;
+
+  document.addEventListener(
+    "click",
+    event => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const toggle = target.closest<HTMLElement>("[data-sound-toggle]");
+      if (toggle) {
+        soundEnabled = !soundEnabled;
+        writeStored("sound-fx", String(soundEnabled));
+        syncSoundToggles();
+        if (soundEnabled) playBlip(660, 0.07, 0.035);
+        return;
+      }
+
+      if (!soundEnabled) return;
+      if (!target.closest("a, button, summary, [role='button']")) return;
+      playBlip();
+    },
+    true
+  );
+
+  document.addEventListener("astro:page-load", syncSoundToggles);
+
+  window.addEventListener("storage", event => {
+    if (event.key !== "sound-fx") return;
+    soundEnabled = readStored("sound-fx", "false") === "true";
+    syncSoundToggles();
+  });
+}
+
+function setupAppearance() {
+  const storedAccent = readStored("accent", "blue");
+  const accent = [
+    "blue",
+    "purple",
+    "green",
+    "amber",
+    "rose",
+    "cyan",
+    "teal",
+    "orange",
+    "pink",
+    "indigo",
+  ].includes(storedAccent)
+    ? storedAccent
+    : "blue";
+  document.documentElement.setAttribute("data-accent", accent);
+  document.documentElement.style.removeProperty("--accent");
+
+  if (appearanceBound) return;
+  appearanceBound = true;
+
+  document.addEventListener(
+    "click",
+    event => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const swatch = target.closest<HTMLElement>("[data-accent-color]");
+      if (!swatch) return;
+
+      const nextAccent = swatch.dataset.accentColor || "blue";
+      document.documentElement.setAttribute("data-accent", nextAccent);
+      document.documentElement.style.removeProperty("--accent");
+      writeStored("accent", nextAccent);
+    },
+    true
+  );
+}
+
 function setupScrollPhysics() {
   if (scrollCleanup) scrollCleanup.abort();
   scrollCleanup = new AbortController();
@@ -170,4 +328,6 @@ export function initHeader() {
   setupScrollPhysics();
   setupMobileNav();
   setupMorePopover();
+  setupAppearance();
+  setupSoundFx();
 }

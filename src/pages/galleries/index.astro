@@ -19,10 +19,11 @@ if (!SITE.showGalleries) {
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
 
+const contentLocale = locale === "zh" ? "en" : locale;
 const rawGalleries = await getCollection(
   "galleries",
   entry =>
-    (entry.id.startsWith(`${locale}/`) ||
+    (entry.id.startsWith(`${contentLocale}/`) ||
       (locale === "en" && !entry.id.startsWith("es/"))) &&
     postFilter(entry)
 );

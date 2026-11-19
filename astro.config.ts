@@ -20,7 +20,7 @@ export default defineConfig({
   compressHTML: true,
   i18n: {
     defaultLocale: "en",
-    locales: ["en", "es"],
+    locales: ["en", "es", "zh"],
     routing: {
       prefixDefaultLocale: false,
     },

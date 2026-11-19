@@ -5,11 +5,13 @@ import getSortedPosts from "@/utils/getSortedPosts";
 import { SITE } from "@/config";
 import { useTranslations } from "@/i18n/utils";
 
-export async function generateLocaleRss(locale: "en" | "es") {
+export async function generateLocaleRss(locale: "en" | "es" | "zh") {
   const t = useTranslations(locale);
-  const prefix = locale === "es" ? "/es" : "";
+  const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
+  const contentLocale = locale === "zh" ? "en" : locale;
   const isMatchingLocale = (id: string) =>
-    id.startsWith(`${locale}/`) || (locale === "en" && !id.startsWith("es/"));
+    id.startsWith(`${contentLocale}/`) ||
+    (locale === "en" && !id.startsWith("es/"));
 
   const [blogPosts, galleryPosts] = await Promise.all([
     getCollection("blog", ({ id }) => isMatchingLocale(id)),

@@ -326,7 +326,7 @@ const { class: className = "" } = Astro.props;
   }
 
   .glitch-canvas-wrap {
-    height: 232px;
+    height: clamp(150px, 31vh, 232px);
   }
 
   .glitch-canvas-wrap canvas {
@@ -335,7 +335,7 @@ const { class: className = "" } = Astro.props;
 
   @media (min-width: 1024px) {
     .glitch-canvas-wrap {
-      height: 268px;
+      height: clamp(180px, 26vh, 268px);
     }
   }
 </style>

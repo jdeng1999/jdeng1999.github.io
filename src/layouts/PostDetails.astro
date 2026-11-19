@@ -25,7 +25,7 @@ type Props = {
 const { post, posts } = Astro.props;
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
-const prefix = locale === "es" ? "/es" : "";
+const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
 
 const {
   title,
