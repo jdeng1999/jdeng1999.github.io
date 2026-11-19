@@ -1,0 +1,652 @@
+---
+import { useTranslations } from "@/i18n/utils";
+
+const locale = Astro.currentLocale || "en";
+const t = useTranslations(locale);
+
+const general = [
+  { keys: ["?"], label: t("shortcuts.action.toggle") },
+  { keys: ["⌘", "K"], label: t("shortcuts.action.search") },
+  { keys: ["T"], label: t("shortcuts.action.theme") },
+  { keys: ["M"], label: t("shortcuts.action.soundFx") },
+  { keys: ["L"], label: t("shortcuts.action.lang") },
+  { keys: ["C"], label: t("shortcuts.action.terminal") },
+  { keys: ["Esc"], label: t("shortcuts.action.close") },
+];
+
+const navigation = [
+  { keys: ["R"], label: t("shortcuts.action.reading") },
+  { keys: ["G", "H"], label: t("shortcuts.action.gotoHome") },
+  { keys: ["G", "P"], label: t("shortcuts.action.gotoPosts") },
+  { keys: ["G", "T"], label: t("shortcuts.action.gotoTags") },
+  { keys: ["G", "G"], label: t("shortcuts.action.gotoGalleries") },
+];
+
+const gotoHint = t("shortcuts.group.gotoHelp").replace("{g}", "G");
+---
+
+<div class="shortcuts-overlay" data-shortcuts hidden>
+  <div class="shortcuts-backdrop" data-shortcuts-close aria-hidden="true"></div>
+
+  <section
+    class="shortcuts-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="shortcuts-title"
+  >
+    <header class="shortcuts-head">
+      <div class="shortcuts-heading">
+        <span class="shortcuts-mark" aria-hidden="true">
+          ?
+        </span>
+        <h2 id="shortcuts-title">{t("shortcuts.title")}</h2>
+      </div>
+      <button
+        type="button"
+        class="shortcuts-close"
+        data-shortcuts-close
+        aria-label={t("shortcuts.closeLabel")}
+        title={t("shortcuts.closeLabel")}
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="shortcuts-body">
+      <section class="shortcuts-group">
+        <h3>{t("shortcuts.group.general")}</h3>
+        <ul>
+          {general.map(item => (
+            <li>
+              <span>{item.label}</span>
+              <span class="shortcuts-keys">
+                {item.keys.map(key => (
+                  <kbd>{key}</kbd>
+                ))}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="shortcuts-group">
+        <h3>
+          {t("shortcuts.group.vim")}
+          <span>{gotoHint}</span>
+        </h3>
+        <ul>
+          {navigation.map(item => (
+            <li>
+              <span>{item.label}</span>
+              <span class="shortcuts-keys">
+                {item.keys.map(key => (
+                  <kbd>{key}</kbd>
+                ))}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+
+    <footer class="shortcuts-foot">
+      <span class="shortcuts-mobile-note">{t("shortcuts.mobileWarning")}</span>
+      <span class="shortcuts-desktop-hint">
+        <kbd>?</kbd>
+        {t("shortcuts.action.toggle")}
+      </span>
+    </footer>
+  </section>
+</div>
+
+<style>
+  .shortcuts-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 96;
+    display: grid;
+    padding: 1rem;
+    place-items: center;
+  }
+
+  .shortcuts-overlay[hidden] {
+    display: none;
+  }
+
+  .shortcuts-backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, #030712 45%, transparent);
+    -webkit-backdrop-filter: blur(10px) saturate(130%);
+    backdrop-filter: blur(10px) saturate(130%);
+    animation: shortcuts-fade 0.2s ease-out;
+  }
+
+  .shortcuts-panel {
+    position: relative;
+    z-index: 2;
+    width: min(46rem, 100%);
+    max-height: min(84vh, 44rem);
+    max-height: min(84dvh, 44rem);
+    overflow-y: auto;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 26%, transparent);
+    border-radius: 1rem;
+    background:
+      radial-gradient(
+        80% 110% at 100% 0%,
+        color-mix(in srgb, var(--color-accent) 11%, transparent),
+        transparent 58%
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--color-background) 94%, #05070d),
+        color-mix(in srgb, var(--color-background) 97%, #05070d)
+      );
+    color: var(--color-foreground);
+    box-shadow:
+      0 50px 140px -50px rgba(0, 0, 0, 0.8),
+      0 0 80px -45px color-mix(in srgb, var(--color-accent) 45%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 7%, transparent);
+    animation: shortcuts-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .shortcuts-panel::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-accent) 75%, transparent),
+      transparent
+    );
+    content: "";
+    pointer-events: none;
+  }
+
+  .shortcuts-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--color-foreground) 8%, transparent);
+    background: color-mix(in srgb, var(--color-foreground) 3%, transparent);
+  }
+
+  .shortcuts-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-width: 0;
+  }
+
+  .shortcuts-mark {
+    display: inline-grid;
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+    border-radius: 0.55rem;
+    background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    color: var(--color-accent);
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .shortcuts-heading h2 {
+    overflow: hidden;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .shortcuts-close {
+    display: inline-grid;
+    flex: none;
+    width: 1.9rem;
+    height: 1.9rem;
+    place-items: center;
+    border: 1px solid
+      color-mix(in srgb, var(--color-foreground) 12%, transparent);
+    border-radius: 0.45rem;
+    background: color-mix(in srgb, var(--color-foreground) 2%, transparent);
+    color: color-mix(in srgb, var(--color-foreground) 50%, transparent);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .shortcuts-close:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+    color: var(--color-accent);
+  }
+
+  .shortcuts-close svg {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .shortcuts-close:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
+    outline-offset: 2px;
+  }
+
+  .shortcuts-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.4rem 2rem;
+    padding: 1.15rem;
+  }
+
+  .shortcuts-group h3 {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 0.55rem;
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  .shortcuts-group h3 span {
+    font-size: 0.52rem;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    color: color-mix(in srgb, var(--color-foreground) 32%, transparent);
+  }
+
+  .shortcuts-group ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .shortcuts-group li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.42rem 0.55rem;
+    border-radius: 0.4rem;
+    font-size: 0.78rem;
+    color: color-mix(in srgb, var(--color-foreground) 66%, transparent);
+    transition: background-color 0.18s ease;
+  }
+
+  .shortcuts-group li:hover {
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+  }
+
+  .shortcuts-keys {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .shortcuts-keys kbd,
+  .shortcuts-desktop-hint kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.3rem;
+    border: 1px solid
+      color-mix(in srgb, var(--color-foreground) 12%, transparent);
+    border-radius: 0.28rem;
+    background: color-mix(in srgb, var(--color-foreground) 4%, transparent);
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 0.6rem;
+    color: color-mix(in srgb, var(--color-foreground) 62%, transparent);
+    box-shadow: 0 1px 0
+      color-mix(in srgb, var(--color-foreground) 6%, transparent);
+  }
+
+  .shortcuts-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 1.15rem;
+    border-top: 1px solid
+      color-mix(in srgb, var(--color-foreground) 8%, transparent);
+    background: color-mix(in srgb, var(--color-foreground) 2%, transparent);
+    font-size: 0.58rem;
+    color: color-mix(in srgb, var(--color-foreground) 36%, transparent);
+  }
+
+  .shortcuts-desktop-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  .shortcuts-mobile-note {
+    display: none;
+    line-height: 1.5;
+  }
+
+  @keyframes shortcuts-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes shortcuts-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .shortcuts-overlay {
+      padding: 0.5rem;
+    }
+
+    .shortcuts-panel {
+      max-height: min(88dvh, 46rem);
+    }
+
+    .shortcuts-body {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      padding: 0.9rem;
+    }
+
+    .shortcuts-group li {
+      font-size: 0.74rem;
+    }
+
+    .shortcuts-foot {
+      align-items: flex-start;
+    }
+
+    .shortcuts-desktop-hint {
+      display: none;
+    }
+
+    .shortcuts-mobile-note {
+      display: block;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shortcuts-backdrop,
+    .shortcuts-panel {
+      animation: none;
+    }
+
+    .shortcuts-close,
+    .shortcuts-group li {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { navigate } from "astro:transitions/client";
+
+  let bound = false;
+  let goMode = false;
+  let goTimer = 0;
+  let lastFocused: HTMLElement | null = null;
+
+  const isTyping = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false;
+    return (
+      target.isContentEditable ||
+      ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+    );
+  };
+
+  const isVisible = (el: Element) => {
+    if (el.getClientRects().length === 0) return false;
+    const style = window.getComputedStyle(el);
+    return style.display !== "none" && style.visibility !== "hidden";
+  };
+
+  const hasOtherModal = () =>
+    [...document.querySelectorAll('[aria-modal="true"]')].some(el => {
+      if (el.closest("[data-shortcuts]")) return false;
+      return isVisible(el);
+    });
+
+  const getOverlay = () =>
+    document.querySelector<HTMLElement>("[data-shortcuts]");
+
+  const closeMobileMenu = () => {
+    const menu = document.querySelector("#mobile-menu");
+    const button = document.querySelector("#menu-btn");
+    menu?.classList.remove("is-open");
+    menu?.setAttribute("aria-hidden", "true");
+    button?.setAttribute("aria-expanded", "false");
+  };
+
+  const openShortcuts = () => {
+    const overlay = getOverlay();
+    if (!overlay || !overlay.hidden) return;
+
+    closeMobileMenu();
+
+    const moreButton = document.querySelector<HTMLElement>("#more-btn");
+    if (moreButton?.getAttribute("aria-expanded") === "true") {
+      moreButton.click();
+    }
+
+    lastFocused =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    overlay.hidden = false;
+    overlay.querySelector<HTMLElement>(".shortcuts-close")?.focus();
+  };
+
+  const closeShortcuts = () => {
+    const overlay = getOverlay();
+    if (!overlay || overlay.hidden) return;
+
+    overlay.hidden = true;
+    lastFocused?.focus();
+  };
+
+  const toggleShortcuts = () => {
+    const overlay = getOverlay();
+    if (!overlay) return;
+    if (overlay.hidden) openShortcuts();
+    else closeShortcuts();
+  };
+
+  const switchLanguage = () => {
+    const isZh =
+      location.pathname === "/zh" || location.pathname.startsWith("/zh/");
+    const path = location.pathname.replace(/^\/(?:es|zh)(?=\/|$)/, "") || "/";
+    const target = isZh ? path : `/zh${path === "/" ? "" : path}`;
+    closeShortcuts();
+    void navigate(target);
+  };
+
+  const goTo = (target: "home" | "posts" | "tags" | "galleries") => {
+    const isEs =
+      location.pathname === "/es" || location.pathname.startsWith("/es/");
+    const isZh =
+      location.pathname === "/zh" || location.pathname.startsWith("/zh/");
+    const prefix = isEs ? "/es" : isZh ? "/zh" : "";
+    const path = target === "home" ? prefix || "/" : `${prefix}/${target}`;
+    closeShortcuts();
+    void navigate(path);
+  };
+
+  const toggleTheme = () => {
+    const desktop = document.querySelector<HTMLElement>("#theme-btn");
+    const mobile = document.querySelector<HTMLElement>("#theme-btn-mobile");
+    (desktop ?? mobile)?.click();
+  };
+
+  const toggleSound = () => {
+    document.querySelector<HTMLElement>("[data-sound-toggle]")?.click();
+  };
+
+  const trapFocus = (event: KeyboardEvent) => {
+    if (event.key !== "Tab") return;
+    const overlay = getOverlay();
+    const panel = overlay?.querySelector<HTMLElement>(".shortcuts-panel");
+    if (!panel) return;
+
+    const focusable = Array.from(
+      panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter(isVisible);
+
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  const bindShortcuts = () => {
+    if (bound) return;
+    bound = true;
+
+    document.addEventListener("click", event => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      if (target.closest("[data-shortcuts-open]")) {
+        event.preventDefault();
+        openShortcuts();
+        return;
+      }
+
+      if (target.closest("[data-shortcuts-close]")) {
+        closeShortcuts();
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.defaultPrevented) return;
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (isTyping(event.target)) return;
+
+      if (event.key === "Escape") {
+        const overlay = getOverlay();
+        if (overlay && !overlay.hidden) {
+          event.preventDefault();
+          closeShortcuts();
+        }
+        return;
+      }
+
+      if (event.key === "?") {
+        if (hasOtherModal()) return;
+        event.preventDefault();
+        toggleShortcuts();
+        return;
+      }
+
+      const overlay = getOverlay();
+      const panelOpen = Boolean(overlay && !overlay.hidden);
+
+      if (goMode) {
+        const key = event.key.toLowerCase();
+        goMode = false;
+        window.clearTimeout(goTimer);
+
+        if (["h", "p", "t", "g"].includes(key)) {
+          event.preventDefault();
+          if (key === "h") goTo("home");
+          if (key === "p") goTo("posts");
+          if (key === "t") goTo("tags");
+          if (key === "g") goTo("galleries");
+        }
+        return;
+      }
+
+      if (!panelOpen && hasOtherModal()) return;
+
+      const key = event.key.toLowerCase();
+
+      if (key === "t") {
+        event.preventDefault();
+        toggleTheme();
+        return;
+      }
+
+      if (key === "m") {
+        event.preventDefault();
+        toggleSound();
+        return;
+      }
+
+      if (key === "l") {
+        event.preventDefault();
+        switchLanguage();
+        return;
+      }
+
+      if (key === "g") {
+        event.preventDefault();
+        goMode = true;
+        goTimer = window.setTimeout(() => {
+          goMode = false;
+        }, 900);
+        return;
+      }
+
+      if (panelOpen) trapFocus(event);
+    });
+  };
+
+  bindShortcuts();
+
+  document.addEventListener("astro:page-load", () => {
+    // The dialog markup is re-created on every view transition, but the
+    // delegated listeners above already point at the current document.
+    closeShortcuts();
+  });
+</script>
