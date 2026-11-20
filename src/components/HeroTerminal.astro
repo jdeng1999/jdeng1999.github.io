@@ -281,41 +281,147 @@ const payloadJson = JSON.stringify(payload).replace(/</g, "\\u003c");
 <style is:global>
   .terminal-badge {
     position: relative;
+    isolation: isolate;
     overflow: hidden;
-    border: 1px solid
-      color-mix(in srgb, var(--color-foreground) 12%, transparent);
-    background:
-      linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--color-accent) 7%, transparent),
-        transparent 46%
-      ),
-      color-mix(in srgb, var(--color-background) 82%, transparent);
+    border: 1px solid transparent;
+    border-radius: 0.8rem;
+    background-color: color-mix(
+      in srgb,
+      var(--color-background) 74%,
+      transparent
+    );
+    background-image: linear-gradient(
+      115deg,
+      color-mix(in srgb, var(--color-accent) 20%, transparent),
+      transparent 30%,
+      color-mix(in srgb, #22d3ee 16%, transparent) 52%,
+      transparent 72%,
+      color-mix(in srgb, #a855f7 18%, transparent)
+    );
+    background-size: 240% 100%;
+    background-position: 0% 50%;
+    animation: terminal-badge-flow 8s ease-in-out infinite;
     box-shadow:
-      inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 5%, transparent),
-      0 6px 18px -14px color-mix(in srgb, var(--color-accent) 45%, transparent);
+      inset 0 1px 0 rgba(255, 255, 255, 0.26),
+      inset 0 -18px 32px -24px
+        color-mix(in srgb, var(--color-accent) 55%, transparent),
+      0 12px 32px -22px color-mix(in srgb, var(--color-accent) 62%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(18px) saturate(170%);
     font-family: var(--font-firacode), ui-monospace, monospace;
     letter-spacing: 0.02em;
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease,
+      background-color 0.25s ease;
   }
 
+  .terminal-badge > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Iridescent hairline border */
   .terminal-badge::before {
     position: absolute;
-    top: 22%;
-    bottom: 22%;
-    left: 0;
-    width: 2px;
-    border-radius: 2px;
-    background: var(--color-accent);
+    inset: 0;
+    z-index: 1;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.65),
+      color-mix(in srgb, var(--color-accent) 80%, transparent),
+      #22d3ee,
+      #a855f7,
+      #fb7185,
+      rgba(255, 255, 255, 0.55)
+    );
+    background-size: 260% 260%;
     content: "";
-    opacity: 0.85;
+    pointer-events: none;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: terminal-badge-aurora 7s linear infinite;
+  }
+
+  /* Slow specular sweep across the glass */
+  .terminal-badge::after {
+    position: absolute;
+    top: -70%;
+    bottom: -70%;
+    left: -75%;
+    z-index: 1;
+    width: 58%;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      rgba(255, 255, 255, 0.42),
+      transparent
+    );
+    content: "";
+    opacity: 0.55;
+    pointer-events: none;
+    transform: skewX(-18deg);
+    mix-blend-mode: screen;
+    animation: terminal-badge-sheen 7.5s ease-in-out infinite;
   }
 
   .terminal-badge:hover {
-    border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     box-shadow:
-      inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 6%, transparent),
-      0 10px 24px -14px color-mix(in srgb, var(--color-accent) 60%, transparent);
+      inset 0 1px 0 rgba(255, 255, 255, 0.32),
+      inset 0 -18px 32px -22px
+        color-mix(in srgb, var(--color-accent) 70%, transparent),
+      0 16px 40px -20px color-mix(in srgb, var(--color-accent) 78%, transparent);
     transform: translateY(-1px);
+  }
+
+  @keyframes terminal-badge-aurora {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+  }
+
+  @keyframes terminal-badge-flow {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  @keyframes terminal-badge-sheen {
+    0%,
+    52% {
+      left: -75%;
+    }
+    82%,
+    100% {
+      left: 130%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminal-badge {
+      transition: none;
+      animation: none;
+    }
+
+    .terminal-badge::before,
+    .terminal-badge::after {
+      animation: none;
+    }
   }
 
   .terminal-badge:focus-visible {

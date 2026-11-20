@@ -8,8 +8,8 @@
  *   2. If that file is missing, the card falls back to Spotify's official
  *      iFrame API (which streams a 30s preview to anonymous visitors).
  *
- * The card also shows the current track's two-line lyric excerpt: the first
- * line is crisp, the second dissolves downward with a mask.
+ * The card shows the current track, controls, and a short "enjoy" line; the
+ * deck itself is a three-card stack that switches one card per gesture.
  */
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -18,6 +18,7 @@ import { SITE } from "@/config";
 
 interface Props {
   label?: string;
+  enjoyLabel?: string;
   openLabel?: string;
   playLabel?: string;
   pauseLabel?: string;
@@ -35,6 +36,7 @@ interface Props {
 
 const {
   label = "On repeat",
+  enjoyLabel = "Enjoy the music ~",
   openLabel = "Open in Spotify",
   playLabel = "Play",
   pauseLabel = "Pause",
@@ -227,14 +229,7 @@ const totalLabel = formatTime(first.duration);
             </p>
           </div>
 
-          <div class="np-lyrics" data-np-lyrics aria-live="polite">
-            <p class="np-lyric np-lyric-current" data-np-lyric-current>
-              {first.lyrics[0]?.text ?? ""}
-            </p>
-            <p class="np-lyric np-lyric-next" data-np-lyric-next>
-              {first.lyrics[1]?.text ?? ""}
-            </p>
-          </div>
+          <p class="np-enjoy">{enjoyLabel}</p>
 
           <div class="np-progress">
             <span class="np-time" data-np-current>
@@ -417,11 +412,6 @@ const totalLabel = formatTime(first.duration);
     position: relative;
     overflow: hidden;
     touch-action: none;
-    cursor: grab;
-  }
-
-  .np-stage.is-dragging {
-    cursor: grabbing;
   }
 
   .np-reel {
@@ -778,67 +768,32 @@ const totalLabel = formatTime(first.duration);
     opacity: 0.5;
   }
 
-  .np-lyrics {
+  .np-enjoy {
     position: relative;
-    min-width: 0;
-    min-height: 2.55rem;
-    margin-top: 0.65rem;
+    display: flex;
+    align-items: center;
+    min-height: 1.75rem;
+    margin: 0.55rem 0 0;
     padding-left: 0.75rem;
+    font-size: 0.74rem;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+    color: color-mix(in srgb, var(--color-foreground) 64%, transparent);
   }
 
-  /* Keep the card height identical whether one or two lyric lines show */
-  .np-lyric-next[hidden],
-  .np-lyrics[hidden] {
-    display: block;
-    visibility: hidden;
-  }
-
-  .np-lyrics::before {
+  .np-enjoy::before {
     position: absolute;
-    top: 0.05rem;
+    top: 50%;
     left: 0;
     width: 1px;
-    height: 2.4rem;
+    height: 1.3rem;
     background: linear-gradient(
       to bottom,
-      color-mix(in srgb, var(--color-accent) 38%, transparent),
+      color-mix(in srgb, var(--color-accent) 42%, transparent),
       transparent
     );
     content: "";
-  }
-
-  .np-lyric {
-    overflow: hidden;
-    margin: 0;
-    font-family:
-      "Noto Serif SC", "Songti SC", "Noto Serif CJK SC", "SimSun",
-      var(--font-app), serif;
-    font-size: 0.72rem;
-    line-height: 1.6;
-    letter-spacing: 0.06em;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .np-lyric-current {
-    color: color-mix(in srgb, var(--color-foreground) 76%, transparent);
-  }
-
-  .np-lyric-next {
-    margin-top: 0.08rem;
-    color: color-mix(in srgb, var(--color-foreground) 58%, transparent);
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      #000 0%,
-      rgba(0, 0, 0, 0.55) 55%,
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to bottom,
-      #000 0%,
-      rgba(0, 0, 0, 0.55) 55%,
-      transparent 100%
-    );
+    transform: translateY(-50%);
   }
 
   .np-progress {
@@ -1189,8 +1144,8 @@ const totalLabel = formatTime(first.duration);
       display: none;
     }
 
-    .np-lyric {
-      font-size: 0.63rem;
+    .np-enjoy {
+      font-size: 0.66rem;
     }
 
     .np-skip {
@@ -1424,11 +1379,6 @@ const totalLabel = formatTime(first.duration);
     const albumEl = root.querySelector<HTMLElement>("[data-np-album]");
     const countEl = root.querySelector<HTMLElement>("[data-np-count]");
     const linkEl = root.querySelector<HTMLAnchorElement>("[data-np-link]");
-    const lyricCurrent = root.querySelector<HTMLElement>(
-      "[data-np-lyric-current]"
-    );
-    const lyricNext = root.querySelector<HTMLElement>("[data-np-lyric-next]");
-    const lyricsEl = root.querySelector<HTMLElement>("[data-np-lyrics]");
     const toggle = root.querySelector<HTMLButtonElement>("[data-np-toggle]");
     const prevButton = root.querySelector<HTMLButtonElement>("[data-np-prev]");
     const nextButton = root.querySelector<HTMLButtonElement>("[data-np-next]");
@@ -1452,9 +1402,6 @@ const totalLabel = formatTime(first.duration);
       !albumEl ||
       !countEl ||
       !linkEl ||
-      !lyricCurrent ||
-      !lyricNext ||
-      !lyricsEl ||
       !toggle ||
       !prevButton ||
       !nextButton ||
@@ -1512,39 +1459,6 @@ const totalLabel = formatTime(first.duration);
       seek.setAttribute("aria-valuenow", String(Math.round(positionMs / 1000)));
       seek.setAttribute("aria-valuetext", formatTime(positionMs));
       currentText.textContent = formatTime(positionMs);
-
-      const track = tracks[index];
-      if (track) {
-        paintLyrics(track, durationMs > 0 ? positionMs / durationMs : 0);
-      }
-    };
-
-    let lyricIndex = -1;
-
-    const paintLyrics = (track: MusicTrack, progress: number) => {
-      const lines = track.lyrics;
-      if (!lines.length) {
-        lyricsEl.hidden = true;
-        lyricIndex = -1;
-        return;
-      }
-
-      lyricsEl.hidden = false;
-      let nextIndex = 0;
-      for (let i = 0; i < lines.length; i++) {
-        if (progress >= lines[i]!.at) nextIndex = i;
-      }
-      if (nextIndex === lyricIndex) return;
-      lyricIndex = nextIndex;
-
-      lyricCurrent.textContent = lines[nextIndex]?.text ?? "";
-      lyricNext.textContent = lines[nextIndex + 1]?.text ?? "";
-      lyricNext.hidden = !lines[nextIndex + 1];
-    };
-
-    const updateLyrics = (track: MusicTrack) => {
-      lyricIndex = -1;
-      paintLyrics(track, 0);
     };
 
     const updateTrackUi = (track: MusicTrack) => {
@@ -1562,7 +1476,6 @@ const totalLabel = formatTime(first.duration);
       syncClones();
       syncPeeks();
 
-      updateLyrics(track);
       endedHandled = false;
       durationMs = track.duration * 1000;
       positionMs = 0;
@@ -1746,12 +1659,6 @@ const totalLabel = formatTime(first.duration);
           tracks.length
         ).padStart(2, "0")}`
       );
-      setText("[data-np-lyric-current]", track.lyrics[0]?.text ?? "");
-      const nextLine = el.querySelector<HTMLElement>("[data-np-lyric-next]");
-      if (nextLine) {
-        nextLine.textContent = track.lyrics[1]?.text ?? "";
-        nextLine.hidden = !track.lyrics[1];
-      }
       setText("[data-np-total]", formatTime(track.duration * 1000));
 
       const link = el.querySelector<HTMLAnchorElement>("[data-np-link]");
@@ -1767,9 +1674,9 @@ const totalLabel = formatTime(first.duration);
       if (height > 0) stage.style.height = `${height + PEEK * 2}px`;
     };
 
-    // ── Virtual vertical scroller ─────────────────────────────────
-    // The stage is a window over a three-card reel; wheel and drag move a
-    // continuous offset, so cards slide exactly as far as the gesture does.
+    // ── Vertical deck ────────────────────────────────────────────
+    // The stage is a window over a three-card reel; each wheel burst or
+    // touch swipe advances exactly one card.
     const prevClone = card.cloneNode(true) as HTMLElement;
     const nextClone = card.cloneNode(true) as HTMLElement;
 
@@ -1825,14 +1732,14 @@ const totalLabel = formatTime(first.duration);
     let deckOffset = 0;
     let deckTarget = 0;
     let deckFrame = 0;
-    let settleTimer = 0;
     let resumeAfterCommit = false;
-    let dragging = false;
-    let dragStartY = 0;
-    let dragStartOffset = 0;
-    let lastPointerY = 0;
-    let lastPointerTime = 0;
-    let pointerVelocity = 0;
+    let swipeStartY = 0;
+    let swipePointerId = -1;
+    let swipeActive = false;
+    let wheelAccum = 0;
+    let wheelTimer = 0;
+    let wheelLocked = false;
+    let wheelUnlockTimer = 0;
 
     const clampUnit = (value: number) => Math.max(0, Math.min(1, value));
 
@@ -1898,22 +1805,6 @@ const totalLabel = formatTime(first.duration);
 
     const startDeck = () => {
       if (!deckFrame) deckFrame = requestAnimationFrame(deckTick);
-    };
-
-    const scrollDeckBy = (pixels: number) => {
-      const height = getCardHeight();
-      if (!height) return;
-      resumeAfterCommit = false;
-      deckTarget += (pixels / height) * 1.5;
-      startDeck();
-
-      // Let the deck glide to the nearest card once the gesture stops, so the
-      // player always comes to rest on a complete card (no half-cut state).
-      window.clearTimeout(settleTimer);
-      settleTimer = window.setTimeout(() => {
-        deckTarget = Math.round(deckTarget);
-        startDeck();
-      }, 150);
     };
 
     const slideToTrack = (direction: 1 | -1, autoplay = false) => {
@@ -2101,13 +1992,36 @@ const totalLabel = formatTime(first.duration);
     });
     setMode("order");
 
-    // Wheel and pointer drag scroll the deck continuously, like a page.
+    // One gesture = one card. A wheel burst is debounced, and a touch swipe
+    // only commits when the finger has travelled far enough.
     stage.addEventListener(
       "wheel",
       event => {
         event.preventDefault();
         if (tracks.length < 2) return;
-        scrollDeckBy(event.deltaY);
+
+        if (wheelLocked) {
+          // Keep the lock alive while a trackpad's inertia events arrive.
+          window.clearTimeout(wheelUnlockTimer);
+          wheelUnlockTimer = window.setTimeout(() => {
+            wheelLocked = false;
+            wheelAccum = 0;
+          }, 220);
+          return;
+        }
+
+        wheelAccum += event.deltaY;
+        window.clearTimeout(wheelTimer);
+        wheelTimer = window.setTimeout(() => {
+          if (Math.abs(wheelAccum) >= 24) {
+            slideToTrack(wheelAccum > 0 ? 1 : -1);
+          }
+          wheelAccum = 0;
+          wheelLocked = true;
+          wheelUnlockTimer = window.setTimeout(() => {
+            wheelLocked = false;
+          }, 220);
+        }, 90);
       },
       { passive: false }
     );
@@ -2117,55 +2031,37 @@ const totalLabel = formatTime(first.duration);
       !target.closest("button, a, input, [role='slider'], [role='button']");
 
     stage.addEventListener("pointerdown", event => {
-      if (event.pointerType === "touch" && !canStartDeckDrag(event.target)) {
-        return;
-      }
       if (event.button !== 0 || !canStartDeckDrag(event.target)) return;
-
-      dragging = true;
-      stage.classList.add("is-dragging");
-      stage.setPointerCapture?.(event.pointerId);
-      dragStartY = event.clientY;
-      dragStartOffset = deckOffset;
-      lastPointerY = event.clientY;
-      lastPointerTime = performance.now();
-      pointerVelocity = 0;
-      deckTarget = deckOffset;
+      swipeActive = true;
+      swipePointerId = event.pointerId;
+      swipeStartY = event.clientY;
+      try {
+        stage.setPointerCapture?.(event.pointerId);
+      } catch {
+        /* pointer may already be gone on very fast taps */
+      }
     });
 
-    stage.addEventListener("pointermove", event => {
-      if (!dragging) return;
-      const height = getCardHeight();
-      if (!height) return;
-
-      const now = performance.now();
-      const dt = Math.max(1, now - lastPointerTime);
-      pointerVelocity = (lastPointerY - event.clientY) / dt;
-      lastPointerY = event.clientY;
-      lastPointerTime = now;
-
-      deckOffset = dragStartOffset + (dragStartY - event.clientY) / height;
-      deckTarget = deckOffset;
-      commitIfNeeded();
-      renderDeck();
-    });
-
-    const endDeckDrag = (event: PointerEvent) => {
-      if (!dragging) return;
-      dragging = false;
-      stage.classList.remove("is-dragging");
-      if (stage.hasPointerCapture?.(event.pointerId)) {
-        stage.releasePointerCapture(event.pointerId);
+    const endDeckSwipe = (event: PointerEvent) => {
+      if (!swipeActive || event.pointerId !== swipePointerId) return;
+      swipeActive = false;
+      swipePointerId = -1;
+      try {
+        if (stage.hasPointerCapture?.(event.pointerId)) {
+          stage.releasePointerCapture(event.pointerId);
+        }
+      } catch {
+        /* capture may have been released by the browser */
       }
-      if (Math.abs(pointerVelocity) > 0.002) {
-        deckTarget = deckOffset + pointerVelocity * 260;
+
+      const delta = swipeStartY - event.clientY;
+      if (Math.abs(delta) >= 28) {
+        slideToTrack(delta > 0 ? 1 : -1);
       }
-      deckTarget = Math.round(deckTarget);
-      startDeck();
     };
 
-    stage.addEventListener("pointerup", endDeckDrag);
-    stage.addEventListener("pointercancel", endDeckDrag);
+    stage.addEventListener("pointerup", endDeckSwipe);
+    stage.addEventListener("pointercancel", endDeckSwipe);
 
     restartButton.addEventListener("click", () => {
       seekToSeconds(0);

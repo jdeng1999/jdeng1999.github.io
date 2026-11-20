@@ -306,6 +306,15 @@ const recommendedPost = rawRecommendedPost
             <TableOfContents headings={headings} isMobile={true} />
           </div>
         </details>
+        <script is:inline>
+          try {
+            if (localStorage.getItem("mobile-toc-open") === "true") {
+              document.querySelector(".mobile-toc")?.setAttribute("open", "");
+            }
+          } catch {
+            /* storage can be unavailable */
+          }
+        </script>
         <article
           id="article"
           class="app-prose w-full max-w-none lg:max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"

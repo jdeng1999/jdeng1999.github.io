@@ -642,3 +642,30 @@ html[data-accent="indigo"] [data-accent-color="indigo"] {
   width: 100%;
   transform: rotate(-45deg);
 }
+
+/* ─── Touch layouts: let the accent palette use the full sheet width ─── */
+@media (max-width: 1023px) {
+  .accent-swatches {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0.1rem;
+    justify-content: space-between;
+    gap: 0;
+    min-height: 3.35rem;
+  }
+
+  .accent-swatch {
+    width: 1.4rem;
+    height: 2.4rem;
+  }
+
+  .accent-swatch::before {
+    inset: -10px -6px;
+  }
+
+  /* Touch devices have no hover: keep the row steady on tap */
+  .accent-swatch:hover {
+    height: 2.4rem;
+  }
+}

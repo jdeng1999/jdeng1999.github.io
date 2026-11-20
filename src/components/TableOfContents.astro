@@ -122,9 +122,47 @@ if (tocHeadings.length === 0) {
 
   let cleanup: (() => void) | null = null;
 
+  const TOC_OPEN_KEY = "mobile-toc-open";
+
+  const readTocOpen = () => {
+    try {
+      return localStorage.getItem(TOC_OPEN_KEY) === "true";
+    } catch {
+      return false;
+    }
+  };
+
+  const saveTocOpen = (open: boolean) => {
+    try {
+      localStorage.setItem(TOC_OPEN_KEY, String(open));
+    } catch {
+      /* storage can be unavailable */
+    }
+  };
+
+  function setupMobileTocState() {
+    const details = document.querySelector<HTMLDetailsElement>(".mobile-toc");
+    if (!details || details.dataset.tocStateReady === "true") return;
+    details.dataset.tocStateReady = "true";
+    details.open = readTocOpen();
+    details.addEventListener("toggle", () => saveTocOpen(details.open));
+  }
+
+  document.addEventListener("astro:before-swap", event => {
+    const current = document.querySelector<HTMLDetailsElement>(".mobile-toc");
+    if (!current) return;
+
+    saveTocOpen(current.open);
+    const next = (
+      event as Event & { newDocument: Document }
+    ).newDocument.querySelector<HTMLDetailsElement>(".mobile-toc");
+    if (next) next.open = current.open;
+  });
+
   document.addEventListener("astro:page-load", () => {
     if (cleanup) cleanup();
     cleanup = setupTocHighlight();
+    setupMobileTocState();
   });
 </script>
 

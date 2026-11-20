@@ -130,6 +130,7 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
       {SITE.spotify.enabled && (
         <NowPlaying
           label={t("footer.listening")}
+          enjoyLabel={t("footer.enjoy")}
           openLabel={t("footer.openSpotify")}
           playLabel={t("footer.play")}
           pauseLabel={t("footer.pause")}
