@@ -9,7 +9,6 @@ import { SITE } from "@/config";
 import { useTranslations } from "@/i18n/utils";
 
 const currentYear = new Date().getFullYear();
-const socialHeadingId = "footer-social-heading";
 
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
@@ -77,17 +76,8 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
           {t("footer.desc")}
         </p>
 
-        <nav
-          class="flex flex-col items-center gap-3 sm:items-start"
-          aria-labelledby={socialHeadingId}
-        >
-          <p
-            id={socialHeadingId}
-            class="font-firacode text-[10px] tracking-wider text-foreground/55 uppercase select-none"
-          >
-            {t("footer.connect")}
-          </p>
-          <ul class="flex items-center gap-2" role="list">
+        <nav class="flex flex-col items-center gap-3 sm:items-start">
+          <ul class="footer-socials flex items-center gap-3" role="list">
             {socialLinks.map(social => (
               <li>
                 <LinkButton
@@ -95,10 +85,9 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
                   target={social.isExternal ? "_blank" : undefined}
                   rel={social.isExternal ? "noopener noreferrer" : undefined}
                   aria-label={social.linkTitle}
-                  class="footer-social-btn group relative flex size-9 items-center justify-center rounded-xl border border-border/20 bg-muted/20 transition-all duration-300 hover:-translate-y-1 hover:border-accent/40 hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:outline-none"
-                  title={social.linkTitle}
+                  class="footer-social-btn group relative flex size-8 items-center justify-center text-foreground/45 transition-colors duration-200 hover:text-accent focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:outline-none"
                 >
-                  <social.icon class="size-4.5 fill-transparent stroke-foreground/60 stroke-[1.5px] transition-all duration-300 group-hover:stroke-accent" />
+                  <social.icon class="size-[1.15rem] fill-current" />
                   <span class="sr-only">{social.linkTitle}</span>
                 </LinkButton>
               </li>
@@ -149,6 +138,10 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
           previewLabel={t("footer.preview")}
           previousLabel={t("footer.previous")}
           nextLabel={t("footer.next")}
+          modeLabel={t("footer.playMode")}
+          orderLabel={t("footer.modeOrder")}
+          repeatLabel={t("footer.modeRepeat")}
+          shuffleLabel={t("footer.modeShuffle")}
           class="footer-music w-full"
         />
       )}
@@ -251,21 +244,18 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
   }
 
   .footer-social-btn {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  }
-
-  .footer-social-btn:hover {
-    box-shadow: 0 8px 20px -4px
-      color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: 0.4rem;
   }
 
   .footer-credits {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: max-content 0.95rem max-content;
+    align-items: center;
+    justify-content: start;
     align-self: center;
     justify-self: center;
-    gap: 0.72rem;
-    width: 17.5rem;
+    row-gap: 0.72rem;
+    column-gap: 0.5rem;
     max-width: 100%;
     margin: 0;
     padding: 0;
@@ -273,38 +263,31 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
   }
 
   .footer-credit-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 1.1rem minmax(0, 1fr);
-    align-items: center;
-    gap: 0.55rem;
+    display: contents;
+  }
+
+  .footer-credit-label {
+    grid-column: 1;
+    text-align: left;
+    color: color-mix(in srgb, var(--color-foreground) 42%, transparent);
     font-family: var(--font-firacode), ui-monospace, monospace;
     font-size: 0.66rem;
     letter-spacing: 0.02em;
   }
 
-  .footer-credit-label {
-    text-align: left;
-    color: color-mix(in srgb, var(--color-foreground) 42%, transparent);
-  }
-
   .footer-credit-name {
-    justify-self: stretch;
-    text-align: right;
+    grid-column: 3;
+    text-align: left;
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.02em;
     color: color-mix(in srgb, var(--color-foreground) 74%, transparent);
     text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition:
-      color 0.2s ease,
-      border-color 0.2s ease;
+    transition: color 0.2s ease;
   }
 
   .footer-credit-name:hover {
     color: var(--color-accent);
-    border-bottom-color: color-mix(
-      in srgb,
-      var(--color-accent) 45%,
-      transparent
-    );
   }
 
   .footer-credit-name:focus-visible {
@@ -316,6 +299,7 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
   .footer-credit-icon {
     width: 0.95rem;
     height: 0.95rem;
+    grid-column: 2;
     justify-self: center;
     flex: none;
     background-color: color-mix(
@@ -331,12 +315,6 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
     mask-position: center;
     -webkit-mask-size: contain;
     mask-size: contain;
-    transition: background-color 0.2s ease;
-  }
-
-  .footer-credit-name:hover ~ .footer-credit-icon,
-  .footer-credit-row:has(.footer-credit-name:hover) .footer-credit-icon {
-    background-color: color-mix(in srgb, var(--color-accent) 80%, transparent);
   }
 
   @media (max-width: 1023px) {
@@ -349,12 +327,7 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
 
   @media (prefers-reduced-motion: reduce) {
     .footer-social-btn {
-      transition: none !important;
-    }
-
-    .footer-social-btn:hover {
-      transform: none;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      transition: none;
     }
   }
 </style>

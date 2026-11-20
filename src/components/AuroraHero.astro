@@ -20,7 +20,9 @@ const { class: className = "", title, description } = Astro.props;
         <span class="glow-text">{title}</span>
       </h1>
       {description && (
-        <p class="mt-3 max-w-lg text-foreground/70 italic">{description}</p>
+        <p class="mt-3 max-w-lg text-[0.95rem] leading-relaxed text-foreground/65">
+          {description}
+        </p>
       )}
       <slot />
     </div>

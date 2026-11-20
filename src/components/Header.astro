@@ -31,7 +31,7 @@ const targetLocale = locale === "zh" ? "en" : "zh";
 const targetLanguageUrl = getTargetLanguageUrl(pathname, targetLocale);
 const langToggleTitle =
   targetLocale === "zh" ? "切换到中文" : "Switch to English";
-const langToggleText = targetLocale === "zh" ? "中文" : "EN";
+const langToggleText = targetLocale === "zh" ? "CN" : "EN";
 
 // Remove trailing slash from current pathname if exists
 const currentPath =
@@ -96,12 +96,24 @@ const accents = [
             <button
               id="theme-btn-mobile"
               class="nav-icon-btn lg:hidden!"
-              title={t("nav.theme")}
               aria-label="auto"
               aria-live="polite"
             >
-              <IconMoon class="block size-4.5 dark:hidden" />
-              <IconSunHigh class="hidden size-4.5 dark:block" />
+              <IconSunHigh class="theme-icon theme-icon--light size-4.5" />
+              <IconMoon class="theme-icon theme-icon--dark size-4.5" />
+              <svg
+                class="theme-icon theme-icon--system size-4.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+                <path d="M8 20h8M12 16v4"></path>
+              </svg>
             </button>
           )}
 
@@ -109,7 +121,6 @@ const accents = [
           <a
             href={targetLanguageUrl}
             class="nav-lang-chip lg:hidden!"
-            title={langToggleTitle}
             aria-label={langToggleTitle}
             data-lang-toggle={targetLocale}
             hreflang={targetLocale === "zh" ? "zh-CN" : "en"}
@@ -135,7 +146,6 @@ const accents = [
           <button
             data-search-trigger
             class="nav-icon-btn lg:hidden!"
-            title={t("nav.search")}
             aria-label={t("nav.openSearch")}
           >
             <IconSearch class="size-4.5" />
@@ -189,12 +199,24 @@ const accents = [
                 <button
                   id="theme-btn"
                   class="nav-icon-btn"
-                  title={t("nav.theme")}
                   aria-label="auto"
                   aria-live="polite"
                 >
-                  <IconMoon class="block size-4.5 dark:hidden" />
-                  <IconSunHigh class="hidden size-4.5 dark:block" />
+                  <IconSunHigh class="theme-icon theme-icon--light size-4.5" />
+                  <IconMoon class="theme-icon theme-icon--dark size-4.5" />
+                  <svg
+                    class="theme-icon theme-icon--system size-4.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+                    <path d="M8 20h8M12 16v4"></path>
+                  </svg>
                 </button>
               </li>
             )}
@@ -204,7 +226,6 @@ const accents = [
               <a
                 href={targetLanguageUrl}
                 class="nav-lang-chip"
-                title={langToggleTitle}
                 aria-label={langToggleTitle}
                 data-lang-toggle={targetLocale}
                 hreflang={targetLocale === "zh" ? "zh-CN" : "en"}
@@ -232,12 +253,10 @@ const accents = [
               <button
                 data-search-trigger
                 class="nav-search-btn"
-                title={`${t("nav.search")} (⌘K)`}
                 aria-label={t("nav.openSearch")}
                 aria-keyshortcuts="Meta+K"
               >
-                <IconSearch class="size-4" />
-                <kbd class="nav-kbd">⌘K</kbd>
+                <IconSearch class="size-4.5" />
               </button>
             </li>
 
@@ -251,13 +270,6 @@ const accents = [
               <button
                 id="more-btn"
                 class="nav-icon-btn relative"
-                title={
-                  locale === "es"
-                    ? "Más opciones"
-                    : locale === "zh"
-                      ? "更多选项"
-                      : "More options"
-                }
                 aria-label={
                   locale === "es"
                     ? "Más opciones"
@@ -400,15 +412,15 @@ const accents = [
                                 class="accent-swatch"
                                 data-accent-color={accent.key}
                                 style={`background-color: ${accent.color}`}
-                                title={accent.label}
+                                data-tip={accent.label}
                                 aria-label={accent.label}
                               ></button>
                             ))}
                           </div>
                         </div>
 
-                        <!-- Sound effects row -->
-                        <div class="popover-row">
+                        <!-- Sound effects toggle (icon only) -->
+                        <div class="popover-row popover-row--icon">
                           <div class="popover-row-label">
                             <svg
                               class="size-3.5 shrink-0"
@@ -432,19 +444,19 @@ const accents = [
                           </div>
                           <button
                             type="button"
-                            class="sound-toggle-pill muted"
+                            class="sound-toggle-icon muted"
                             data-sound-toggle
                             data-label-on={t("nav.soundFxOn")}
                             data-label-off={t("nav.soundFxOff")}
                             aria-pressed="false"
-                            title={t("nav.soundFxToggle")}
+                            aria-label={t("nav.soundFxToggle")}
                           >
                             <svg
-                              class="size-3 shrink-0"
+                              class="sound-icon sound-icon--on"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
-                              stroke-width="2"
+                              stroke-width="1.9"
                               aria-hidden="true"
                             >
                               <path
@@ -452,8 +464,29 @@ const accents = [
                                 stroke-linejoin="round"
                                 d="M11 5 6 9H3v6h3l5 4V5Z"
                               />
+                              <path
+                                stroke-linecap="round"
+                                d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"
+                              />
                             </svg>
-                            <span data-sound-label>{t("nav.soundFxOff")}</span>
+                            <svg
+                              class="sound-icon sound-icon--off"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              stroke-width="1.9"
+                              aria-hidden="true"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M11 5 6 9H3v6h3l5 4V5Z"
+                              />
+                              <path
+                                stroke-linecap="round"
+                                d="m16 9 5 5m0-5-5 5"
+                              />
+                            </svg>
                           </button>
                         </div>
                       </div>

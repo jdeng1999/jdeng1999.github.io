@@ -23,11 +23,10 @@ const URL = Astro.url;
     <h2 class="toc-heading border-b border-dashed border-border/15 pb-2 font-firacode text-[10px] tracking-widest text-foreground/45 uppercase select-none">
       {t("share.post")}
     </h2>
-    <div class="mt-4 flex flex-wrap gap-2">
+    <div class="mt-4 flex flex-nowrap gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
       {/* Copy URL Button */}
       <button
-        class="copy-url-btn share-btn inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-border/20 bg-muted/5 transition-all duration-200 hover:border-accent/40 hover:bg-accent/10 hover:text-accent hover:shadow-sm hover:shadow-accent/10"
-        title={t("share.copy")}
+        class="copy-url-btn share-btn inline-flex size-8 cursor-pointer items-center justify-center text-foreground/55 transition-colors duration-200 hover:text-accent"
         aria-label={t("share.copy")}
         data-copied-label={t("share.copied")}
       >
@@ -64,8 +63,7 @@ const URL = Astro.url;
           href={`${social.href + URL}`}
           target="_blank"
           rel="noopener noreferrer"
-          class="share-btn inline-flex size-8 items-center justify-center rounded-lg border border-border/20 bg-muted/5 transition-all duration-200 hover:border-accent/40 hover:bg-accent/10 hover:text-accent hover:shadow-sm hover:shadow-accent/10"
-          title={social.linkTitle}
+          class="share-btn inline-flex size-8 items-center justify-center text-foreground/55 transition-colors duration-200 hover:text-accent"
         >
           <social.icon class="size-4 fill-transparent stroke-current stroke-2" />
           <span class="sr-only">{social.linkTitle}</span>
@@ -81,8 +79,7 @@ const URL = Astro.url;
     <div class="flex items-center gap-1.5">
       {/* Copy URL Button */}
       <button
-        class="copy-url-btn share-btn inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-border/20 bg-muted/5 transition-all duration-200 hover:border-accent/40 hover:bg-accent/10 hover:text-accent hover:shadow-sm hover:shadow-accent/10"
-        title={t("share.copy")}
+        class="copy-url-btn share-btn inline-flex size-8 cursor-pointer items-center justify-center text-foreground/55 transition-colors duration-200 hover:text-accent"
         aria-label={t("share.copy")}
         data-copied-label={t("share.copied")}
       >
@@ -119,8 +116,7 @@ const URL = Astro.url;
           href={`${social.href + URL}`}
           target="_blank"
           rel="noopener noreferrer"
-          class="share-btn inline-flex size-8 items-center justify-center rounded-lg border border-border/20 bg-muted/5 transition-all duration-200 hover:border-accent/40 hover:bg-accent/10 hover:text-accent hover:shadow-sm hover:shadow-accent/10"
-          title={social.linkTitle}
+          class="share-btn inline-flex size-8 items-center justify-center text-foreground/55 transition-colors duration-200 hover:text-accent"
         >
           <social.icon class="size-4 fill-transparent stroke-current stroke-2" />
           <span class="sr-only">{social.linkTitle}</span>

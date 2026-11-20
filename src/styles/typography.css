@@ -14,7 +14,8 @@
     }
 
     h3 {
-      @apply font-sriracha italic;
+      @apply text-foreground;
+      letter-spacing: -0.01em;
     }
 
     p,
@@ -96,7 +97,7 @@
     }
 
     blockquote {
-      @apply rounded-r-xl border-s-[3px] border-accent/80 bg-accent/5 py-4 pr-5 pl-6 font-sriracha text-[1.05rem] wrap-break-word text-foreground/90 opacity-90 shadow-sm shadow-accent/5;
+      @apply rounded-r-xl border-s-[3px] border-accent/80 bg-accent/5 py-4 pr-5 pl-6 text-[1.02rem] leading-relaxed wrap-break-word text-foreground/85 shadow-sm shadow-accent/5;
     }
 
     /* ===== Table of Contents (clean card, no glassmorphism) ===== */

@@ -164,7 +164,7 @@ const recommendedPost = rawRecommendedPost
           {tags.map((tag: string) => (
             <a
               href={`${prefix}/tags/${slugifyStr(tag)}/`}
-              class="post-tag-badge inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/5 px-2.5 py-0.5 font-firacode text-xs text-accent transition-all duration-200 hover:border-accent/40 hover:bg-accent/10 hover:shadow-sm hover:shadow-accent/10"
+              class="post-tag-badge inline-flex items-center gap-1 font-firacode text-xs text-accent transition-colors duration-200 hover:text-accent/70"
             >
               <span class="opacity-50">#</span>
               {tag}
@@ -597,7 +597,7 @@ const recommendedPost = rawRecommendedPost
 
   document.addEventListener("astro:page-load", () => {
     const pathname = window.location.pathname;
-    const isPostPage = pathname.match(/^\/(es\/)?posts\/.+/);
+    const isPostPage = pathname.match(/^\/((?:es|zh)\/)?posts\/.+/);
 
     if (!isPostPage) {
       cleanupReadingMode();

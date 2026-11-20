@@ -188,7 +188,6 @@ const accents = [
           <button
             data-search-trigger
             class="mobile-action-btn"
-            title={`${t("nav.search")} (⌘K)`}
             aria-label={t("nav.openSearch")}
           >
             <IconSearch class="size-4 shrink-0" />
@@ -223,7 +222,7 @@ const accents = [
                 class="accent-swatch"
                 data-accent-color={accent.key}
                 style={`background-color: ${accent.color}`}
-                title={accent.label}
+                data-tip={accent.label}
                 aria-label={accent.label}
               ></button>
             ))}
@@ -239,7 +238,6 @@ const accents = [
             data-label-on={t("nav.soundFxOn")}
             data-label-off={t("nav.soundFxOff")}
             aria-pressed="false"
-            title={t("nav.soundFxToggle")}
           >
             <svg
               class="size-4 shrink-0"

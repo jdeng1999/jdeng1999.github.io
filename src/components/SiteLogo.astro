@@ -27,7 +27,7 @@ const { class: className = "", cursor = false } = Astro.props;
     font-family: var(--font-wotfard), ui-sans-serif, sans-serif;
     font-weight: 700;
     line-height: 0.9;
-    letter-spacing: -0.045em;
+    letter-spacing: -0.015em;
     color: var(--color-foreground);
     user-select: none;
   }
@@ -36,11 +36,16 @@ const { class: className = "", cursor = false } = Astro.props;
     color: var(--color-accent);
   }
 
+  .site-logo-text {
+    margin-left: 0.18em;
+  }
+
   .site-logo-cursor {
-    margin-left: 0.04em;
+    margin-left: 0.09em;
     color: var(--color-accent);
-    font-weight: 700;
-    animation: site-logo-blink 1.1s steps(1, end) infinite;
+    font-weight: 500;
+    opacity: 0.9;
+    animation: site-logo-blink 1.7s steps(1, end) infinite;
   }
 
   @keyframes site-logo-blink {

@@ -22,6 +22,12 @@ const navigation = [
   { keys: ["G", "G"], label: t("shortcuts.action.gotoGalleries") },
 ];
 
+const media = [
+  { keys: ["K"], label: t("shortcuts.action.playPause") },
+  { keys: ["⇧", "←"], label: t("shortcuts.action.prevTrack") },
+  { keys: ["⇧", "→"], label: t("shortcuts.action.nextTrack") },
+];
+
 const gotoHint = t("shortcuts.group.gotoHelp").replace("{g}", "G");
 ---
 
@@ -62,40 +68,60 @@ const gotoHint = t("shortcuts.group.gotoHelp").replace("{g}", "G");
     </header>
 
     <div class="shortcuts-body">
-      <section class="shortcuts-group">
-        <h3>{t("shortcuts.group.general")}</h3>
-        <ul>
-          {general.map(item => (
-            <li>
-              <span>{item.label}</span>
-              <span class="shortcuts-keys">
-                {item.keys.map(key => (
-                  <kbd>{key}</kbd>
-                ))}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div class="shortcuts-col">
+        <section class="shortcuts-group">
+          <h3>{t("shortcuts.group.general")}</h3>
+          <ul>
+            {general.map(item => (
+              <li>
+                <span>{item.label}</span>
+                <span class="shortcuts-keys">
+                  {item.keys.map(key => (
+                    <kbd>{key}</kbd>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
 
-      <section class="shortcuts-group">
-        <h3>
-          {t("shortcuts.group.vim")}
-          <span>{gotoHint}</span>
-        </h3>
-        <ul>
-          {navigation.map(item => (
-            <li>
-              <span>{item.label}</span>
-              <span class="shortcuts-keys">
-                {item.keys.map(key => (
-                  <kbd>{key}</kbd>
-                ))}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div class="shortcuts-col">
+        <section class="shortcuts-group">
+          <h3>{t("shortcuts.group.media")}</h3>
+          <ul>
+            {media.map(item => (
+              <li>
+                <span>{item.label}</span>
+                <span class="shortcuts-keys">
+                  {item.keys.map(key => (
+                    <kbd>{key}</kbd>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section class="shortcuts-group">
+          <h3>
+            {t("shortcuts.group.vim")}
+            <span>{gotoHint}</span>
+          </h3>
+          <ul>
+            {navigation.map(item => (
+              <li>
+                <span>{item.label}</span>
+                <span class="shortcuts-keys">
+                  {item.keys.map(key => (
+                    <kbd>{key}</kbd>
+                  ))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
     </div>
 
     <footer class="shortcuts-foot">
@@ -255,8 +281,16 @@ const gotoHint = t("shortcuts.group.gotoHelp").replace("{g}", "G");
   .shortcuts-body {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
     gap: 1.4rem 2rem;
     padding: 1.15rem;
+  }
+
+  .shortcuts-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    min-width: 0;
   }
 
   .shortcuts-group h3 {

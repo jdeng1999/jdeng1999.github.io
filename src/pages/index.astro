@@ -19,6 +19,15 @@ import { getEntryPath } from "@/utils/contentEntry";
 
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
+const introVariantIds: Array<"en" | "zh" | "es"> =
+  locale === "es"
+    ? ["es", "en"]
+    : [locale === "zh" ? "zh" : "en", locale === "zh" ? "en" : "zh"];
+const introVariants = introVariantIds.map(id => ({
+  id,
+  t: useTranslations(id),
+  active: id === locale,
+}));
 const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
 const contentLocale = locale === "zh" ? "en" : locale;
 
@@ -151,7 +160,10 @@ const whatIcons = {
             <p class="hero-greeting">
               <span class="hero-greeting-dot" aria-hidden="true"></span>
               {t("index.heroGreeting")}
-              <span class="hero-name">J. Deng</span>
+              <span class="hero-name">
+                J. Deng
+                <span class="hero-name-native">(邓佳)</span>
+              </span>
             </p>
 
             <div class="hero-role-grid">
@@ -161,16 +173,26 @@ const whatIcons = {
               </h1>
 
               <div class="hero-intro-panel">
-                <p class="hero-intro">
-                  {t("index.heroIntroBefore")}
-                  <span class="shiny-accent">
-                    {t("index.heroIntroHighlight")}
-                  </span>
-                  {t("index.heroIntroAfter")}
-                  <span class="hero-intro-tail">
-                    {t("index.heroIntroTail")}
-                  </span>
-                </p>
+                <div class="hero-intro-stack">
+                  {introVariants.map(variant => (
+                    <p
+                      class:list={[
+                        "hero-intro",
+                        { "is-active": variant.active },
+                      ]}
+                      aria-hidden={variant.active ? undefined : "true"}
+                    >
+                      {variant.t("index.heroIntroBefore")}
+                      <span class="shiny-accent">
+                        {variant.t("index.heroIntroHighlight")}
+                      </span>
+                      {variant.t("index.heroIntroAfter")}
+                      <span class="hero-intro-tail">
+                        {variant.t("index.heroIntroTail")}
+                      </span>
+                    </p>
+                  ))}
+                </div>
 
                 <div class="hero-meta-row">
                   <p class="hero-written">
@@ -434,15 +456,8 @@ const whatIcons = {
       type="button"
       class="scroll-cue"
       data-scroll-cue
-      data-visible="true"
+      data-visible="false"
       aria-label={
-        locale === "es"
-          ? "Ir a los artículos"
-          : locale === "zh"
-            ? "前往文章"
-            : "Scroll to articles"
-      }
-      title={
         locale === "es"
           ? "Ir a los artículos"
           : locale === "zh"
@@ -510,16 +525,12 @@ const whatIcons = {
     color: color-mix(in srgb, var(--color-foreground) 38%, transparent);
     cursor: pointer;
     transform: translateX(-50%);
-    transition:
-      opacity 0.25s ease,
-      transform 0.25s ease,
-      color 0.2s ease;
+    transition: color 0.2s ease;
   }
 
   .scroll-cue svg {
     width: 1.35rem;
     height: 1.35rem;
-    animation: scroll-cue-bounce 2.4s ease-in-out infinite;
   }
 
   .scroll-cue:hover {
@@ -535,17 +546,7 @@ const whatIcons = {
   .scroll-cue[data-visible="false"] {
     opacity: 0;
     pointer-events: none;
-    transform: translateX(-50%) translateY(6px);
-  }
-
-  @keyframes scroll-cue-bounce {
-    0%,
-    100% {
-      transform: translateY(-1px);
-    }
-    50% {
-      transform: translateY(3px);
-    }
+    transform: translateX(-50%);
   }
 
   @media (max-width: 640px) {
@@ -590,6 +591,12 @@ const whatIcons = {
   .hero-name {
     color: var(--color-foreground);
     letter-spacing: 0.06em;
+  }
+
+  .hero-name-native {
+    color: color-mix(in srgb, var(--color-foreground) 45%, transparent);
+    font-weight: 400;
+    letter-spacing: 0.02em;
   }
 
   .hero-role-grid {
@@ -674,6 +681,20 @@ const whatIcons = {
     letter-spacing: 0.002em;
     color: color-mix(in srgb, var(--color-foreground) 72%, transparent);
     text-wrap: pretty;
+  }
+
+  /* All locales share the same footprint, so switching language can never
+     move the divider, meta row or socials. */
+  .hero-intro-stack {
+    display: grid;
+  }
+
+  .hero-intro-stack > .hero-intro {
+    grid-area: 1 / 1;
+  }
+
+  .hero-intro-stack > .hero-intro:not(.is-active) {
+    visibility: hidden;
   }
 
   .hero-intro-tail {
@@ -841,9 +862,7 @@ const whatIcons = {
       var(--color-foreground) 2.5%,
       var(--color-background)
     );
-    transition:
-      border-color 0.25s ease,
-      background-color 0.25s ease;
+    transition: border-color 0.12s ease;
   }
 
   .what-item[open] {
@@ -894,8 +913,12 @@ const whatIcons = {
 
   .what-item-title {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
     font-size: 0.92rem;
     font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .what-chevron {
@@ -938,6 +961,13 @@ const whatIcons = {
     display: flex;
     align-items: baseline;
     gap: 0.55rem;
+    min-width: 0;
+  }
+
+  .what-items li > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .what-bullet {
@@ -1180,7 +1210,7 @@ const whatIcons = {
 
   /* More than two featured posts: horizontal rail with the next card peeking */
   .featured-rail.is-scrollable .featured-track > :global(li) {
-    flex-basis: calc(47% - 0.5rem);
+    flex-basis: calc(50% - 1rem);
   }
 
   .featured-rail.is-scrollable {
@@ -1193,15 +1223,15 @@ const whatIcons = {
     -webkit-mask-image: linear-gradient(
       to right,
       transparent 0,
-      black 1.2rem,
-      black calc(100% - 1.2rem),
+      black 1.6rem,
+      black calc(100% - 4.5rem),
       transparent 100%
     );
     mask-image: linear-gradient(
       to right,
       transparent 0,
-      black 1.2rem,
-      black calc(100% - 1.2rem),
+      black 1.6rem,
+      black calc(100% - 4.5rem),
       transparent 100%
     );
   }
@@ -1316,21 +1346,47 @@ const whatIcons = {
     });
 
     // ── "What I do?" behaves as a single-open accordion ──
-    document
-      .querySelectorAll<HTMLDetailsElement>(".what-item")
-      .forEach(item => {
-        if (item.dataset.accordionReady === "true") return;
-        item.dataset.accordionReady = "true";
+    const accordionItems = Array.from(
+      document.querySelectorAll<HTMLDetailsElement>(".what-item")
+    );
+    const savedAccordion = Number(localStorage.getItem("what-open"));
+    const initialAccordion =
+      Number.isInteger(savedAccordion) &&
+      savedAccordion >= 0 &&
+      savedAccordion < accordionItems.length
+        ? savedAccordion
+        : 0;
+    accordionItems.forEach((item, itemIndex) => {
+      if (item.dataset.accordionReady === "true") return;
+      item.dataset.accordionReady = "true";
+      item.open = itemIndex === initialAccordion;
 
-        item.addEventListener("toggle", () => {
-          if (!item.open) return;
-          document
-            .querySelectorAll<HTMLDetailsElement>(".what-item")
-            .forEach(other => {
-              if (other !== item) other.open = false;
-            });
-        });
+      const summary = item.querySelector("summary");
+      summary?.addEventListener("click", event => {
+        // Clicking the open item must not collapse it (that would move the
+        // page); clicking a closed one closes its siblings *before* the
+        // browser opens it, so two panels are never open at once.
+        if (item.open) {
+          event.preventDefault();
+          return;
+        }
+        document
+          .querySelectorAll<HTMLDetailsElement>(".what-item")
+          .forEach(other => {
+            if (other !== item) other.open = false;
+          });
       });
+
+      item.addEventListener("toggle", () => {
+        if (!item.open) return;
+        localStorage.setItem("what-open", String(itemIndex));
+        document
+          .querySelectorAll<HTMLDetailsElement>(".what-item")
+          .forEach(other => {
+            if (other !== item) other.open = false;
+          });
+      });
+    });
 
     // ── First-screen scroll cue ──
     const cue = document.querySelector<HTMLButtonElement>("[data-scroll-cue]");

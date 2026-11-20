@@ -1,8 +1,10 @@
 import type { Props } from "astro";
 import IconMail from "@/assets/icons/IconMail.svg";
-import IconGitHub from "@/assets/icons/IconGitHub.svg";
+import IconGithubSolid from "@/assets/icons/IconGithubSolid.svg";
+import IconXSolid from "@/assets/icons/IconXSolid.svg";
+import IconLinkedinSolid from "@/assets/icons/IconLinkedinSolid.svg";
+import IconGmail from "@/assets/icons/IconGmail.svg";
 import IconBrandX from "@/assets/icons/IconBrandX.svg";
-import IconLinkedin from "@/assets/icons/IconLinkedin.svg";
 import IconWhatsapp from "@/assets/icons/IconWhatsapp.svg";
 import IconFacebook from "@/assets/icons/IconFacebook.svg";
 import IconTelegram from "@/assets/icons/IconTelegram.svg";
@@ -32,25 +34,29 @@ export const SOCIALS: Social[] = (
       name: "GitHub",
       href: PUBLIC_SOCIAL_GITHUB ?? "",
       linkTitle: `${SITE.title} on GitHub`,
-      icon: IconGitHub,
+      icon: IconGithubSolid,
     },
     {
       name: "X",
       href: PUBLIC_SOCIAL_X ?? "",
       linkTitle: `${SITE.title} on X`,
-      icon: IconBrandX,
+      icon: IconXSolid,
     },
     {
       name: "LinkedIn",
       href: PUBLIC_SOCIAL_LINKEDIN ?? "",
       linkTitle: `${SITE.title} on LinkedIn`,
-      icon: IconLinkedin,
+      icon: IconLinkedinSolid,
     },
     {
       name: "Mail",
-      href: PUBLIC_SOCIAL_EMAIL ? `mailto:${PUBLIC_SOCIAL_EMAIL}` : "",
+      href: PUBLIC_SOCIAL_EMAIL
+        ? `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+            PUBLIC_SOCIAL_EMAIL
+          )}`
+        : "",
       linkTitle: `Send an email to ${SITE.title}`,
-      icon: IconMail,
+      icon: IconGmail,
     },
   ] satisfies Social[]
 ).filter(s => s.href !== "");

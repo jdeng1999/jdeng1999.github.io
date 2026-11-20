@@ -97,7 +97,6 @@ if (SITE.showCoverImages) {
     coverSrc ? "overflow-hidden" : "",
     "border backdrop-blur-sm",
     "transition-[border-color,background-color,box-shadow,transform] duration-300 ease-out motion-reduce:transform-none motion-reduce:transition-none",
-    "focus-within:-translate-y-0.5 hover:-translate-y-0.5",
     "focus-within:shadow-lg hover:shadow-lg",
 
     // Default posts styling
@@ -205,7 +204,7 @@ if (SITE.showCoverImages) {
       ]}
       aria-labelledby={headingId}
       aria-describedby={descriptionId}
-      style={{ viewTransitionName }}
+      style={featured ? undefined : { viewTransitionName }}
     >
       <Heading id={headingId} class="flex items-center gap-2">
         {isGallery && (
@@ -244,27 +243,26 @@ if (SITE.showCoverImages) {
 
     <p
       id={descriptionId}
-      class="pointer-events-auto relative z-20 mt-2 line-clamp-2 text-sm leading-relaxed text-foreground/90 select-text"
+      class="pointer-events-none relative z-20 mt-2 line-clamp-2 text-sm leading-relaxed text-foreground/90"
     >
       {description}
     </p>
 
     <!-- Tags -->
     {SITE.showTagsInCards && tags.length > 0 && (
-      <ul class="pointer-events-auto relative z-20 mt-3 flex flex-wrap gap-1.5">
+      <ul class="pointer-events-auto relative z-20 mt-3 flex flex-wrap gap-3">
         {tags.slice(0, 4).map((tag: string) => (
           <li>
             <a
               href={`${prefix}/tags/${slugifyStr(tag)}/`}
               class:list={[
-                "inline-flex items-center gap-0.5 rounded-full px-2.5 py-0.5",
-                "text-xs font-medium",
-                "border transition-colors duration-200",
+                "inline-flex items-center gap-0.5 text-xs font-medium",
+                "transition-colors duration-200",
                 isGallery
-                  ? "border-gallery/30 bg-gallery/10 text-gallery hover:border-gallery/60 hover:bg-gallery/20"
+                  ? "text-gallery/80 hover:text-gallery"
                   : featured
-                    ? "border-featured/30 bg-featured/10 text-featured hover:border-featured/60 hover:bg-featured/20"
-                    : "border-border/30 bg-muted/15 text-foreground/80 hover:border-accent/40 hover:bg-accent/10 hover:text-accent",
+                    ? "text-featured/80 hover:text-featured"
+                    : "text-foreground/55 hover:text-accent",
               ]}
             >
               <span aria-hidden="true" class="opacity-60">

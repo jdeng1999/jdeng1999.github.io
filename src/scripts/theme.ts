@@ -2,37 +2,55 @@
 const THEME = "theme";
 const LIGHT = "light";
 const DARK = "dark";
+const SYSTEM = "system";
 
-// Initial color scheme
-// Can be "light", "dark", or empty string for system's prefers-color-scheme
-const initialColorScheme = "dark";
+type ThemeMode = typeof LIGHT | typeof DARK | typeof SYSTEM;
 
-function getPreferTheme(): string {
-  // get theme data from local storage (user's explicit choice)
-  const currentTheme = localStorage.getItem(THEME);
-  if (currentTheme) return currentTheme;
+const isThemeMode = (value: string | null): value is ThemeMode =>
+  value === LIGHT || value === DARK || value === SYSTEM;
 
-  // return initial color scheme if it is set (site default)
-  if (initialColorScheme) return initialColorScheme;
-
-  // return user device's prefer color scheme (system fallback)
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? DARK
-    : LIGHT;
+function getPreferredMode(): ThemeMode {
+  try {
+    const stored = localStorage.getItem(THEME);
+    if (isThemeMode(stored)) return stored;
+  } catch {
+    /* storage can be unavailable */
+  }
+  return SYSTEM;
 }
 
+const resolveMode = (mode: ThemeMode): string =>
+  mode === SYSTEM
+    ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? DARK
+      : LIGHT
+    : mode;
+
 // Use existing theme value from inline script if available, otherwise detect
-let themeValue = window.theme?.themeValue ?? getPreferTheme();
+let themeValue: ThemeMode =
+  (window.theme?.themeValue as ThemeMode | undefined) ?? getPreferredMode();
+if (!isThemeMode(themeValue)) themeValue = getPreferredMode();
 
 function setPreference(): void {
-  localStorage.setItem(THEME, themeValue);
+  try {
+    localStorage.setItem(THEME, themeValue);
+  } catch {
+    /* storage can be unavailable */
+  }
   reflectPreference();
 }
 
 function reflectPreference(): void {
-  document.firstElementChild?.setAttribute("data-theme", themeValue);
+  const root = document.firstElementChild;
+  root?.setAttribute("data-theme", resolveMode(themeValue));
+  root?.setAttribute("data-theme-mode", themeValue);
 
-  document.querySelector("#theme-btn")?.setAttribute("aria-label", themeValue);
+  const label = themeValue;
+  document
+    .querySelectorAll<HTMLElement>("#theme-btn, #theme-btn-mobile")
+    .forEach(button => {
+      button.setAttribute("aria-label", label);
+    });
 
   // Get a reference to the body element
   const body = document.body;
@@ -63,7 +81,7 @@ if (window.theme) {
     reflectPreference,
     getTheme: () => themeValue,
     setTheme: (val: string) => {
-      themeValue = val;
+      if (isThemeMode(val)) themeValue = val;
     },
   };
 }
@@ -77,7 +95,8 @@ function setThemeFeature(): void {
 
   // now this script can find and listen for clicks on the control
   const toggleTheme = () => {
-    themeValue = themeValue === LIGHT ? DARK : LIGHT;
+    themeValue =
+      themeValue === LIGHT ? DARK : themeValue === DARK ? SYSTEM : LIGHT;
     window.theme?.setTheme(themeValue);
     setPreference();
   };
@@ -109,6 +128,26 @@ document.addEventListener("astro:after-swap", setThemeFeature);
 // to avoid navigation bar color flickering in Android dark mode
 document.addEventListener("astro:before-swap", event => {
   const astroEvent = event;
+
+  // Carry the resolved theme (and accent) into the incoming document before
+  // the swap, otherwise the new markup is styled with the light defaults for
+  // a frame and every themed surface visibly flashes.
+  const rootStyles = document.documentElement;
+  const themeAttr = rootStyles.getAttribute("data-theme");
+  const accentAttr = rootStyles.getAttribute("data-accent");
+  if (themeAttr) {
+    astroEvent.newDocument.documentElement.setAttribute(
+      "data-theme",
+      themeAttr
+    );
+  }
+  if (accentAttr) {
+    astroEvent.newDocument.documentElement.setAttribute(
+      "data-accent",
+      accentAttr
+    );
+  }
+
   const bgColor = document
     .querySelector("meta[name='theme-color']")
     ?.getAttribute("content");
@@ -120,11 +159,10 @@ document.addEventListener("astro:before-swap", event => {
   }
 });
 
-// sync with system changes
+// sync with system changes when the "system" mode is active
 window
   .matchMedia("(prefers-color-scheme: dark)")
-  .addEventListener("change", ({ matches: isDark }) => {
-    themeValue = isDark ? DARK : LIGHT;
-    window.theme?.setTheme(themeValue);
-    setPreference();
+  .addEventListener("change", () => {
+    if (themeValue !== SYSTEM) return;
+    reflectPreference();
   });

@@ -166,10 +166,9 @@ function setupScrollPhysics() {
   const { signal } = scrollCleanup;
 
   const header = document.getElementById("main-header");
-  const navWrap = document.getElementById("top-nav-wrap");
   const borderLine = document.getElementById("header-border");
 
-  if (!header || !navWrap || !borderLine) return;
+  if (!header || !borderLine) return;
 
   let rafPending = false;
   const handleScroll = () => {
@@ -177,9 +176,9 @@ function setupScrollPhysics() {
     rafPending = true;
     requestAnimationFrame(() => {
       const scrolled = window.scrollY > 15;
+      // Only the surface changes on scroll; the header keeps its height so
+      // navigation targets never shift under the pointer.
       header.classList.toggle("header-scrolled", scrolled);
-      navWrap.classList.toggle("sm:py-5", !scrolled);
-      navWrap.classList.toggle("sm:py-3", scrolled);
       borderLine.classList.toggle("opacity-0", !scrolled);
       borderLine.classList.toggle("opacity-100", scrolled);
       rafPending = false;

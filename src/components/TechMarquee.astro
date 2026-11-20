@@ -213,3 +213,53 @@ const repeats = 4;
     }
   }
 </style>
+
+<script>
+  // Keep both ticker rows running seamlessly across client-side navigations
+  // (e.g. a language switch) instead of restarting the animation.
+  const MARQUEE_STATE_KEY = "marquee-state";
+
+  const captureMarqueeState = () => {
+    const track = document.querySelector<HTMLElement>(".marquee-track");
+    const animation = track?.getAnimations()[0];
+    if (!animation) return;
+    try {
+      sessionStorage.setItem(
+        MARQUEE_STATE_KEY,
+        JSON.stringify({
+          time: Number(animation.currentTime ?? 0),
+          at: Date.now(),
+        })
+      );
+    } catch {
+      /* storage can be unavailable */
+    }
+  };
+
+  const restoreMarqueeState = () => {
+    let raw: string | null = null;
+    try {
+      raw = sessionStorage.getItem(MARQUEE_STATE_KEY);
+      if (raw) sessionStorage.removeItem(MARQUEE_STATE_KEY);
+    } catch {
+      return;
+    }
+    if (!raw) return;
+
+    try {
+      const { time, at } = JSON.parse(raw) as { time: number; at: number };
+      const elapsed = Math.max(0, Date.now() - at);
+      document
+        .querySelectorAll<HTMLElement>(".marquee-track")
+        .forEach(track => {
+          const animation = track.getAnimations()[0];
+          if (animation) animation.currentTime = Number(time) + elapsed;
+        });
+    } catch {
+      /* ignore malformed state */
+    }
+  };
+
+  document.addEventListener("astro:before-swap", captureMarqueeState);
+  document.addEventListener("astro:page-load", restoreMarqueeState);
+</script>

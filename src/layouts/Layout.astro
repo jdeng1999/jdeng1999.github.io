@@ -5,6 +5,7 @@ import { PUBLIC_GOOGLE_SITE_VERIFICATION } from "astro:env/client";
 import { SITE } from "@/config";
 import SearchModal from "@/components/SearchModal.astro";
 import ShortcutsDialog from "@/components/ShortcutsDialog.astro";
+import Tooltip from "@/components/Tooltip.astro";
 import { useTranslations, getTargetLanguageUrl } from "@/i18n/utils";
 import "@/styles/global.css";
 
@@ -262,21 +263,23 @@ const showGrain = SITE.backdropEffects.grain;
     <!-- Minimal inline script to prevent FOUC - sets theme immediately -->
     <script is:inline>
       (function () {
-        const initialColorScheme = ""; // "light" | "dark"
-        const currentTheme = localStorage.getItem("theme");
-
-        function getPreferTheme() {
-          if (currentTheme) return currentTheme;
-          if (initialColorScheme) return initialColorScheme;
-          return window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light";
-        }
-
-        const themeValue = getPreferTheme();
+        const storedTheme = localStorage.getItem("theme");
+        const themeMode =
+          storedTheme === "light" ||
+          storedTheme === "dark" ||
+          storedTheme === "system"
+            ? storedTheme
+            : "system";
+        const resolvedTheme =
+          themeMode === "system"
+            ? window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : themeMode;
 
         // Set theme immediately to prevent flash
-        document.firstElementChild?.setAttribute("data-theme", themeValue);
+        document.firstElementChild?.setAttribute("data-theme", resolvedTheme);
+        document.firstElementChild?.setAttribute("data-theme-mode", themeMode);
 
         // Restore the chosen accent before paint as well
         try {
@@ -300,7 +303,7 @@ const showGrain = SITE.backdropEffects.grain;
 
         // Export minimal API for external script
         window.theme = {
-          themeValue: themeValue,
+          themeValue: themeMode,
           getTheme: () => window.theme.themeValue,
           setTheme: val => {
             window.theme.themeValue = val;
@@ -361,6 +364,7 @@ const showGrain = SITE.backdropEffects.grain;
 
     <SearchModal />
     <ShortcutsDialog />
+    <Tooltip transition:persist />
 
     <!-- Load full theme logic -->
     <script src="../scripts/theme.ts"></script>
@@ -513,6 +517,23 @@ const showGrain = SITE.backdropEffects.grain;
 
 <script>
   let langCleanup: AbortController | null = null;
+
+  // Restore the saved scroll position as early as possible after a language
+  // swap so the page never paints at the top before settling.
+  const restoreLangScrollEarly = () => {
+    try {
+      const raw = sessionStorage.getItem("lang-scroll-y");
+      if (raw === null) return;
+      const y = Number(raw);
+      if (!Number.isFinite(y) || y <= 0) return;
+      const apply = () => window.scrollTo({ top: y, behavior: "instant" });
+      apply();
+      requestAnimationFrame(() => requestAnimationFrame(apply));
+    } catch {
+      /* storage can be unavailable */
+    }
+  };
+  document.addEventListener("astro:after-swap", restoreLangScrollEarly);
 
   document.addEventListener("astro:page-load", () => {
     if (langCleanup) langCleanup.abort();
