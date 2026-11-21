@@ -32,5 +32,8 @@ export function getReadingTime(
   if (locale === "es") {
     return minutes < 1 ? "< 1 min de lectura" : `${minutes} min de lectura`;
   }
+  if (locale === "zh") {
+    return minutes < 1 ? "< 1 分钟阅读" : `${minutes} 分钟阅读`;
+  }
   return minutes < 1 ? "< 1 min read" : `${minutes} min read`;
 }

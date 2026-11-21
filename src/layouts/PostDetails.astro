@@ -248,7 +248,9 @@ const recommendedPost = rawRecommendedPost
             title={
               locale === "es"
                 ? "Alternar Modo Lectura (Atajo: r)"
-                : "Toggle Reading Mode (Shortcut: r)"
+                : locale === "zh"
+                  ? "切换阅读模式（快捷键：r）"
+                  : "Toggle Reading Mode (Shortcut: r)"
             }
             aria-label={t("post.readMode")}
           >

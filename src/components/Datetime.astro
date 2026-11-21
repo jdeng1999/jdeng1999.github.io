@@ -47,7 +47,13 @@ const parts = new Intl.DateTimeFormat(locale, {
 const day = parts.find(p => p.type === "day")?.value ?? "";
 const month = parts.find(p => p.type === "month")?.value ?? "";
 const year = parts.find(p => p.type === "year")?.value ?? "";
-const date = `${day} ${month}, ${year}`;
+const date =
+  locale === "zh"
+    ? new Intl.DateTimeFormat(locale, {
+        dateStyle: "long",
+        timeZone: resolvedTimezone,
+      }).format(targetDate)
+    : `${day} ${month}, ${year}`;
 
 const srDate = new Intl.DateTimeFormat(locale, {
   dateStyle: "long",

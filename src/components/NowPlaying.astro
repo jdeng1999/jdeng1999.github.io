@@ -475,7 +475,12 @@ const totalLabel = formatTime(first.duration);
       transform 0.25s ease,
       border-color 0.2s ease,
       color 0.2s ease,
-      background-color 0.2s ease;
+      background-color 0.2s ease,
+      opacity 0.18s ease;
+  }
+
+  .np-stack.is-dealing [data-np-peek="1"] {
+    opacity: 0;
   }
 
   .np-peek--back {
@@ -1373,6 +1378,7 @@ const totalLabel = formatTime(first.duration);
     const peeks = Array.from(
       root.querySelectorAll<HTMLButtonElement>("[data-np-peek]")
     );
+    const stack = root.querySelector<HTMLElement>("[data-np-stack]");
     const modeButton = root.querySelector<HTMLButtonElement>("[data-np-mode]");
     const titleEl = root.querySelector<HTMLElement>("[data-np-title]");
     const artistEl = root.querySelector<HTMLElement>("[data-np-artist]");
@@ -1741,24 +1747,22 @@ const totalLabel = formatTime(first.duration);
     let wheelLocked = false;
     let wheelUnlockTimer = 0;
 
-    const clampUnit = (value: number) => Math.max(0, Math.min(1, value));
-
     const renderDeck = () => {
       const height = getCardHeight();
       if (!height || !card) return;
 
-      card.style.transform = `translateY(${PEEK - deckOffset * height}px)`;
-      card.style.opacity = `${clampUnit(1 - Math.abs(deckOffset))}`;
+      // The peeks sit above the stage, so "next" comes down from that stack
+      // and "previous" rises from below. Cards stay opaque while they move:
+      // the stage clip reveals one complete card instead of ghosting two.
+      card.style.transform = `translateY(${PEEK + deckOffset * height}px)`;
 
       nextClone.style.transform = `translateY(${
-        PEEK + (1 - deckOffset) * height
+        PEEK + (deckOffset - 1) * height
       }px)`;
-      nextClone.style.opacity = `${clampUnit(deckOffset)}`;
 
       prevClone.style.transform = `translateY(${
-        PEEK + (-1 - deckOffset) * height
+        PEEK + (deckOffset + 1) * height
       }px)`;
-      prevClone.style.opacity = `${clampUnit(-deckOffset)}`;
     };
 
     const commitIfNeeded = () => {
@@ -1788,7 +1792,7 @@ const totalLabel = formatTime(first.duration);
 
     const deckTick = () => {
       const diff = deckTarget - deckOffset;
-      deckOffset += diff * 0.22;
+      deckOffset += diff * 0.26;
       if (Math.abs(deckTarget - deckOffset) < 0.001) {
         deckOffset = deckTarget;
       }
@@ -1800,10 +1804,14 @@ const totalLabel = formatTime(first.duration);
         deckFrame = requestAnimationFrame(deckTick);
       } else {
         deckFrame = 0;
+        stack?.classList.remove("is-dealing");
       }
     };
 
     const startDeck = () => {
+      // While advancing forward, hide the immediate next peek: that card is
+      // the one sliding down into the front, so showing it twice feels chaotic.
+      stack?.classList.toggle("is-dealing", deckTarget > deckOffset + 0.01);
       if (!deckFrame) deckFrame = requestAnimationFrame(deckTick);
     };
 
@@ -2056,7 +2064,9 @@ const totalLabel = formatTime(first.duration);
 
       const delta = swipeStartY - event.clientY;
       if (Math.abs(delta) >= 28) {
-        slideToTrack(delta > 0 ? 1 : -1);
+        // Dragging down pulls the next card out of the stack above; dragging
+        // up reveals the previous card from below.
+        slideToTrack(delta > 0 ? -1 : 1);
       }
     };
 

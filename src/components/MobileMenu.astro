@@ -292,19 +292,12 @@ const accents = [
 <style>
   /* Declarative scroll lock when menu is open on mobile */
   @media (max-width: 1023px) {
-    :global(body:has(#mobile-menu.is-open)) {
+    /* Lock the page scroll without turning the body into a scroll container:
+       body scrolling disables the sticky header and makes the sheet jump to
+       the document top. Locking <html> keeps the header in place and leaves
+       the page layout untouched. */
+    :global(html:has(#mobile-menu.is-open)) {
       overflow: hidden;
-    }
-
-    /* `overflow: hidden` makes the body the scroll container and disables the
-       sticky header, which would leave the sheet anchored at the document top.
-       Pin the header for as long as the sheet is open so the panel always
-       opens right below the visible header. */
-    :global(body:has(#mobile-menu.is-open)) :global(#main-header) {
-      position: fixed;
-      top: 0;
-      right: 0;
-      left: 0;
     }
   }
 
