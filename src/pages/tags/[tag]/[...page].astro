@@ -30,10 +30,14 @@ const tagDescription =
   page.currentPage > 1
     ? locale === "es"
       ? `Todos los artículos etiquetados con "${tagName}" en ${SITE.title} (Página ${page.currentPage} de ${page.lastPage}).`
-      : `All articles tagged with "${tagName}" on ${SITE.title} (Page ${page.currentPage} of ${page.lastPage}).`
+      : locale === "zh"
+        ? `所有标记为 “${tagName}” 的文章，第 ${page.currentPage} 页，共 ${page.lastPage} 页 · ${SITE.title}`
+        : `All articles tagged with "${tagName}" on ${SITE.title} (Page ${page.currentPage} of ${page.lastPage}).`
     : locale === "es"
       ? `Todos los artículos etiquetados con "${tagName}" en ${SITE.title}.`
-      : `All articles tagged with "${tagName}" on ${SITE.title}.`;
+      : locale === "zh"
+        ? `所有标记为 “${tagName}” 的文章 · ${SITE.title}`
+        : `All articles tagged with "${tagName}" on ${SITE.title}.`;
 
 const prevURL = page.url.prev
   ? new URL(page.url.prev, SITE.website).toString()
@@ -56,7 +60,9 @@ const nextURL = page.url.next
       {t("tags.tag")}:<span transition:name={tag}>{tagName}</span>
     </h1>
     <p class="mt-2 mb-6 italic">
-      {t("tags.articlesWith")} "{tagName}".
+      {locale === "zh"
+        ? `包含标签 “${tagName}” 的文章。`
+        : `${t("tags.articlesWith")} "${tagName}".`}
     </p>
     <ul>
       {page.data.map((data, index) => (

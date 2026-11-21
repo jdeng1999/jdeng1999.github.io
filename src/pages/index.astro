@@ -30,7 +30,7 @@ const introVariants = introVariantIds.map(id => ({
   active: id === locale,
 }));
 const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
-const contentLocale = locale === "zh" ? "en" : locale;
+const contentLocale = locale;
 
 const [blogPosts, galleryPosts] = await Promise.all([
   getCollection("blog", ({ id }) => id.startsWith(`${contentLocale}/`)),

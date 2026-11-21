@@ -38,7 +38,7 @@ const allGalleries = await getCollection(
   "galleries",
   ({ id }) =>
     id.startsWith(`${contentLocale}/`) ||
-    (locale === "en" && !id.startsWith("es/"))
+    (locale === "en" && !id.startsWith("es/") && !id.startsWith("zh/"))
 );
 const entry = allGalleries.find(g => {
   // Normalize separators and strip extension to match purely the slug (excluding locale prefix)

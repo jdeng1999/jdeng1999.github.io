@@ -26,8 +26,10 @@ export function getReadingTime(
     .replace(/\s+/g, " ") // collapse whitespace
     .trim();
 
-  const wordCount = plainText.split(" ").filter(Boolean).length;
-  const minutes = Math.ceil(wordCount / wordsPerMinute);
+  const cjkCount = (plainText.match(/[\u3400-\u9fff]/g) ?? []).length;
+  const latinText = plainText.replace(/[\u3400-\u9fff]/g, " ");
+  const wordCount = latinText.split(" ").filter(Boolean).length;
+  const minutes = Math.ceil(cjkCount / 350 + wordCount / wordsPerMinute);
 
   if (locale === "es") {
     return minutes < 1 ? "< 1 min de lectura" : `${minutes} min de lectura`;

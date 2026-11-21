@@ -15,7 +15,8 @@ export async function getStaticPaths() {
       post =>
         postFilter(post) &&
         !post.data.ogImage &&
-        (post.id.startsWith("en/") || !post.id.startsWith("es/"))
+        (post.id.startsWith("en/") ||
+          (!post.id.startsWith("es/") && !post.id.startsWith("zh/")))
     )
   );
 

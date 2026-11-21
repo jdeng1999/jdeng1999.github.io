@@ -31,6 +31,8 @@ export function getLocalizedTitle(
   title: string,
   locale: string
 ): string {
-  if (locale !== "zh") return title;
+  // Chinese content now ships its own frontmatter; only fall back to the
+  // mapping when a `/zh` page is still reusing an English entry.
+  if (locale !== "zh" || id.startsWith("zh/")) return title;
   return ZH_TITLES[entryKey(id)] ?? title;
 }

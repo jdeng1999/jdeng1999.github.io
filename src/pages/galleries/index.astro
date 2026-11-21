@@ -19,12 +19,15 @@ if (!SITE.showGalleries) {
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
 
-const contentLocale = locale === "zh" ? "en" : locale;
+const contentLocale = locale;
+const imageLocale = locale === "zh" ? "en" : locale;
 const rawGalleries = await getCollection(
   "galleries",
   entry =>
     (entry.id.startsWith(`${contentLocale}/`) ||
-      (locale === "en" && !entry.id.startsWith("es/"))) &&
+      (locale === "en" &&
+        !entry.id.startsWith("es/") &&
+        !entry.id.startsWith("zh/"))) &&
     postFilter(entry)
 );
 
@@ -36,7 +39,7 @@ const galleries = rawGalleries
   )
   .map(gallery => {
     const slug = getGallerySlug(gallery.id);
-    const folderImages = getGalleryImages(slug, locale);
+    const folderImages = getGalleryImages(slug, imageLocale);
     return {
       gallery,
       slug,

@@ -11,9 +11,10 @@ import postFilter from "./postFilter";
 type Locale = "en" | "es" | "zh";
 
 const isMatchingLocale = (id: string, locale: Locale) => {
-  if (locale === "zh") return id.startsWith("en/");
+  if (locale === "zh") return id.startsWith("zh/");
   return (
-    id.startsWith(`${locale}/`) || (locale === "en" && !id.startsWith("es/"))
+    id.startsWith(`${locale}/`) ||
+    (locale === "en" && !id.startsWith("es/") && !id.startsWith("zh/"))
   );
 };
 

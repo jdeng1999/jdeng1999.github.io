@@ -9,10 +9,10 @@ import { useTranslations } from "@/i18n/utils";
 export async function generateLocaleRss(locale: "en" | "es" | "zh") {
   const t = useTranslations(locale);
   const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
-  const contentLocale = locale === "zh" ? "en" : locale;
+  const contentLocale = locale;
   const isMatchingLocale = (id: string) =>
     id.startsWith(`${contentLocale}/`) ||
-    (locale === "en" && !id.startsWith("es/"));
+    (locale === "en" && !id.startsWith("es/") && !id.startsWith("zh/"));
 
   const [blogPosts, galleryPosts] = await Promise.all([
     getCollection("blog", ({ id }) => isMatchingLocale(id)),

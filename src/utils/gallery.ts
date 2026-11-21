@@ -37,7 +37,7 @@ export function getGalleryImages(
   locale?: string,
   fallbackTitle = ""
 ): GalleryImage[] {
-  const cleanSlug = slug.replace(/^(en|es)\//, "");
+  const cleanSlug = slug.replace(/^(en|es|zh)\//, "");
   return Object.entries(allGalleryImages)
     .filter(([path]) => {
       const isMatch =
