@@ -295,6 +295,17 @@ const accents = [
     :global(body:has(#mobile-menu.is-open)) {
       overflow: hidden;
     }
+
+    /* `overflow: hidden` makes the body the scroll container and disables the
+       sticky header, which would leave the sheet anchored at the document top.
+       Pin the header for as long as the sheet is open so the panel always
+       opens right below the visible header. */
+    :global(body:has(#mobile-menu.is-open)) :global(#main-header) {
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: 0;
+    }
   }
 
   /* ─── Mobile Menu Floating Sheet ─── */
@@ -305,8 +316,6 @@ const accents = [
     width: 100%;
     z-index: 20;
     pointer-events: none;
-    max-height: calc(100dvh - 100%);
-    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 

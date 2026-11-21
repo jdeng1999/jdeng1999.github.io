@@ -12,6 +12,7 @@ import TableOfContents from "@/components/TableOfContents.astro";
 import { getPath } from "@/utils/getPath";
 import { slugifyStr } from "@/utils/slugify";
 import { getReadingTime } from "@/utils/readingTime";
+import { getLocalizedTitle } from "@/utils/localizedTitle";
 import IconClock from "@/assets/icons/IconClock.svg";
 import { SITE } from "@/config";
 import { useTranslations } from "@/i18n/utils";
@@ -28,7 +29,6 @@ const t = useTranslations(locale);
 const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
 
 const {
-  title,
   author,
   description,
   ogImage: initOgImage,
@@ -36,6 +36,8 @@ const {
   modDatetime,
   tags,
 } = post.data;
+
+const title = getLocalizedTitle(post.id, post.data.title, locale);
 
 const { Content, headings } = await render(post);
 const readingTime = post.body ? getReadingTime(post.body, locale) : null;
@@ -80,7 +82,7 @@ const rawPrevPost = currentPostIndex !== 0 ? posts[currentPostIndex - 1] : null;
 const prevPost = rawPrevPost
   ? {
       id: rawPrevPost.id,
-      title: rawPrevPost.data.title,
+      title: getLocalizedTitle(rawPrevPost.id, rawPrevPost.data.title, locale),
       filePath: rawPrevPost.filePath,
       pubDatetime: rawPrevPost.data.pubDatetime,
       modDatetime: rawPrevPost.data.modDatetime,
@@ -120,7 +122,11 @@ const isRecommended = sortedCandidates.length > 0;
 const recommendedPost = rawRecommendedPost
   ? {
       id: rawRecommendedPost.id,
-      title: rawRecommendedPost.data.title,
+      title: getLocalizedTitle(
+        rawRecommendedPost.id,
+        rawRecommendedPost.data.title,
+        locale
+      ),
       filePath: rawRecommendedPost.filePath,
       pubDatetime: rawRecommendedPost.data.pubDatetime,
       modDatetime: rawRecommendedPost.data.modDatetime,
@@ -136,7 +142,7 @@ const recommendedPost = rawRecommendedPost
     <div class="progress-bar" id="reading-progress-bar"></div>
   </div>
   <Header />
-  {SITE.showBackButton && <Breadcrumb withBackButton />}
+  {SITE.showBackButton && <Breadcrumb withBackButton currentLabel={title} />}
   <main
     id="main-content"
     class:list={[
@@ -306,15 +312,6 @@ const recommendedPost = rawRecommendedPost
             <TableOfContents headings={headings} isMobile={true} />
           </div>
         </details>
-        <script is:inline>
-          try {
-            if (localStorage.getItem("mobile-toc-open") === "true") {
-              document.querySelector(".mobile-toc")?.setAttribute("open", "");
-            }
-          } catch {
-            /* storage can be unavailable */
-          }
-        </script>
         <article
           id="article"
           class="app-prose w-full max-w-none lg:max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"

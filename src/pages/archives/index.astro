@@ -10,6 +10,7 @@ import { getEntryPath } from "@/utils/contentEntry";
 import { slugifyStr } from "@/utils/slugify";
 import getPostsByGroupCondition from "@/utils/getPostsByGroupCondition";
 import getSortedPosts from "@/utils/getSortedPosts";
+import { getLocalizedTitle } from "@/utils/localizedTitle";
 import { SITE } from "@/config";
 
 if (!SITE.showArchives) {
@@ -158,7 +159,11 @@ let postIndex = 0;
                                 class="post-title flex items-center gap-2"
                                 style={{
                                   viewTransitionName: slugifyStr(
-                                    post.data.title.replaceAll(".", "-")
+                                    getLocalizedTitle(
+                                      post.id,
+                                      post.data.title,
+                                      locale
+                                    ).replaceAll(".", "-")
                                   ),
                                 }}
                               >
@@ -170,7 +175,11 @@ let postIndex = 0;
                                     <IconGallery class="size-3.5" />
                                   </span>
                                 )}
-                                {post.data.title}
+                                {getLocalizedTitle(
+                                  post.id,
+                                  post.data.title,
+                                  locale
+                                )}
                               </span>
                               <p class="post-desc">{post.data.description}</p>
                             </div>

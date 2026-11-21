@@ -16,6 +16,7 @@ import TechMarquee from "@/components/TechMarquee.astro";
 import HeroTerminal from "@/components/HeroTerminal.astro";
 import { useTranslations } from "@/i18n/utils";
 import { getEntryPath } from "@/utils/contentEntry";
+import { getLocalizedTitle } from "@/utils/localizedTitle";
 
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
@@ -48,7 +49,7 @@ const recentPosts = sortedPosts.filter(
 );
 
 const terminalPosts = sortedPosts.map(post => ({
-  title: post.data.title,
+  title: getLocalizedTitle(post.id, post.data.title, locale),
   href: `${prefix}${getEntryPath(post)}`,
 }));
 

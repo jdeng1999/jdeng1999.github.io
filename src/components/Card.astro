@@ -11,6 +11,7 @@ import Datetime from "./Datetime.astro";
 import IconGallery from "@/assets/icons/IconGallery.svg";
 import IconClock from "@/assets/icons/IconClock.svg";
 import { SITE } from "@/config";
+import { getLocalizedTitle } from "@/utils/localizedTitle";
 
 type EntryData =
   CollectionEntry<"blog">["data"] | CollectionEntry<"galleries">["data"];
@@ -41,10 +42,11 @@ const {
   sequence = 0,
 } = Astro.props;
 
-const { title, description, pubDatetime } = data;
+const { description, pubDatetime } = data;
 const modDatetime = "modDatetime" in data ? data.modDatetime : null;
 const tags = "tags" in data ? data.tags : [];
 const locale = Astro.currentLocale || "en";
+const title = getLocalizedTitle(String(id), data.title, locale);
 const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
 const href = prefix + getEntryPath({ collection, id, filePath });
 const isGallery = collection === "galleries";

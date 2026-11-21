@@ -2,6 +2,7 @@ import rss from "@astrojs/rss";
 import { getCollection } from "astro:content";
 import { getEntryPath } from "@/utils/contentEntry";
 import getSortedPosts from "@/utils/getSortedPosts";
+import { getLocalizedTitle } from "@/utils/localizedTitle";
 import { SITE } from "@/config";
 import { useTranslations } from "@/i18n/utils";
 
@@ -26,7 +27,7 @@ export async function generateLocaleRss(locale: "en" | "es" | "zh") {
     site: SITE.website,
     items: sortedPosts.map(entry => ({
       link: `${prefix}${getEntryPath(entry)}`,
-      title: entry.data.title,
+      title: getLocalizedTitle(entry.id, entry.data.title, locale),
       description: entry.data.description,
       pubDate: new Date(
         "modDatetime" in entry.data && entry.data.modDatetime

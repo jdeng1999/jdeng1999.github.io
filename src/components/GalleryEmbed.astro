@@ -14,6 +14,7 @@
 import { Image } from "astro:assets";
 import { getCollection } from "astro:content";
 import { getGalleryImages, type GalleryImage } from "@/utils/gallery";
+import { getLocalizedTitle } from "@/utils/localizedTitle";
 import GalleryLightbox from "./GalleryLightbox.astro";
 
 type Props = {
@@ -27,6 +28,8 @@ const { slug, limit = 6, showLink = true, cols = 3 } = Astro.props;
 
 const locale = Astro.currentLocale || "en";
 const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
+// `/zh` reuses the English gallery folders and localizes the display title.
+const contentLocale = locale === "zh" ? "en" : locale;
 
 // ── 1. Find the collection entry by slug ────────────────────────────
 // Find ALL entries (including drafts) so the embed works in preview;
@@ -34,7 +37,8 @@ const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
 const allGalleries = await getCollection(
   "galleries",
   ({ id }) =>
-    id.startsWith(`${locale}/`) || (locale === "en" && !id.startsWith("es/"))
+    id.startsWith(`${contentLocale}/`) ||
+    (locale === "en" && !id.startsWith("es/"))
 );
 const entry = allGalleries.find(g => {
   // Normalize separators and strip extension to match purely the slug (excluding locale prefix)
@@ -47,10 +51,13 @@ const entry = allGalleries.find(g => {
 });
 
 // ── 2. Load images from folder ───────────────────────────────────────
+const galleryTitle = entry
+  ? getLocalizedTitle(entry.id, entry.data.title, locale)
+  : slug;
 const folderImages: GalleryImage[] = getGalleryImages(
   slug,
-  locale,
-  entry?.data.title ?? slug
+  contentLocale,
+  galleryTitle
 );
 
 const visibleImages = limit > 0 ? folderImages.slice(0, limit) : folderImages;
@@ -105,7 +112,7 @@ const gridClass = {
         <rect x="3" y="14" width="7" height="7" rx="1" />
         <rect x="14" y="14" width="7" height="7" rx="1" />
       </svg>
-      <span class="ge-title">{entry.data.title}</span>
+      <span class="ge-title">{galleryTitle}</span>
       {remaining > 0 && <span class="ge-count">+{remaining} more</span>}
     </div>
 
@@ -114,7 +121,7 @@ const gridClass = {
       <ul
         class:list={["ge-grid", gridClass]}
         role="list"
-        aria-label={`Gallery: ${entry.data.title}`}
+        aria-label={`Gallery: ${galleryTitle}`}
       >
         {visibleImages.map((img, idx) => (
           <li>
@@ -180,7 +187,7 @@ const gridClass = {
 )}
 
 {entry && visibleImages.length > 0 && (
-  <GalleryLightbox id={lbId} label={`Viewer: ${entry.data.title}`} />
+  <GalleryLightbox id={lbId} label={`Viewer: ${galleryTitle}`} />
 )}
 
 <style>

@@ -10,6 +10,7 @@ import { slugifyStr } from "@/utils/slugify";
 import { SITE } from "@/config";
 import { useTranslations } from "@/i18n/utils";
 import { getGalleryImages, type GalleryImage } from "@/utils/gallery";
+import { getLocalizedTitle } from "@/utils/localizedTitle";
 import { buildGalleryStaticPaths } from "@/utils/staticPaths";
 import GalleryLightbox from "@/components/GalleryLightbox.astro";
 
@@ -17,11 +18,18 @@ export const getStaticPaths = () => buildGalleryStaticPaths("en");
 
 const { entry } = Astro.props;
 const { gallery: slug } = Astro.params;
-const { title, description, pubDatetime, coverImage, tags } = entry.data;
+const {
+  title: rawTitle,
+  description,
+  pubDatetime,
+  coverImage,
+  tags,
+} = entry.data;
 
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
 const prefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
+const title = getLocalizedTitle(entry.id, rawTitle, locale);
 
 const images: GalleryImage[] = getGalleryImages(slug, locale, title);
 
@@ -60,7 +68,7 @@ const gallerySchema = {
   structuredData={gallerySchema}
 >
   <Header />
-  {SITE.showBackButton && <Breadcrumb withBackButton />}
+  {SITE.showBackButton && <Breadcrumb withBackButton currentLabel={title} />}
   <main
     id="main-content"
     class:list={["relative app-layout pb-16", { "mt-8": !SITE.showBackButton }]}

@@ -6,9 +6,10 @@ import { useTranslations } from "@/i18n/utils";
 
 type Props = {
   withBackButton?: boolean;
+  currentLabel?: string;
 };
 
-const { withBackButton = false } = Astro.props as Props;
+const { withBackButton = false, currentLabel } = Astro.props as Props;
 
 const locale = Astro.currentLocale || SITE.lang || "en";
 const t = useTranslations(locale);
@@ -17,6 +18,13 @@ const breadcrumbs = buildBreadcrumbItems(Astro.url.pathname, {
   locale,
   compactNumericPagination: true,
 });
+
+if (currentLabel && breadcrumbs.length > 0) {
+  breadcrumbs[breadcrumbs.length - 1] = {
+    ...breadcrumbs[breadcrumbs.length - 1]!,
+    label: currentLabel,
+  };
+}
 
 const currentPageLabel =
   breadcrumbs.at(-1)?.label ??
