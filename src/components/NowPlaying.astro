@@ -167,6 +167,31 @@ const totalLabel = formatTime(first.duration);
       </button>
     )}
 
+    {tracks.length > 3 && (
+      <div
+        class="np-peek np-peek--ghost"
+        data-np-peek-ghost="3"
+        aria-hidden="true"
+      >
+        <img
+          class="np-peek-cover"
+          data-np-peek-cover-ghost
+          src={tracks[3]!.cover}
+          alt=""
+          width="40"
+          height="40"
+          loading="lazy"
+          decoding="async"
+        />
+        <span class="np-peek-title" data-np-peek-title-ghost>
+          {tracks[3]!.title}
+        </span>
+        <span class="np-peek-arrow" aria-hidden="true">
+          ↗
+        </span>
+      </div>
+    )}
+
     <div class="np-stage" data-np-stage>
       <div class="np-card" data-np-card>
         <div class="np-art">
@@ -405,13 +430,15 @@ const totalLabel = formatTime(first.duration);
   .np-stack {
     position: relative;
     isolation: isolate;
-    padding-top: 3.05rem;
+    padding-top: 3.65rem;
   }
 
   .np-stage {
     position: relative;
     overflow: hidden;
     touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   .np-reel {
@@ -489,6 +516,26 @@ const totalLabel = formatTime(first.duration);
     right: 1.05rem;
     left: 1.05rem;
     opacity: 0.72;
+  }
+
+  /* The fourth card is only a hint: visible enough to promise more tracks,
+     but not interactive until it rotates into the second peek slot. */
+  .np-peek--ghost {
+    z-index: -2;
+    top: -0.95rem;
+    right: 1.5rem;
+    left: 1.5rem;
+    border-color: color-mix(in srgb, var(--color-foreground) 6%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--color-foreground) 3%,
+      var(--color-background)
+    );
+    opacity: 0.34;
+    filter: blur(0.25px);
+    transform: rotate(calc(var(--peek-tilt) * 1.5)) scale(0.98);
+    pointer-events: none;
+    cursor: default;
   }
 
   .np-peek:hover {
@@ -1378,6 +1425,13 @@ const totalLabel = formatTime(first.duration);
     const peeks = Array.from(
       root.querySelectorAll<HTMLButtonElement>("[data-np-peek]")
     );
+    const ghostPeek = root.querySelector<HTMLElement>("[data-np-peek-ghost]");
+    const ghostCover = root.querySelector<HTMLImageElement>(
+      "[data-np-peek-cover-ghost]"
+    );
+    const ghostTitle = root.querySelector<HTMLElement>(
+      "[data-np-peek-title-ghost]"
+    );
     const stack = root.querySelector<HTMLElement>("[data-np-stack]");
     const modeButton = root.querySelector<HTMLButtonElement>("[data-np-mode]");
     const titleEl = root.querySelector<HTMLElement>("[data-np-title]");
@@ -1704,18 +1758,28 @@ const totalLabel = formatTime(first.duration);
         nextClone.style.display = "none";
         return;
       }
-      prevClone.style.display = "";
-      nextClone.style.display = "";
-      const prevIndex = (index - 1 + count) % count;
-      const nextIndex = (index + 1) % count;
-      applyCardContent(prevClone, tracks[prevIndex]!, prevIndex);
-      applyCardContent(nextClone, tracks[nextIndex]!, nextIndex);
+
+      // The deck is finite: hide the slot that does not exist at each end so
+      // a boundary rubber band never reveals a wrapped-around card.
+      if (index > 0) {
+        prevClone.style.display = "";
+        applyCardContent(prevClone, tracks[index - 1]!, index - 1);
+      } else {
+        prevClone.style.display = "none";
+      }
+
+      if (index < count - 1) {
+        nextClone.style.display = "";
+        applyCardContent(nextClone, tracks[index + 1]!, index + 1);
+      } else {
+        nextClone.style.display = "none";
+      }
     };
 
     const syncPeeks = () => {
       peeks.forEach(button => {
         const offset = Number(button.dataset.npPeek ?? "1");
-        const peekTrack = tracks[(index + offset) % tracks.length];
+        const peekTrack = tracks[index + offset];
         const peekCover = button.querySelector<HTMLImageElement>(
           "[data-np-peek-cover]"
         );
@@ -1723,7 +1787,7 @@ const totalLabel = formatTime(first.duration);
           "[data-np-peek-title]"
         );
 
-        if (!peekTrack || offset >= tracks.length) {
+        if (!peekTrack) {
           button.hidden = true;
           return;
         }
@@ -1733,19 +1797,51 @@ const totalLabel = formatTime(first.duration);
         if (peekTitle) peekTitle.textContent = peekTrack.title;
         button.setAttribute("aria-label", peekTrack.title);
       });
+
+      const ghostTrack = tracks[index + 3];
+      if (ghostPeek) {
+        ghostPeek.hidden = !ghostTrack;
+        if (ghostTrack) {
+          if (ghostCover) ghostCover.src = ghostTrack.cover;
+          if (ghostTitle) ghostTitle.textContent = ghostTrack.title;
+        }
+      }
     };
 
+    const MAX_INDEX = tracks.length - 1;
     let deckOffset = 0;
     let deckTarget = 0;
     let deckFrame = 0;
+    let deckVelocity = 0;
+    let springing = false;
     let resumeAfterCommit = false;
-    let swipeStartY = 0;
-    let swipePointerId = -1;
-    let swipeActive = false;
+
+    let draggingDeck = false;
+    let dragPointerId = -1;
+    let dragStartY = 0;
+    let dragStartOffset = 0;
+    let dragLastRaw = 0;
+    let dragLastTime = 0;
+    let dragVelocity = 0;
+
     let wheelAccum = 0;
     let wheelTimer = 0;
     let wheelLocked = false;
     let wheelUnlockTimer = 0;
+
+    // Compress movement past the first/last card into a short rubber band.
+    const rubberBand = (value: number) => {
+      const sign = value < 0 ? -1 : 1;
+      const magnitude = Math.abs(value);
+      return sign * (1 - 1 / (magnitude * 2.4 + 1)) * 0.62;
+    };
+
+    const boundDrag = (value: number) => {
+      if ((index === 0 && value < 0) || (index === MAX_INDEX && value > 0)) {
+        return rubberBand(value);
+      }
+      return Math.max(-0.98, Math.min(0.98, value));
+    };
 
     const renderDeck = () => {
       const height = getCardHeight();
@@ -1767,20 +1863,20 @@ const totalLabel = formatTime(first.duration);
 
     const commitIfNeeded = () => {
       let moved = 0;
-      while (deckOffset >= 1) {
-        index = (index + 1) % tracks.length;
+      while (deckOffset >= 1 && index < MAX_INDEX) {
+        index += 1;
         deckOffset -= 1;
         deckTarget -= 1;
         moved += 1;
       }
-      while (deckOffset <= -1) {
-        index = (index - 1 + tracks.length) % tracks.length;
+      while (deckOffset <= -1 && index > 0) {
+        index -= 1;
         deckOffset += 1;
         deckTarget += 1;
         moved -= 1;
       }
 
-      if (moved === 0) return;
+      if (moved === 0) return false;
 
       const autoplay = resumeAfterCommit;
       resumeAfterCommit = false;
@@ -1788,19 +1884,53 @@ const totalLabel = formatTime(first.duration);
       localFailed = false;
       activateTrack(autoplay);
       syncStageHeight();
+      return true;
     };
 
     const deckTick = () => {
-      const diff = deckTarget - deckOffset;
-      deckOffset += diff * 0.26;
-      if (Math.abs(deckTarget - deckOffset) < 0.001) {
-        deckOffset = deckTarget;
+      if (draggingDeck) {
+        // Weighted follow: the card trails the finger a little instead of
+        // sticking to it 1:1.
+        const diff = deckTarget - deckOffset;
+        deckOffset += diff * 0.3;
+        if (Math.abs(diff) < 0.001) deckOffset = deckTarget;
+      } else if (springing) {
+        // Released fling: carry the finger velocity, then settle on the card.
+        deckVelocity = (deckVelocity + (deckTarget - deckOffset) * 0.16) * 0.78;
+        deckOffset += deckVelocity;
+
+        if (deckTarget !== 0) {
+          if (
+            (deckTarget > 0 && deckOffset >= deckTarget) ||
+            (deckTarget < 0 && deckOffset <= deckTarget)
+          ) {
+            deckOffset = deckTarget;
+            commitIfNeeded();
+            deckOffset = 0;
+            deckTarget = 0;
+            deckVelocity = 0;
+            springing = false;
+          }
+        } else if (
+          Math.abs(deckOffset) < 0.004 &&
+          Math.abs(deckVelocity) < 0.003
+        ) {
+          deckOffset = 0;
+          deckVelocity = 0;
+          springing = false;
+        }
+      } else {
+        const diff = deckTarget - deckOffset;
+        deckOffset += diff * 0.26;
+        if (Math.abs(diff) < 0.001) deckOffset = deckTarget;
+        commitIfNeeded();
       }
 
-      commitIfNeeded();
       renderDeck();
 
-      if (Math.abs(deckTarget - deckOffset) > 0.0001) {
+      const moving =
+        draggingDeck || springing || Math.abs(deckTarget - deckOffset) > 0.0005;
+      if (moving) {
         deckFrame = requestAnimationFrame(deckTick);
       } else {
         deckFrame = 0;
@@ -1816,9 +1946,12 @@ const totalLabel = formatTime(first.duration);
     };
 
     const slideToTrack = (direction: 1 | -1, autoplay = false) => {
-      if (tracks.length < 2) return;
+      if (direction > 0 && index >= MAX_INDEX) return;
+      if (direction < 0 && index <= 0) return;
       resumeAfterCommit = autoplay;
       if (!autoplay) pauseCurrent();
+      springing = false;
+      deckVelocity = 0;
       const base = Math.round(deckOffset);
       deckTarget = base + direction;
       startDeck();
@@ -1985,9 +2118,11 @@ const totalLabel = formatTime(first.duration);
     peeks.forEach(button => {
       button.addEventListener("click", () => {
         const offset = Number(button.dataset.npPeek ?? "1");
-        if (!offset) return;
+        if (!offset || index + offset > MAX_INDEX) return;
         resumeAfterCommit = false;
         pauseCurrent();
+        springing = false;
+        deckVelocity = 0;
         deckTarget = Math.round(deckOffset) + offset;
         startDeck();
       });
@@ -2040,20 +2175,49 @@ const totalLabel = formatTime(first.duration);
 
     stage.addEventListener("pointerdown", event => {
       if (event.button !== 0 || !canStartDeckDrag(event.target)) return;
-      swipeActive = true;
-      swipePointerId = event.pointerId;
-      swipeStartY = event.clientY;
+
+      draggingDeck = true;
+      springing = false;
+      deckVelocity = 0;
+      dragPointerId = event.pointerId;
+      dragStartY = event.clientY;
+      dragStartOffset = deckOffset;
+      dragLastRaw = deckOffset;
+      dragLastTime = performance.now();
+      dragVelocity = 0;
+      deckTarget = deckOffset;
+
       try {
         stage.setPointerCapture?.(event.pointerId);
       } catch {
         /* pointer may already be gone on very fast taps */
       }
+      startDeck();
     });
 
-    const endDeckSwipe = (event: PointerEvent) => {
-      if (!swipeActive || event.pointerId !== swipePointerId) return;
-      swipeActive = false;
-      swipePointerId = -1;
+    stage.addEventListener("pointermove", event => {
+      if (!draggingDeck || event.pointerId !== dragPointerId) return;
+
+      const height = getCardHeight();
+      if (!height) return;
+
+      const now = performance.now();
+      const dt = Math.max(8, now - dragLastTime);
+      const raw = dragStartOffset + (event.clientY - dragStartY) / height;
+
+      dragVelocity = (raw - dragLastRaw) / dt;
+      dragLastRaw = raw;
+      dragLastTime = now;
+
+      deckTarget = boundDrag(raw);
+      startDeck();
+    });
+
+    const endDeckDrag = (event: PointerEvent) => {
+      if (!draggingDeck || event.pointerId !== dragPointerId) return;
+      draggingDeck = false;
+      dragPointerId = -1;
+
       try {
         if (stage.hasPointerCapture?.(event.pointerId)) {
           stage.releasePointerCapture(event.pointerId);
@@ -2062,16 +2226,23 @@ const totalLabel = formatTime(first.duration);
         /* capture may have been released by the browser */
       }
 
-      const delta = swipeStartY - event.clientY;
-      if (Math.abs(delta) >= 28) {
-        // Dragging down pulls the next card out of the stack above; dragging
-        // up reveals the previous card from below.
-        slideToTrack(delta > 0 ? -1 : 1);
-      }
+      // Project the release velocity a little, then settle with a spring.
+      // Ignore stale velocity if the finger rested before lifting.
+      if (performance.now() - dragLastTime > 90) dragVelocity = 0;
+      const projected = deckOffset + dragVelocity * 200;
+      let target = 0;
+      if (projected > 0.5 && index < MAX_INDEX) target = 1;
+      else if (projected < -0.5 && index > 0) target = -1;
+
+      resumeAfterCommit = false;
+      deckTarget = target;
+      deckVelocity = Math.max(-0.16, Math.min(0.16, dragVelocity * 18));
+      springing = true;
+      startDeck();
     };
 
-    stage.addEventListener("pointerup", endDeckSwipe);
-    stage.addEventListener("pointercancel", endDeckSwipe);
+    stage.addEventListener("pointerup", endDeckDrag);
+    stage.addEventListener("pointercancel", endDeckDrag);
 
     restartButton.addEventListener("click", () => {
       seekToSeconds(0);

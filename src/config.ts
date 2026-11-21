@@ -117,6 +117,21 @@ export const SITE = {
           { at: 0.288, text: "我只取一瓢爱了解" },
         ],
       },
+      {
+        title: "东风破",
+        artist: "周杰伦",
+        album: "叶惠美",
+        cover: "/spotify/dongfengpo.jpg",
+        url: "https://open.spotify.com/track/3WTd8qNJhJHAgRG6FhdSPZ",
+        src: "/audio/dongfengpo.mp3",
+        duration: 313,
+        lyrics: [
+          { at: 0.09, text: "一盏离愁孤单伫立在窗口" },
+          { at: 0.115, text: "我在门后假装你人还没走" },
+          { at: 0.14, text: "旧地如重游月圆更寂寞" },
+          { at: 0.165, text: "夜半清醒的烛火不忍苛责我" },
+        ],
+      },
     ],
   },
   likes: {
