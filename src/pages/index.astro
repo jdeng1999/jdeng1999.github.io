@@ -394,16 +394,6 @@ const whatIcons = {
             ))}
           </ul>
         </div>
-
-        {featuredPosts.length > 2 && (
-          <div
-            class="featured-progress"
-            data-featured-progress
-            aria-hidden="true"
-          >
-            <span></span>
-          </div>
-        )}
       </section>
     )}
 
@@ -1276,22 +1266,9 @@ const whatIcons = {
     scrollbar-width: none;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     cursor: grab;
     will-change: scroll-position;
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0,
-      black 1.6rem,
-      black calc(100% - 4.5rem),
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to right,
-      transparent 0,
-      black 1.6rem,
-      black calc(100% - 4.5rem),
-      transparent 100%
-    );
   }
 
   .featured-rail.is-scrollable.is-dragging {
@@ -1299,25 +1276,12 @@ const whatIcons = {
     user-select: none;
   }
 
+  .featured-rail.is-rubber {
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
   .featured-rail.is-scrollable::-webkit-scrollbar {
     display: none;
-  }
-
-  .featured-progress {
-    height: 1px;
-    margin: 0.8rem 0.5rem 0;
-    overflow: hidden;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-foreground) 8%, transparent);
-  }
-
-  .featured-progress span {
-    display: block;
-    width: var(--featured-progress, 20%);
-    height: 100%;
-    border-radius: inherit;
-    background: color-mix(in srgb, var(--color-accent) 65%, transparent);
-    transition: width 0.18s ease;
   }
 
   @media (max-width: 640px) {
@@ -1610,9 +1574,6 @@ const whatIcons = {
       const counter = document.querySelector<HTMLElement>(
         "[data-featured-counter]"
       );
-      const progress = document.querySelector<HTMLElement>(
-        "[data-featured-progress]"
-      );
 
       if (cards.length && rail.classList.contains("is-scrollable")) {
         const pad = (value: number) => String(value).padStart(2, "0");
@@ -1632,11 +1593,6 @@ const whatIcons = {
           if (counter) {
             counter.textContent = `${pad(active)} / ${pad(cards.length)}`;
           }
-
-          progress?.style.setProperty(
-            "--featured-progress",
-            `${Math.max(6, max > 0 ? (rail.scrollLeft / max) * 100 : 0)}%`
-          );
 
           if (prev) prev.disabled = rail.scrollLeft <= 8;
           if (next) next.disabled = rail.scrollLeft >= max - 8;
@@ -1662,7 +1618,7 @@ const whatIcons = {
         window.addEventListener("resize", update);
         update();
 
-        // ── Drag to slide (mouse / pen); touch keeps native momentum ──
+        // ── Drag to slide (mouse, pen and touch) with an edge rubber band ──
         let dragStartX = 0;
         let dragStartLeft = 0;
         let dragTargetLeft = 0;
@@ -1670,16 +1626,40 @@ const whatIcons = {
         let dragging = false;
         let dragFrame = 0;
         let suppressClick = false;
+        let rubber = 0;
 
         rail.addEventListener("dragstart", event => event.preventDefault());
 
+        const clearRubber = (animate: boolean) => {
+          if (!animate) {
+            rail.classList.remove("is-rubber");
+            rail.style.transform = "";
+            rubber = 0;
+            return;
+          }
+          rail.classList.add("is-rubber");
+          rail.style.transform = "translateX(0)";
+          window.setTimeout(() => {
+            rail.classList.remove("is-rubber");
+            rail.style.transform = "";
+          }, 320);
+          rubber = 0;
+        };
+
         rail.addEventListener("pointerdown", event => {
-          if (event.pointerType === "touch" || event.button !== 0) return;
+          if (event.button !== 0) return;
           dragPointer = event.pointerId;
           dragStartX = event.clientX;
           dragStartLeft = rail.scrollLeft;
           dragTargetLeft = dragStartLeft;
           dragging = false;
+          suppressClick = false;
+          clearRubber(false);
+          try {
+            rail.setPointerCapture(event.pointerId);
+          } catch {
+            /* pointer may already be gone */
+          }
         });
 
         rail.addEventListener("pointermove", event => {
@@ -1690,12 +1670,26 @@ const whatIcons = {
             dragging = true;
             rail.classList.add("is-dragging");
           }
+
+          const max = rail.scrollWidth - rail.clientWidth;
           dragTargetLeft = dragStartLeft - dx;
-          if (dragFrame) return;
-          dragFrame = requestAnimationFrame(() => {
-            dragFrame = 0;
-            rail.scrollLeft = dragTargetLeft;
-          });
+
+          if (dragTargetLeft < 0) {
+            rail.scrollLeft = 0;
+            rubber = Math.min(44, -dragTargetLeft * 0.38);
+          } else if (dragTargetLeft > max) {
+            rail.scrollLeft = max;
+            rubber = -Math.min(44, (dragTargetLeft - max) * 0.38);
+          } else {
+            rubber = 0;
+            if (dragFrame) return;
+            dragFrame = requestAnimationFrame(() => {
+              dragFrame = 0;
+              rail.scrollLeft = dragTargetLeft;
+            });
+          }
+
+          rail.style.transform = rubber ? `translateX(${rubber}px)` : "";
         });
 
         const endDrag = (event: PointerEvent) => {
@@ -1705,17 +1699,30 @@ const whatIcons = {
           dragging = false;
           cancelAnimationFrame(dragFrame);
           dragFrame = 0;
-          rail.scrollLeft = dragTargetLeft;
+          if (!rubber) {
+            rail.scrollLeft = dragTargetLeft;
+          }
           rail.classList.remove("is-dragging");
+          if (rubber) {
+            clearRubber(true);
+          } else {
+            rail.style.transform = "";
+          }
           suppressClick = true;
           requestAnimationFrame(() => {
             suppressClick = false;
           });
+          try {
+            if (rail.hasPointerCapture(event.pointerId)) {
+              rail.releasePointerCapture(event.pointerId);
+            }
+          } catch {
+            /* capture may have been released */
+          }
         };
 
         rail.addEventListener("pointerup", endDrag);
         rail.addEventListener("pointercancel", endDrag);
-        rail.addEventListener("pointerleave", endDrag);
 
         rail.addEventListener(
           "click",
