@@ -15,6 +15,7 @@ const { class: className = "" } = Astro.props;
   class:list={["code-glitch-panel", className]}
   data-code-glitch
   aria-hidden="true"
+  transition:persist
 >
   <div class="glitch-canvas-wrap">
     <canvas data-glitch-canvas></canvas>

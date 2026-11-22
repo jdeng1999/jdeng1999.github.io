@@ -430,7 +430,7 @@ const totalLabel = formatTime(first.duration);
   .np-stack {
     position: relative;
     isolation: isolate;
-    padding-top: 3.65rem;
+    padding-top: 3.1rem;
   }
 
   .np-stage {
@@ -475,7 +475,7 @@ const totalLabel = formatTime(first.duration);
 
     position: absolute;
     z-index: 0;
-    top: 1.55rem;
+    top: 1.2rem;
     right: 0.55rem;
     left: 0.55rem;
     display: flex;
@@ -512,7 +512,7 @@ const totalLabel = formatTime(first.duration);
 
   .np-peek--back {
     z-index: -1;
-    top: 0;
+    top: 0.05rem;
     right: 1.05rem;
     left: 1.05rem;
     opacity: 0.72;
@@ -522,7 +522,7 @@ const totalLabel = formatTime(first.duration);
      but not interactive until it rotates into the second peek slot. */
   .np-peek--ghost {
     z-index: -2;
-    top: -0.95rem;
+    top: -0.65rem;
     right: 1.5rem;
     left: 1.5rem;
     border-color: color-mix(in srgb, var(--color-foreground) 6%, transparent);
@@ -1759,27 +1759,19 @@ const totalLabel = formatTime(first.duration);
         return;
       }
 
-      // The deck is finite: hide the slot that does not exist at each end so
-      // a boundary rubber band never reveals a wrapped-around card.
-      if (index > 0) {
-        prevClone.style.display = "";
-        applyCardContent(prevClone, tracks[index - 1]!, index - 1);
-      } else {
-        prevClone.style.display = "none";
-      }
-
-      if (index < count - 1) {
-        nextClone.style.display = "";
-        applyCardContent(nextClone, tracks[index + 1]!, index + 1);
-      } else {
-        nextClone.style.display = "none";
-      }
+      // Infinite deck: the previous and next cards always exist by wrapping.
+      prevClone.style.display = "";
+      nextClone.style.display = "";
+      const prevIndex = (index - 1 + count) % count;
+      const nextIndex = (index + 1) % count;
+      applyCardContent(prevClone, tracks[prevIndex]!, prevIndex);
+      applyCardContent(nextClone, tracks[nextIndex]!, nextIndex);
     };
 
     const syncPeeks = () => {
       peeks.forEach(button => {
         const offset = Number(button.dataset.npPeek ?? "1");
-        const peekTrack = tracks[index + offset];
+        const peekTrack = tracks[(index + offset) % tracks.length];
         const peekCover = button.querySelector<HTMLImageElement>(
           "[data-np-peek-cover]"
         );
@@ -1787,7 +1779,7 @@ const totalLabel = formatTime(first.duration);
           "[data-np-peek-title]"
         );
 
-        if (!peekTrack) {
+        if (!peekTrack || offset >= tracks.length) {
           button.hidden = true;
           return;
         }
@@ -1798,7 +1790,8 @@ const totalLabel = formatTime(first.duration);
         button.setAttribute("aria-label", peekTrack.title);
       });
 
-      const ghostTrack = tracks[index + 3];
+      const ghostTrack =
+        tracks.length >= 4 ? tracks[(index + 3) % tracks.length] : undefined;
       if (ghostPeek) {
         ghostPeek.hidden = !ghostTrack;
         if (ghostTrack) {
@@ -1808,7 +1801,6 @@ const totalLabel = formatTime(first.duration);
       }
     };
 
-    const MAX_INDEX = tracks.length - 1;
     let deckOffset = 0;
     let deckTarget = 0;
     let deckFrame = 0;
@@ -1829,19 +1821,7 @@ const totalLabel = formatTime(first.duration);
     let wheelLocked = false;
     let wheelUnlockTimer = 0;
 
-    // Compress movement past the first/last card into a short rubber band.
-    const rubberBand = (value: number) => {
-      const sign = value < 0 ? -1 : 1;
-      const magnitude = Math.abs(value);
-      return sign * (1 - 1 / (magnitude * 2.4 + 1)) * 0.62;
-    };
-
-    const boundDrag = (value: number) => {
-      if ((index === 0 && value < 0) || (index === MAX_INDEX && value > 0)) {
-        return rubberBand(value);
-      }
-      return Math.max(-0.98, Math.min(0.98, value));
-    };
+    const clampDrag = (value: number) => Math.max(-0.98, Math.min(0.98, value));
 
     const renderDeck = () => {
       const height = getCardHeight();
@@ -1863,14 +1843,14 @@ const totalLabel = formatTime(first.duration);
 
     const commitIfNeeded = () => {
       let moved = 0;
-      while (deckOffset >= 1 && index < MAX_INDEX) {
-        index += 1;
+      while (deckOffset >= 1) {
+        index = (index + 1) % tracks.length;
         deckOffset -= 1;
         deckTarget -= 1;
         moved += 1;
       }
-      while (deckOffset <= -1 && index > 0) {
-        index -= 1;
+      while (deckOffset <= -1) {
+        index = (index - 1 + tracks.length) % tracks.length;
         deckOffset += 1;
         deckTarget += 1;
         moved -= 1;
@@ -1946,8 +1926,6 @@ const totalLabel = formatTime(first.duration);
     };
 
     const slideToTrack = (direction: 1 | -1, autoplay = false) => {
-      if (direction > 0 && index >= MAX_INDEX) return;
-      if (direction < 0 && index <= 0) return;
       resumeAfterCommit = autoplay;
       if (!autoplay) pauseCurrent();
       springing = false;
@@ -2118,7 +2096,7 @@ const totalLabel = formatTime(first.duration);
     peeks.forEach(button => {
       button.addEventListener("click", () => {
         const offset = Number(button.dataset.npPeek ?? "1");
-        if (!offset || index + offset > MAX_INDEX) return;
+        if (!offset) return;
         resumeAfterCommit = false;
         pauseCurrent();
         springing = false;
@@ -2209,7 +2187,7 @@ const totalLabel = formatTime(first.duration);
       dragLastRaw = raw;
       dragLastTime = now;
 
-      deckTarget = boundDrag(raw);
+      deckTarget = clampDrag(raw);
       startDeck();
     });
 
@@ -2231,8 +2209,8 @@ const totalLabel = formatTime(first.duration);
       if (performance.now() - dragLastTime > 90) dragVelocity = 0;
       const projected = deckOffset + dragVelocity * 200;
       let target = 0;
-      if (projected > 0.5 && index < MAX_INDEX) target = 1;
-      else if (projected < -0.5 && index > 0) target = -1;
+      if (projected > 0.5) target = 1;
+      else if (projected < -0.5) target = -1;
 
       resumeAfterCommit = false;
       deckTarget = target;

@@ -65,13 +65,37 @@ const { id, label = "Image viewer" } = Astro.props;
       </button>
 
       <div class="lightbox-figure">
-        <img
-          src=""
-          alt=""
-          class="lightbox-image"
-          decoding="async"
-          data-lb-img
-        />
+        <div class="lightbox-slider" data-lb-slider tabindex="-1">
+          <div class="lightbox-track" data-lb-track>
+            <div class="lightbox-slide" data-lb-slide>
+              <img
+                src=""
+                alt=""
+                class="lightbox-image"
+                decoding="async"
+                data-lb-img-prev
+              />
+            </div>
+            <div class="lightbox-slide" data-lb-slide>
+              <img
+                src=""
+                alt=""
+                class="lightbox-image"
+                decoding="async"
+                data-lb-img
+              />
+            </div>
+            <div class="lightbox-slide" data-lb-slide>
+              <img
+                src=""
+                alt=""
+                class="lightbox-image"
+                decoding="async"
+                data-lb-img-next
+              />
+            </div>
+          </div>
+        </div>
         <p class="lightbox-caption text-foreground/80" data-lb-caption></p>
       </div>
 
@@ -119,6 +143,12 @@ const { id, label = "Image viewer" } = Astro.props;
         if (items.length === 0) return;
 
         const lbImg = dialog.querySelector<HTMLImageElement>("[data-lb-img]");
+        const lbPrevImg =
+          dialog.querySelector<HTMLImageElement>("[data-lb-img-prev]");
+        const lbNextImg =
+          dialog.querySelector<HTMLImageElement>("[data-lb-img-next]");
+        const slider = dialog.querySelector<HTMLElement>("[data-lb-slider]");
+        const track = dialog.querySelector<HTMLElement>("[data-lb-track]");
         const lbCaption =
           dialog.querySelector<HTMLElement>("[data-lb-caption]");
         const lbCounter =
@@ -130,34 +160,149 @@ const { id, label = "Image viewer" } = Astro.props;
         const nextBtn =
           dialog.querySelector<HTMLButtonElement>("[data-lb-next]");
 
+        if (!lbImg || !lbPrevImg || !lbNextImg || !slider || !track) return;
+
+        const count = items.length;
         let current = 0;
+        let displayOffset = 0;
+        let dragTarget = 0;
+        let dragging = false;
+        let animating = false;
+        let pointerId = -1;
+        let startX = 0;
+        let lastRaw = 0;
+        let lastTime = 0;
+        let velocity = 0;
+        let followFrame = 0;
+        let finishTimer = 0;
+        let animationToken = 0;
+        let lastCaption = "";
+
+        const imageAt = (idx: number) =>
+          items[(idx + count) % count]?.querySelector("img");
+
+        const setSlideImage = (
+          element: HTMLImageElement,
+          idx: number,
+          empty: boolean
+        ) => {
+          const img = imageAt(idx);
+          if (img) {
+            element.src = img.src;
+            element.alt = img.alt;
+          }
+          element.parentElement?.setAttribute("data-empty", String(empty));
+        };
+
+        const updateCaption = () => {
+          const img = imageAt(current);
+          if (!lbCaption || !img) return;
+          const caption = img.alt.trim();
+          const hasCaption = caption.length > 0 && !/^\d+$/.test(caption);
+          const nextCaption = hasCaption ? caption : "";
+          if (nextCaption === lastCaption) {
+            lbCaption.hidden = !hasCaption;
+            return;
+          }
+          lastCaption = nextCaption;
+          lbCaption.textContent = nextCaption;
+          lbCaption.hidden = !hasCaption;
+        };
+
+        const renderSlides = () => {
+          setSlideImage(lbPrevImg, current - 1, current === 0);
+          setSlideImage(lbImg, current, false);
+          setSlideImage(lbNextImg, current + 1, current === count - 1);
+
+          if (lbCounter) {
+            lbCounter.textContent = `${current + 1} / ${count}`;
+          }
+          updateCaption();
+          if (prevBtn) {
+            prevBtn.style.visibility = current === 0 ? "hidden" : "visible";
+          }
+          if (nextBtn) {
+            nextBtn.style.visibility =
+              current === count - 1 ? "hidden" : "visible";
+          }
+
+          displayOffset = 0;
+          dragTarget = 0;
+          track.style.transition = "none";
+          track.style.transform = "translate3d(0, 0, 0)";
+        };
+
+        const applyOffset = () => {
+          track.style.transform = `translate3d(${-displayOffset * 100}%, 0, 0)`;
+        };
+
+        const follow = () => {
+          if (!dragging) return;
+          displayOffset += (dragTarget - displayOffset) * 0.32;
+          applyOffset();
+          followFrame = requestAnimationFrame(follow);
+        };
+
+        const stopFollow = () => {
+          window.cancelAnimationFrame(followFrame);
+          followFrame = 0;
+        };
+
+        const finishAnimation = (delta: number) => {
+          window.clearTimeout(finishTimer);
+          if (!animating) return;
+          animating = false;
+          animationToken += 1;
+          if (delta !== 0) {
+            current = Math.max(0, Math.min(count - 1, current + delta));
+          }
+          renderSlides();
+        };
+
+        const animateTo = (delta: number, releaseVelocity: number) => {
+          if (animating) return;
+          const target = Math.max(0, Math.min(count - 1, current + delta));
+          const actualDelta = target - current;
+          if (actualDelta === 0 && Math.abs(displayOffset) < 0.01) {
+            renderSlides();
+            return;
+          }
+
+          animating = true;
+          const token = ++animationToken;
+          const speed = Math.min(1, Math.abs(releaseVelocity) * 220);
+          const duration = 300 + Math.round(speed * 150);
+          track.style.transition = `transform ${duration}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+          // Let the browser paint the current dragged position first.
+          requestAnimationFrame(() => {
+            if (token !== animationToken) return;
+            track.style.transform = `translate3d(${-actualDelta * 100}%, 0, 0)`;
+          });
+
+          const finish = () => {
+            if (token !== animationToken) return;
+            finishAnimation(actualDelta);
+          };
+          track.addEventListener("transitionend", finish, { once: true });
+          finishTimer = window.setTimeout(finish, duration + 40);
+        };
 
         function open(idx: number) {
-          current = Math.max(0, Math.min(idx, items.length - 1));
-          const img = items[current]?.querySelector("img");
-          if (!img || !lbImg) return;
-          lbImg.src = img.src;
-          lbImg.alt = img.alt;
-          if (lbCaption) {
-            const captionText = img.alt.trim();
-            // Camera filenames are meaningless as captions; keep the frame clean.
-            const hasCaption =
-              captionText.length > 0 && !/^\d+$/.test(captionText);
-            lbCaption.textContent = hasCaption ? captionText : "";
-            lbCaption.hidden = !hasCaption;
-          }
-          if (lbCounter)
-            lbCounter.textContent = `${current + 1} / ${items.length}`;
-          if (prevBtn)
-            prevBtn.style.visibility = current === 0 ? "hidden" : "visible";
-          if (nextBtn)
-            nextBtn.style.visibility =
-              current === items.length - 1 ? "hidden" : "visible";
+          current = Math.max(0, Math.min(idx, count - 1));
+          renderSlides();
           if (!dialog.open) dialog.showModal();
+          slider?.focus({ preventScroll: true });
           document.body.style.overflow = "hidden";
         }
 
         function close() {
+          stopFollow();
+          dragging = false;
+          animating = false;
+          animationToken += 1;
+          window.clearTimeout(finishTimer);
+          track!.style.transition = "none";
+          track!.style.transform = "translate3d(0, 0, 0)";
           dialog.close();
           document.body.style.overflow = "";
         }
@@ -167,8 +312,88 @@ const { id, label = "Image viewer" } = Astro.props;
         });
 
         closeBtn?.addEventListener("click", close, { signal });
-        prevBtn?.addEventListener("click", () => open(current - 1), { signal });
-        nextBtn?.addEventListener("click", () => open(current + 1), { signal });
+        prevBtn?.addEventListener("click", () => animateTo(-1, 0), {
+          signal,
+        });
+        nextBtn?.addEventListener("click", () => animateTo(1, 0), {
+          signal,
+        });
+
+        slider.addEventListener(
+          "pointerdown",
+          event => {
+            if (event.button !== 0 || animating) return;
+            pointerId = event.pointerId;
+            dragging = true;
+            startX = event.clientX;
+            lastRaw = 0;
+            lastTime = performance.now();
+            velocity = 0;
+            displayOffset = 0;
+            dragTarget = 0;
+            track.style.transition = "none";
+            applyOffset();
+            try {
+              slider.setPointerCapture(event.pointerId);
+            } catch {
+              /* pointer may already be gone */
+            }
+            stopFollow();
+            followFrame = requestAnimationFrame(follow);
+          },
+          { signal }
+        );
+
+        slider.addEventListener(
+          "pointermove",
+          event => {
+            if (!dragging || event.pointerId !== pointerId) return;
+            const width = slider.getBoundingClientRect().width;
+            if (!width) return;
+
+            const raw = -(event.clientX - startX) / width;
+            const atStart = current === 0;
+            const atEnd = current === count - 1;
+            if ((atStart && raw < 0) || (atEnd && raw > 0)) {
+              dragTarget =
+                Math.sign(raw) * (1 - 1 / (Math.abs(raw) * 2.6 + 1)) * 0.48;
+            } else {
+              dragTarget = Math.max(-1, Math.min(1, raw));
+            }
+
+            const now = performance.now();
+            const dt = Math.max(8, now - lastTime);
+            velocity = (raw - lastRaw) / dt;
+            lastRaw = raw;
+            lastTime = now;
+          },
+          { signal }
+        );
+
+        const endSwipe = (event: PointerEvent) => {
+          if (!dragging || event.pointerId !== pointerId) return;
+          dragging = false;
+          pointerId = -1;
+          stopFollow();
+          try {
+            if (slider.hasPointerCapture(event.pointerId)) {
+              slider.releasePointerCapture(event.pointerId);
+            }
+          } catch {
+            /* capture may have been released */
+          }
+
+          if (performance.now() - lastTime > 90) velocity = 0;
+          const projected = dragTarget + velocity * 190;
+          let delta = 0;
+          if (projected > 0.32 && current < count - 1) delta = 1;
+          else if (projected < -0.32 && current > 0) delta = -1;
+
+          animateTo(delta, velocity);
+        };
+
+        slider.addEventListener("pointerup", endSwipe, { signal });
+        slider.addEventListener("pointercancel", endSwipe, { signal });
 
         dialog.addEventListener(
           "click",
@@ -176,7 +401,7 @@ const { id, label = "Image viewer" } = Astro.props;
             const target = e.target as HTMLElement;
             if (
               !target.closest(
-                "img, button, .lightbox-caption, .lightbox-counter"
+                "img, button, .lightbox-caption, .lightbox-counter, .lightbox-slider"
               )
             ) {
               close();
@@ -198,8 +423,8 @@ const { id, label = "Image viewer" } = Astro.props;
           e => {
             if (!dialog.open) return;
             if (e.key === "Escape") close();
-            if (e.key === "ArrowLeft") open(current - 1);
-            if (e.key === "ArrowRight") open(current + 1);
+            if (e.key === "ArrowLeft") animateTo(-1, 0);
+            if (e.key === "ArrowRight") animateTo(1, 0);
           },
           { signal }
         );
@@ -292,6 +517,45 @@ const { id, label = "Image viewer" } = Astro.props;
     min-width: 0;
     height: 100%;
     gap: 1.1rem;
+  }
+
+  .lightbox-slider {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    touch-action: pan-y;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: grab;
+  }
+
+  .lightbox-slider:active {
+    cursor: grabbing;
+  }
+
+  .lightbox-slider:focus {
+    outline: none;
+  }
+
+  .lightbox-track {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+  }
+
+  .lightbox-slide {
+    display: flex;
+    flex: 0 0 100%;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .lightbox-slide[data-empty="true"] {
+    opacity: 0;
   }
 
   .lightbox-image {

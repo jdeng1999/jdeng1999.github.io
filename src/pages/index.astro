@@ -148,93 +148,98 @@ const whatIcons = {
 
   <main id="main-content" data-layout="index" class="relative app-layout">
     <div class="home-intro">
-      <!-- ═══════════════════ HERO ═══════════════════ -->
-      <section
-        id="hero"
-        class="hero-section relative pt-2 pb-5 sm:pt-3 sm:pb-7"
-      >
-        <div class="relative z-10">
-          <div class="hero-copy">
-            <!-- Terminal prompt badge + interactive shell -->
-            <HeroTerminal posts={terminalPosts} />
+      <div class="home-stage home-stage--intro">
+        <!-- ═══════════════════ HERO ═══════════════════ -->
+        <section
+          id="hero"
+          class="hero-section relative pt-2 pb-5 sm:pt-3 sm:pb-7"
+        >
+          <div class="relative z-10">
+            <div class="hero-copy">
+              <!-- Terminal prompt badge + interactive shell -->
+              <HeroTerminal posts={terminalPosts} />
 
-            <p class="hero-greeting">
-              <span class="hero-greeting-dot" aria-hidden="true"></span>
-              {t("index.heroGreeting")}
-              <span class="hero-name">
-                J. Deng
-                <span class="hero-name-native">(邓佳)</span>
-              </span>
-            </p>
+              <p class="hero-greeting">
+                <span class="hero-greeting-dot" aria-hidden="true"></span>
+                {t("index.heroGreeting")}
+                <span class="hero-name">
+                  J. Deng
+                  <span class="hero-name-native">(邓佳)</span>
+                </span>
+              </p>
 
-            <div class="hero-role-grid">
-              <h1 class="hero-role">
-                <span class="hero-role-line">Software</span>
-                <span class="hero-role-line hero-role-accent">Engineer</span>
-              </h1>
+              <div class="hero-role-grid">
+                <h1 class="hero-role">
+                  <span class="hero-role-line">Software</span>
+                  <span class="hero-role-line hero-role-accent">Engineer</span>
+                </h1>
 
-              <div class="hero-intro-panel">
-                <div class="hero-intro-stack">
-                  {introVariants.map(variant => (
-                    <p
-                      class:list={[
-                        "hero-intro",
-                        { "is-active": variant.active },
-                      ]}
-                      aria-hidden={variant.active ? undefined : "true"}
-                    >
-                      {variant.t("index.heroIntroBefore")}
-                      <span class="shiny-accent">
-                        {variant.t("index.heroIntroHighlight")}
-                      </span>
-                      {variant.t("index.heroIntroAfter")}
-                      <span class="hero-intro-tail">
-                        {variant.t("index.heroIntroTail")}
-                      </span>
-                    </p>
-                  ))}
-                </div>
-
-                <div class="hero-meta-row">
-                  <p class="hero-written">
-                    {t("index.writtenBy")}
-                    <LinkButton
-                      class="font-medium underline decoration-dashed underline-offset-4 hover:text-accent"
-                      href={SITE.profile}
-                      target="_blank"
-                    >
-                      {SITE.author}
-                    </LinkButton>
-                  </p>
-
-                  {SOCIALS.length > 0 && (
-                    <div class="hero-socials">
-                      <Socials />
-                      <a
-                        target="_blank"
-                        href={`${prefix}/rss.xml`}
-                        class="hero-rss"
-                        aria-label="RSS Feed"
-                        title="RSS Feed"
+                <div class="hero-intro-panel">
+                  <div class="hero-intro-stack">
+                    {introVariants.map(variant => (
+                      <p
+                        class:list={[
+                          "hero-intro",
+                          { "is-active": variant.active },
+                        ]}
+                        aria-hidden={variant.active ? undefined : "true"}
                       >
-                        <IconRss width={16} height={16} />
-                      </a>
-                    </div>
-                  )}
+                        {variant.t("index.heroIntroBefore")}
+                        <span class="shiny-accent">
+                          {variant.t("index.heroIntroHighlight")}
+                        </span>
+                        {variant.t("index.heroIntroAfter")}
+                        <span class="hero-intro-tail">
+                          {variant.t("index.heroIntroTail")}
+                        </span>
+                      </p>
+                    ))}
+                  </div>
+
+                  <div class="hero-meta-row">
+                    <p class="hero-written">
+                      {t("index.writtenBy")}
+                      <LinkButton
+                        class="font-medium underline decoration-dashed underline-offset-4 hover:text-accent"
+                        href={SITE.profile}
+                        target="_blank"
+                      >
+                        {SITE.author}
+                      </LinkButton>
+                    </p>
+
+                    {SOCIALS.length > 0 && (
+                      <div class="hero-socials">
+                        <Socials />
+                        <a
+                          target="_blank"
+                          href={`${prefix}/rss.xml`}
+                          class="hero-rss"
+                          aria-label="RSS Feed"
+                          title="RSS Feed"
+                        >
+                          <IconRss width={16} height={16} />
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- ═══════════════════ TECH STACK ═══════════════════ -->
-      <div class="home-intro-bottom">
-        <TechMarquee label={t("index.techStack")} />
+        <!-- ═══════════════════ TECH STACK ═══════════════════ -->
+        <div class="home-intro-bottom">
+          <TechMarquee label={t("index.techStack")} />
+        </div>
       </div>
 
       <!-- ═══════════════════ WHAT I DO ═══════════════════ -->
-      <section id="what-i-do" class="what-section relative">
+      <section
+        id="what-i-do"
+        class="what-section home-stage home-stage--what relative"
+      >
         <div class="what-head">
           <div class="what-head-copy">
             <h2 class="what-title">{t("index.whatIDo")}</h2>
@@ -492,6 +497,12 @@ const whatIcons = {
     padding-bottom: 3.5rem;
   }
 
+  /* Structural wrapper is invisible on desktop; the hero and marquee behave
+     as direct children of the home intro. */
+  .home-stage--intro {
+    display: contents;
+  }
+
   .hero-section {
     display: flex;
     flex: 0 0 auto;
@@ -643,35 +654,14 @@ const whatIcons = {
     padding-left: 1.7rem;
   }
 
-  /* Tapered gradient rule: wide and bright at the top, thinning into nothing */
+  /* Simple hairline rule: uniform thickness from top to bottom */
   .hero-intro-panel::before {
     position: absolute;
     top: 0.2rem;
     bottom: 0.35rem;
     left: 0;
-    width: 2px;
-    background: linear-gradient(
-      to bottom,
-      var(--color-accent) 0%,
-      color-mix(in srgb, var(--color-accent) 62%, transparent) 42%,
-      color-mix(in srgb, var(--color-accent) 18%, transparent) 78%,
-      transparent 100%
-    );
-    clip-path: polygon(0 0, 100% 0, 68% 100%, 32% 100%);
-    content: "";
-  }
-
-  .hero-intro-panel::after {
-    position: absolute;
-    top: 0;
-    left: -1px;
-    width: 4px;
-    height: 4px;
-    border-radius: 1px;
-    background: var(--color-accent);
-    box-shadow: 0 0 10px 1px
-      color-mix(in srgb, var(--color-accent) 45%, transparent);
-    transform: rotate(45deg);
+    width: 1px;
+    background: color-mix(in srgb, var(--color-accent) 52%, transparent);
     content: "";
   }
 
@@ -806,6 +796,36 @@ const whatIcons = {
   @media (max-width: 1023px) {
     .hero-intro-panel {
       max-width: 100%;
+    }
+  }
+
+  /* ── Mobile paged home: three deliberate stages ── */
+  @media (max-width: 767px) {
+    .home-intro {
+      min-height: 0;
+      padding-bottom: 0;
+      justify-content: flex-start;
+    }
+
+    .home-stage--intro,
+    .home-stage--what {
+      min-height: calc(100dvh - 4.5rem);
+      touch-action: pan-x;
+    }
+
+    .home-stage--intro {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-bottom: 2.8rem;
+    }
+
+    .home-stage--what {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      margin-top: 1.25rem;
+      padding-bottom: 3rem;
     }
   }
 
@@ -1389,12 +1409,65 @@ const whatIcons = {
       });
     });
 
-    // ── First-screen scroll cue ──
+    // ── Home pager: mobile-only three-stage scroll + cue ──
     const cue = document.querySelector<HTMLButtonElement>("[data-scroll-cue]");
     if (cue && cue.dataset.cueReady !== "true") {
       cue.dataset.cueReady = "true";
 
+      const mobileQuery = window.matchMedia("(max-width: 767px)");
+      const whatSection = document.querySelector<HTMLElement>("#what-i-do");
+      const featuredSection = document.querySelector<HTMLElement>("#featured");
+      const recentSection =
+        document.querySelector<HTMLElement>("#recent-posts");
+      const header = document.querySelector<HTMLElement>("#main-header");
+      let stageTops = [0, 0, 0];
+      let headerH = 65;
+
+      const isMobile = () => mobileQuery.matches;
+      const topOf = (element: HTMLElement | null) =>
+        element ? element.getBoundingClientRect().top + window.scrollY : 0;
+
+      const measure = () => {
+        headerH = header?.getBoundingClientRect().height ?? 65;
+        stageTops = [
+          0,
+          Math.max(0, topOf(whatSection) - headerH),
+          Math.max(0, topOf(featuredSection ?? recentSection) - headerH),
+        ];
+      };
+
+      const currentStage = () => {
+        if (!isMobile()) return -1;
+        const y = window.scrollY + headerH + 4;
+        if (y < stageTops[1] - 2) return 0;
+        if (y < stageTops[2] - 2) return 1;
+        return 2;
+      };
+
+      const smoothToStage = (stage: number) => {
+        measure();
+        const target = stageTops[Math.max(0, Math.min(2, stage))];
+        const reduce = window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
+        window.scrollTo({
+          top: target,
+          behavior: reduce ? "auto" : "smooth",
+        });
+      };
+
       const syncCue = () => {
+        measure();
+        if (isMobile()) {
+          const stage = currentStage();
+          const visible = stage < 2;
+          cue.dataset.visible = String(visible);
+          cue.tabIndex = visible ? 0 : -1;
+          cue.setAttribute("aria-hidden", String(!visible));
+          cue.dataset.stage = String(stage);
+          return;
+        }
+
         const visible = window.scrollY < 48;
         cue.dataset.visible = String(visible);
         cue.tabIndex = visible ? 0 : -1;
@@ -1402,13 +1475,82 @@ const whatIcons = {
       };
 
       cue.addEventListener("click", () => {
-        const target =
-          document.querySelector("#featured") ??
-          document.querySelector("#recent-posts");
-        target?.scrollIntoView({ behavior: "smooth", block: "start" });
+        measure();
+        if (isMobile()) {
+          const stage = currentStage();
+          if (stage < 2) smoothToStage(stage + 1);
+          return;
+        }
+        (featuredSection ?? recentSection)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+
+      // A single deliberate vertical swipe pages the first two mobile
+      // screens; after the article list starts, normal scrolling takes over.
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchStage = -1;
+      let touchMoved = false;
+
+      const menuIsOpen = () =>
+        document.querySelector("#mobile-menu.is-open") !== null;
+
+      const onTouchStart = (event: TouchEvent) => {
+        if (!isMobile() || menuIsOpen()) return;
+        const stage = currentStage();
+        if (stage < 0 || stage > 1) return;
+        const point = event.touches[0];
+        if (!point) return;
+        touchStage = stage;
+        touchStartX = point.clientX;
+        touchStartY = point.clientY;
+        touchMoved = false;
+      };
+
+      const onTouchMove = (event: TouchEvent) => {
+        if (touchStage < 0) return;
+        const point = event.touches[0];
+        if (!point) return;
+        const dx = point.clientX - touchStartX;
+        const dy = point.clientY - touchStartY;
+        if (Math.abs(dy) > 7 && Math.abs(dy) > Math.abs(dx) * 1.1) {
+          touchMoved = true;
+          if (event.cancelable) event.preventDefault();
+        }
+      };
+
+      const onTouchEnd = (event: TouchEvent) => {
+        if (touchStage < 0) return;
+        const point = event.changedTouches[0];
+        const stage = touchStage;
+        const moved = touchMoved;
+        touchStage = -1;
+        touchMoved = false;
+
+        if (!point || !moved) return;
+        const dx = point.clientX - touchStartX;
+        const dy = touchStartY - point.clientY;
+
+        if (Math.abs(dy) < 8 || Math.abs(dy) < Math.abs(dx) * 1.1) return;
+        if (dy > 0) smoothToStage(stage + 1);
+        else if (stage > 0) smoothToStage(stage - 1);
+      };
+
+      document.addEventListener("touchstart", onTouchStart, {
+        passive: true,
+      });
+      document.addEventListener("touchmove", onTouchMove, {
+        passive: false,
+      });
+      document.addEventListener("touchend", onTouchEnd, {
+        passive: true,
       });
 
       window.addEventListener("scroll", syncCue, { passive: true });
+      window.addEventListener("resize", syncCue, { passive: true });
+      mobileQuery.addEventListener?.("change", syncCue);
       syncCue();
     }
 
