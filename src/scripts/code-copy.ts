@@ -68,6 +68,12 @@ export function attachCopyButtons() {
     copyButton.innerHTML = copyIcon;
     copyButton.setAttribute("aria-label", copyLabel);
     copyButton.setAttribute("type", "button");
+
+    const fileName = codeBlock.querySelector<HTMLElement>(
+      ":scope > span.absolute"
+    );
+    fileName?.classList.add("code-file-name");
+
     codeBlock.setAttribute("tabindex", "0");
     codeBlock.appendChild(copyButton);
 
@@ -87,7 +93,7 @@ export function attachCopyButtons() {
         copyButton.innerHTML = copyIcon;
         copyButton.setAttribute("aria-label", copyLabel);
         delete copyButton.dataset.copied;
-      }, 900);
+      }, 1500);
     });
   });
 }

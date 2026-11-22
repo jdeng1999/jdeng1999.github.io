@@ -5,12 +5,21 @@
 
 /* Code block copy button: quiet, icon-only, slightly lifted from the code surface */
 .copy-code {
+  z-index: 2;
   border: 0;
   background: color-mix(in srgb, var(--foreground) 7%, transparent);
   color: color-mix(in srgb, var(--foreground) 48%, transparent);
+  box-shadow: 0 0 0 4px var(--background);
   transition:
     color 0.2s ease,
     background-color 0.2s ease;
+}
+
+.code-file-name {
+  border: 0;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  color: color-mix(in srgb, var(--foreground) 48%, transparent);
+  box-shadow: 0 0 0 4px var(--background);
 }
 
 .copy-code:hover,
@@ -27,6 +36,67 @@
 .copy-code svg {
   width: 0.9rem;
   height: 0.9rem;
+}
+
+/* Mobile article tags / meta: one relaxed, scrollable row */
+.post-tags-scroll,
+.post-meta-scroll {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.post-tags-scroll::-webkit-scrollbar,
+.post-meta-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.post-tags-track {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  gap: 0.5rem;
+  padding-block: 0.1rem;
+}
+
+.post-tags-track > * {
+  flex: 0 0 auto;
+}
+
+.post-meta-track {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 0.75rem;
+}
+
+.post-meta-track > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .post-tags-scroll,
+  .post-meta-scroll {
+    justify-content: flex-start;
+  }
+
+  .post-tags-track,
+  .post-meta-track {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: max-content;
+    min-width: 0;
+    margin-inline: 0;
+  }
 }
 
 /* Reading Progress Bar styles */

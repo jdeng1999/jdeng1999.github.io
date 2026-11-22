@@ -158,7 +158,7 @@ i {
 
 @utility app-layout {
   @apply mx-auto w-full px-4;
-  max-width: 72rem;
+  max-width: clamp(70rem, 74vw, 110rem);
 }
 
 .active-nav {
@@ -298,45 +298,8 @@ i {
   box-shadow: 0 4px 15px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
-/* ── Large desktop & 4K: keep the shell generous without stretching prose ── */
-@media (min-width: 1536px) {
-  .app-layout {
-    max-width: 80rem;
-  }
-}
-
-@media (min-width: 1920px) {
-  .app-layout {
-    max-width: 88rem;
-  }
-}
-
-@media (min-width: 2560px) {
-  html {
-    font-size: 18px;
-  }
-
-  .app-layout {
-    max-width: 100rem;
-  }
-}
-
-@media (min-width: 3200px) {
-  html {
-    font-size: 19px;
-  }
-
-  .app-layout {
-    max-width: 112rem;
-  }
-}
-
-@media (min-width: 3600px) {
-  html {
-    font-size: 20px;
-  }
-
-  .app-layout {
-    max-width: 120rem;
-  }
+/* Fluid shell for every desktop resolution. The 4K cap intentionally keeps
+   generous side margins instead of stretching the layout edge to edge. */
+html {
+  font-size: clamp(16px, 0.36vw + 9px, 20px);
 }

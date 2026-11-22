@@ -430,7 +430,7 @@ const totalLabel = formatTime(first.duration);
   .np-stack {
     position: relative;
     isolation: isolate;
-    padding-top: 3.1rem;
+    padding-top: 2.9rem;
   }
 
   .np-stage {
@@ -475,7 +475,7 @@ const totalLabel = formatTime(first.duration);
 
     position: absolute;
     z-index: 0;
-    top: 1.2rem;
+    top: 1.1rem;
     right: 0.55rem;
     left: 0.55rem;
     display: flex;
@@ -512,7 +512,7 @@ const totalLabel = formatTime(first.duration);
 
   .np-peek--back {
     z-index: -1;
-    top: 0.05rem;
+    top: 0;
     right: 1.05rem;
     left: 1.05rem;
     opacity: 0.72;
@@ -522,7 +522,7 @@ const totalLabel = formatTime(first.duration);
      but not interactive until it rotates into the second peek slot. */
   .np-peek--ghost {
     z-index: -2;
-    top: -0.65rem;
+    top: -0.6rem;
     right: 1.5rem;
     left: 1.5rem;
     border-color: color-mix(in srgb, var(--color-foreground) 6%, transparent);
@@ -2135,7 +2135,7 @@ const totalLabel = formatTime(first.duration);
         window.clearTimeout(wheelTimer);
         wheelTimer = window.setTimeout(() => {
           if (Math.abs(wheelAccum) >= 24) {
-            slideToTrack(wheelAccum > 0 ? 1 : -1);
+            slideToTrack(wheelAccum > 0 ? -1 : 1);
           }
           wheelAccum = 0;
           wheelLocked = true;
