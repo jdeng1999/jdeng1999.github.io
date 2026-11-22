@@ -3,6 +3,32 @@
    Extracted from PostDetails.astro for modularity and caching.
    ═══════════════════════════════════════════════════════════════ */
 
+/* Code block copy button: quiet, icon-only, slightly lifted from the code surface */
+.copy-code {
+  border: 0;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  color: color-mix(in srgb, var(--foreground) 48%, transparent);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.copy-code:hover,
+.copy-code:focus-visible {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.copy-code[data-copied="true"] {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.copy-code svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
 /* Reading Progress Bar styles */
 .progress-container {
   position: fixed;

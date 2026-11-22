@@ -543,6 +543,23 @@ const whatIcons = {
   .scroll-cue svg {
     width: 1.35rem;
     height: 1.35rem;
+    animation: scroll-cue-bob 5.4s ease-in-out infinite;
+  }
+
+  @keyframes scroll-cue-bob {
+    0%,
+    100% {
+      transform: translateY(-1px);
+    }
+    50% {
+      transform: translateY(1.5px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-cue svg {
+      animation: none;
+    }
   }
 
   .scroll-cue:hover {

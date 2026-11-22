@@ -28,7 +28,21 @@ export function addHeadingLinks() {
 }
 
 export function attachCopyButtons() {
-  const copyButtonLabel = "Copy";
+  const lang = document.documentElement.lang || "en";
+  const copyLabel = lang.startsWith("zh")
+    ? "复制代码"
+    : lang.startsWith("es")
+      ? "Copiar código"
+      : "Copy code";
+  const copiedLabel = lang.startsWith("zh")
+    ? "已复制"
+    : lang.startsWith("es")
+      ? "Copiado"
+      : "Copied";
+
+  const copyIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>`;
+  const checkIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>`;
+
   const codeBlocks = Array.from(
     document.querySelectorAll<HTMLPreElement>("pre")
   );
@@ -50,8 +64,10 @@ export function attachCopyButtons() {
     wrapper.style.position = "relative";
 
     const copyButton = document.createElement("button");
-    copyButton.className = `copy-code absolute end-3 ${topClasses[i]} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium cursor-pointer`;
-    copyButton.innerHTML = copyButtonLabel;
+    copyButton.className = `copy-code absolute end-3 ${topClasses[i]} inline-flex size-7 items-center justify-center rounded-md cursor-pointer`;
+    copyButton.innerHTML = copyIcon;
+    copyButton.setAttribute("aria-label", copyLabel);
+    copyButton.setAttribute("type", "button");
     codeBlock.setAttribute("tabindex", "0");
     codeBlock.appendChild(copyButton);
 
@@ -64,10 +80,14 @@ export function attachCopyButtons() {
 
       await navigator.clipboard.writeText(text ?? "");
 
-      copyButton.innerText = "Copied";
+      copyButton.innerHTML = checkIcon;
+      copyButton.setAttribute("aria-label", copiedLabel);
+      copyButton.dataset.copied = "true";
       setTimeout(() => {
-        copyButton.innerText = copyButtonLabel;
-      }, 700);
+        copyButton.innerHTML = copyIcon;
+        copyButton.setAttribute("aria-label", copyLabel);
+        delete copyButton.dataset.copied;
+      }, 900);
     });
   });
 }

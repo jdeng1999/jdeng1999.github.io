@@ -157,7 +157,8 @@ i {
 }
 
 @utility app-layout {
-  @apply mx-auto w-full max-w-app px-4;
+  @apply mx-auto w-full px-4;
+  max-width: 72rem;
 }
 
 .active-nav {
@@ -295,4 +296,47 @@ i {
 .premium-search .pagefind-ui__button:hover {
   background: color-mix(in srgb, var(--accent) 15%, transparent);
   box-shadow: 0 4px 15px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+/* ── Large desktop & 4K: keep the shell generous without stretching prose ── */
+@media (min-width: 1536px) {
+  .app-layout {
+    max-width: 80rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-layout {
+    max-width: 88rem;
+  }
+}
+
+@media (min-width: 2560px) {
+  html {
+    font-size: 18px;
+  }
+
+  .app-layout {
+    max-width: 100rem;
+  }
+}
+
+@media (min-width: 3200px) {
+  html {
+    font-size: 19px;
+  }
+
+  .app-layout {
+    max-width: 112rem;
+  }
+}
+
+@media (min-width: 3600px) {
+  html {
+    font-size: 20px;
+  }
+
+  .app-layout {
+    max-width: 120rem;
+  }
 }
