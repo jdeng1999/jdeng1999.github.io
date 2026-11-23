@@ -117,9 +117,19 @@ const totalLabel = formatTime(first.duration);
   data-np
   data-np-playing="false"
 >
+  <div class="np-aura" aria-hidden="true">
+    {Array.from({ length: 6 }).map(() => (
+      <i />
+    ))}
+  </div>
   <div class="np-stack" data-np-stack>
     <div class="np-stage" data-np-stage>
       <div class="np-card" data-np-card data-np-track-index="0">
+        <span
+          class="np-hover-title"
+          data-np-hover-title
+          aria-hidden="true"
+        ></span>
         <div class="np-art">
           <img
             data-np-cover
@@ -357,6 +367,7 @@ const totalLabel = formatTime(first.duration);
 
   .np-stack {
     position: relative;
+    z-index: 1;
     isolation: isolate;
     /* The extra top room is cancelled by the negative margin, so the front
        card keeps its place while the tilted back cards get space to breathe. */
@@ -415,6 +426,48 @@ const totalLabel = formatTime(first.duration);
     transform-origin: 50% 0%;
     will-change: transform, opacity, filter;
     transition: box-shadow 0.25s ease;
+  }
+
+  .np-card[data-np-role="1"],
+  .np-card[data-np-role="2"] {
+    cursor: pointer;
+  }
+
+  .np-hover-title {
+    position: absolute;
+    z-index: 3;
+    top: 0.16rem;
+    left: 0.82rem;
+    max-width: calc(100% - 1.7rem);
+    overflow: hidden;
+    padding: 0.1rem 0.38rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-background) 78%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--color-accent);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(-0.18rem);
+    transition:
+      opacity 0.14s ease,
+      transform 0.14s ease;
+    pointer-events: none;
+  }
+
+  .np-card[data-np-role="1"]:hover .np-hover-title,
+  .np-card[data-np-role="2"]:hover .np-hover-title {
+    opacity: 1;
+    transform: none;
+  }
+
+  .np-card[data-np-role="3"] .np-hover-title {
+    display: none;
   }
 
   .np-card:hover {
@@ -520,7 +573,7 @@ const totalLabel = formatTime(first.duration);
     transform-origin: bottom;
   }
 
-  .now-playing[data-np-playing="true"] .np-eq i {
+  .now-playing[data-np-playing="true"] .np-card.np-active .np-eq i {
     animation: np-eq 1.05s ease-in-out infinite;
     animation-delay: calc(var(--i) * -0.17s);
   }
@@ -832,11 +885,11 @@ const totalLabel = formatTime(first.duration);
     display: none;
   }
 
-  .now-playing[data-np-playing="true"] .np-icon-play {
+  .now-playing[data-np-playing="true"] .np-card.np-active .np-icon-play {
     display: none;
   }
 
-  .now-playing[data-np-playing="true"] .np-icon-pause {
+  .now-playing[data-np-playing="true"] .np-card.np-active .np-icon-pause {
     display: block;
   }
 
@@ -987,6 +1040,7 @@ const totalLabel = formatTime(first.duration);
 
   /* ── Expanded nine-card carousel ─────────────────────────────── */
   .np-expand {
+    --np-wreath-gold: #d8b46a;
     position: fixed;
     inset: 0;
     width: 100%;
@@ -999,10 +1053,175 @@ const totalLabel = formatTime(first.duration);
     border: 0;
     background: transparent;
     color: var(--color-foreground);
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  html[data-theme="light"] .np-expand {
+    --np-wreath-gold: #a87834;
+  }
+
+  .np-expand-wreath {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.7s ease 0.1s;
+  }
+
+  .np-expand.is-open .np-expand-wreath {
+    opacity: 1;
+  }
+
+  .np-expand.is-closing .np-expand-wreath {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+
+  .np-wreath-branch {
+    position: absolute;
+    top: 4%;
+    width: clamp(8rem, 19vw, 17rem);
+    height: 92%;
+    color: var(--np-wreath-gold);
+    opacity: 0.62;
+    filter: drop-shadow(
+      0 0 12px color-mix(in srgb, currentColor 16%, transparent)
+    );
+    overflow: visible;
+  }
+
+  .np-wreath-branch--left {
+    left: clamp(-1.5rem, 1vw, 2rem);
+  }
+
+  .np-wreath-branch--right {
+    right: clamp(-1.5rem, 1vw, 2rem);
+    transform: scaleX(-1);
+  }
+
+  .np-wreath-sparks,
+  .np-aura {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .np-wreath-sparks {
+    color: var(--np-wreath-gold);
+  }
+
+  .np-aura {
+    color: color-mix(in srgb, var(--color-accent) 84%, #ffffff);
+    z-index: 0;
+  }
+
+  .np-wreath-sparks i,
+  .np-aura i {
+    position: absolute;
+    left: var(--x, 50%);
+    top: var(--y, 50%);
+    width: var(--s, 2px);
+    height: var(--s, 2px);
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 7px currentColor;
+    opacity: 0;
+    animation: np-spark-rise var(--d, 8s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+    will-change: transform, opacity;
+  }
+
+  .np-wreath-sparks i.is-bright {
+    background: color-mix(in srgb, var(--np-wreath-gold) 38%, #ffffff);
+    box-shadow: 0 0 10px currentColor;
+  }
+
+  .np-aura i:nth-child(1) {
+    --x: calc(100% + 0.65rem);
+    --y: 34%;
+    --s: 2.6px;
+    --d: 8.6s;
+    --delay: -1.2s;
+  }
+
+  .np-aura i:nth-child(2) {
+    --x: calc(100% + 1rem);
+    --y: 58%;
+    --s: 1.9px;
+    --d: 9.8s;
+    --delay: -4.4s;
+  }
+
+  .np-aura i:nth-child(3) {
+    --x: calc(100% + 0.4rem);
+    --y: 76%;
+    --s: 3px;
+    --d: 10.4s;
+    --delay: -6.1s;
+  }
+
+  .np-aura i:nth-child(4) {
+    --x: -0.65rem;
+    --y: 22%;
+    --s: 1.9px;
+    --d: 9.2s;
+    --delay: -2.8s;
+  }
+
+  .np-aura i:nth-child(5) {
+    --x: -1rem;
+    --y: 55%;
+    --s: 2.5px;
+    --d: 11s;
+    --delay: -7.3s;
+  }
+
+  .np-aura i:nth-child(6) {
+    --x: 72%;
+    --y: calc(100% + 0.5rem);
+    --s: 1.9px;
+    --d: 8.8s;
+    --delay: -3.5s;
+  }
+
+  @keyframes np-spark-rise {
+    0% {
+      opacity: 0;
+      transform: translateY(0.6rem) scale(0.4);
+    }
+    12% {
+      opacity: 0.86;
+    }
+    70% {
+      opacity: 0.36;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-6.5rem) scale(0.15);
+    }
+  }
+
+  .np-expand * {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .np-expand img {
+    -webkit-user-drag: none;
   }
 
   .np-expand[open] {
     display: block;
+  }
+
+  .np-expand:focus,
+  .np-expand:focus-visible {
+    outline: none;
   }
 
   .np-expand::backdrop {
@@ -1061,6 +1280,7 @@ const totalLabel = formatTime(first.duration);
     top: 50%;
     left: 50%;
     width: var(--np-expand-w, 32rem);
+    min-height: var(--np-expand-h, 0);
     margin: 0;
     border-radius: 1.05rem;
     box-shadow:
@@ -1092,6 +1312,30 @@ const totalLabel = formatTime(first.duration);
     pointer-events: none;
   }
 
+  /* Keep the controls above the band where the next lower card overlaps.
+     The extra space at the very bottom becomes the shared seam. */
+  .np-expand-card .np-controls,
+  .np-fly-card .np-controls {
+    margin-bottom: 1.35rem;
+    padding-top: 0.35rem;
+  }
+
+  .np-expand-card .np-meta,
+  .np-fly-card .np-meta {
+    margin-top: 0.2rem;
+  }
+
+  .np-expand-card .np-enjoy,
+  .np-fly-card .np-enjoy {
+    min-height: 1.15rem;
+    margin-top: 0.28rem;
+  }
+
+  .np-expand-card .np-progress,
+  .np-fly-card .np-progress {
+    padding-top: 0.3rem;
+  }
+
   .np-expand-card:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
     outline-offset: 6px;
@@ -1103,40 +1347,31 @@ const totalLabel = formatTime(first.duration);
     top: clamp(1rem, 3vh, 2rem);
     right: clamp(1rem, 3vw, 2rem);
     display: grid;
-    width: 2.6rem;
-    height: 2.6rem;
+    width: 2.4rem;
+    height: 2.4rem;
     place-items: center;
     padding: 0;
-    border: 1px solid
-      color-mix(in srgb, var(--color-foreground) 12%, transparent);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--color-background) 55%, transparent);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    color: color-mix(in srgb, var(--color-foreground) 62%, transparent);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: color-mix(in srgb, var(--color-foreground) 58%, transparent);
     cursor: pointer;
-    transition:
-      color 0.2s ease,
-      border-color 0.2s ease,
-      background-color 0.2s ease,
-      transform 0.2s ease;
+    transition: color 0.18s ease;
   }
 
   .np-expand-close:hover {
-    border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
-    background: color-mix(in srgb, var(--color-accent) 10%, transparent);
     color: var(--color-accent);
-    transform: translateY(-1px);
   }
 
   .np-expand-close:focus-visible {
+    border-radius: 0.2rem;
     outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
     outline-offset: 3px;
   }
 
   .np-expand-close svg {
-    width: 1rem;
-    height: 1rem;
+    width: 1.3rem;
+    height: 1.3rem;
   }
 
   .np-expand-hint {
@@ -1165,15 +1400,105 @@ const totalLabel = formatTime(first.duration);
     transition-delay: 0s;
   }
 
-  .np-expand.is-playing .np-icon-play {
+  .np-expand-wheel {
+    position: absolute;
+    z-index: 40;
+    top: 50%;
+    left: 50%;
+    width: 5.2rem;
+    height: min(56vh, 31rem);
+    transform: translateY(-50%);
+    transform-origin: 50% 50%;
+    color: color-mix(in srgb, var(--color-foreground) 54%, transparent);
+    cursor: grab;
+    touch-action: none;
+    opacity: 0;
+    transition:
+      opacity 0.45s ease 0.12s,
+      color 0.2s ease;
+  }
+
+  .np-expand.is-open .np-expand-wheel {
+    opacity: 1;
+  }
+
+  .np-expand.is-closing .np-expand-wheel {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+
+  .np-expand-wheel:hover,
+  .np-expand-wheel:focus-visible {
+    color: color-mix(in srgb, var(--color-foreground) 76%, transparent);
+  }
+
+  .np-expand-wheel:focus-visible {
+    border-radius: 999px;
+    outline: 1px solid color-mix(in srgb, var(--color-accent) 45%, transparent);
+    outline-offset: 0.65rem;
+  }
+
+  .np-expand-wheel.is-dragging {
+    cursor: grabbing;
+    color: color-mix(in srgb, var(--color-foreground) 84%, transparent);
+  }
+
+  .np-wheel-ticks {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 12%,
+      #000 88%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 12%,
+      #000 88%,
+      transparent 100%
+    );
+  }
+
+  .np-wheel-ticks i {
+    position: absolute;
+    top: var(--y, 50%);
+    left: 50%;
+    width: var(--w, 2rem);
+    height: 1px;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: var(--o, 0.3);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 5px color-mix(in srgb, currentColor 18%, transparent);
+    transition:
+      width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.45s ease;
+  }
+
+  .np-wheel-ticks i.is-center {
+    height: 1.5px;
+    background: var(--color-accent);
+    opacity: 0.95;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent) 35%, transparent);
+  }
+
+  .np-expand.is-closing .np-expand-wheel {
+    pointer-events: none;
+  }
+
+  .np-expand.is-playing .np-expand-card[data-center="true"] .np-icon-play {
     display: none;
   }
 
-  .np-expand.is-playing .np-icon-pause {
+  .np-expand.is-playing .np-expand-card[data-center="true"] .np-icon-pause {
     display: block;
   }
 
-  .np-expand.is-playing .np-eq i {
+  .np-expand.is-playing .np-expand-card[data-center="true"] .np-eq i {
     animation: np-eq 1.05s ease-in-out infinite;
     animation-delay: calc(var(--i) * -0.17s);
   }
@@ -1181,6 +1506,7 @@ const totalLabel = formatTime(first.duration);
   .np-fly-card {
     position: absolute;
     z-index: 50;
+    min-height: var(--np-expand-h, 0);
     margin: 0;
     border-radius: 1.05rem;
     box-shadow:
@@ -1216,16 +1542,38 @@ const totalLabel = formatTime(first.duration);
     }
   }
 
+  @media (max-width: 860px) {
+    .np-expand-wheel {
+      display: none;
+    }
+
+    .np-wreath-branch {
+      width: 6rem;
+      opacity: 0.28;
+    }
+
+    .np-wreath-sparks i:nth-child(n + 12) {
+      display: none;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .np-expand-glass,
     .np-expand-stage,
     .np-expand-hint,
+    .np-expand-wreath,
     .np-fly-card {
       transition: none !important;
     }
 
     .np-expand[data-ready="true"] .np-expand-card {
       transition: none !important;
+    }
+
+    .np-wreath-sparks i,
+    .np-aura i {
+      animation: none;
+      opacity: 0;
     }
   }
 
@@ -1533,6 +1881,7 @@ const totalLabel = formatTime(first.duration);
       const coverEl = card.querySelector<HTMLImageElement>("[data-np-cover]");
       if (coverEl) coverEl.src = track.cover;
       setText(card, "[data-np-title]", track.title);
+      setText(card, "[data-np-hover-title]", track.title);
       setText(card, "[data-np-artist]", track.artist);
       setText(card, "[data-np-album]", track.album);
       setText(
@@ -1570,6 +1919,7 @@ const totalLabel = formatTime(first.duration);
         const body = getBody(other);
         if (!body) return;
         const isActive = other === activeCard;
+        other.classList.toggle("np-active", isActive);
         body.toggleAttribute("inert", !isActive);
         if (isActive) body.removeAttribute("aria-hidden");
         else body.setAttribute("aria-hidden", "true");
@@ -1792,7 +2142,12 @@ const totalLabel = formatTime(first.duration);
       stopLocalAudio();
       setPreviewHidden(false);
       root.dataset.npSource = "spotify";
-      if (autoplay) {
+      // Keep an already-created embed in sync even when the new track is
+      // selected without autoplay. Otherwise the next play would still toggle
+      // the previous track that the controller was loaded with.
+      if (spotifyController) {
+        void connectSpotify(track, autoplay);
+      } else if (autoplay) {
         requestedPlay = true;
         void connectSpotify(track, true);
       }
@@ -1874,6 +2229,8 @@ const totalLabel = formatTime(first.duration);
         const from = role;
         let to = role;
         let t = 0;
+
+        card.dataset.npRole = String(role);
 
         if (phase > 0.001) {
           t = clamp01(phase);
@@ -2359,13 +2716,14 @@ const totalLabel = formatTime(first.duration);
 
       if (pressedRole === 0) {
         openExpanded();
-      } else if (pressedRole === 3 && visibleCount > 3) {
-        requestMove(-1, false);
-      } else if (pressedRole > 0) {
-        for (let step = 0; step < pressedRole; step += 1) {
-          requestMove(1, false);
-        }
+      } else if (pressedRole === 1) {
+        requestMove(1, false);
+      } else if (pressedRole === 2) {
+        requestMove(1, false);
+        requestMove(1, false);
       }
+      // The deepest card (role 3) intentionally stays inert on hover/click;
+      // it still participates in the drag gesture.
     };
 
     stack.addEventListener("pointerup", endDeckDrag);
@@ -2494,7 +2852,7 @@ const totalLabel = formatTime(first.duration);
     type ExpandedCard = { el: HTMLElement; trackIndex: number };
 
     let expandedStage: HTMLElement | null = null;
-    let expandedClose: HTMLButtonElement | null = null;
+    let expandedWheel: HTMLElement | null = null;
     let expandedCards: ExpandedCard[] = [];
     let expandedOpen = false;
     let expandedClosing = false;
@@ -2503,6 +2861,7 @@ const totalLabel = formatTime(first.duration);
     let expandedBaseH = 0;
     let expandedCenterScale = 1.2;
     let expandedStep = 70;
+    let expandedBelowSteps: number[] = [];
     let expandedOpenTimer = 0;
     let expandedCloseTimer = 0;
     let expandedReturnFocus: HTMLElement | null = null;
@@ -2535,6 +2894,7 @@ const totalLabel = formatTime(first.duration);
       const fly = serverCard.cloneNode(true) as HTMLElement;
       fly.classList.add("np-fly-card");
       fly.removeAttribute("data-np-card");
+      fly.removeAttribute("data-np-role");
       fly.removeAttribute("data-np-track-index");
       fly.querySelectorAll("[id]").forEach(node => node.removeAttribute("id"));
       const body = getBody(fly);
@@ -2557,6 +2917,7 @@ const totalLabel = formatTime(first.duration);
 
     const createExpanded = () => {
       if (expandedDialog) return;
+      let wheelAccum = 0;
 
       const astroScope = serverCard
         .getAttributeNames()
@@ -2567,6 +2928,7 @@ const totalLabel = formatTime(first.duration);
 
       const dialog = document.createElement("dialog");
       dialog.className = "np-expand";
+      dialog.tabIndex = -1;
       dialog.setAttribute("aria-label", "Music cards");
       scope(dialog);
 
@@ -2577,6 +2939,180 @@ const totalLabel = formatTime(first.duration);
       const stage = document.createElement("div");
       stage.className = "np-expand-stage";
       scope(stage);
+
+      const wheel = document.createElement("div");
+      wheel.className = "np-expand-wheel";
+      wheel.tabIndex = 0;
+      wheel.setAttribute("role", "slider");
+      wheel.setAttribute("aria-label", "Music carousel");
+      wheel.setAttribute("aria-valuemin", "0");
+      wheel.setAttribute("aria-valuemax", String(tracks.length - 1));
+      scope(wheel);
+
+      const tickLayer = document.createElement("div");
+      tickLayer.className = "np-wheel-ticks";
+      const tickCount = 21;
+      for (let tick = 0; tick < tickCount; tick += 1) {
+        const t = (tick - (tickCount - 1) / 2) / ((tickCount - 1) / 2);
+        const falloff = 1 - Math.pow(Math.abs(t), 1.35);
+        const line = document.createElement("i");
+        line.style.setProperty("--y", `${50 + t * 43}%`);
+        line.style.setProperty("--w", `${0.55 + falloff * 3.6}rem`);
+        line.style.setProperty("--o", String(0.14 + falloff * 0.66));
+        if (Math.abs(t) < 0.001) line.classList.add("is-center");
+        scope(line);
+        tickLayer.appendChild(line);
+      }
+      wheel.appendChild(tickLayer);
+      scope(tickLayer);
+
+      const wreath = document.createElement("div");
+      wreath.className = "np-expand-wreath";
+      scope(wreath);
+
+      const makeBranch = (side: "left" | "right") => {
+        const ns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("viewBox", "0 0 250 720");
+        svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+        svg.setAttribute("aria-hidden", "true");
+        svg.classList.add("np-wreath-branch", `np-wreath-branch--${side}`);
+        scope(svg);
+
+        const gradientId = `np-wreath-gold-${side}`;
+        const defs = document.createElementNS(ns, "defs");
+        const gradient = document.createElementNS(ns, "linearGradient");
+        gradient.setAttribute("id", gradientId);
+        gradient.setAttribute("x1", "0");
+        gradient.setAttribute("y1", "1");
+        gradient.setAttribute("x2", "0");
+        gradient.setAttribute("y2", "0");
+        [
+          [0, 0.04],
+          [0.35, 0.42],
+          [0.7, 0.92],
+          [1, 0.3],
+        ].forEach(([offset, opacity]) => {
+          const stop = document.createElementNS(ns, "stop");
+          stop.setAttribute("offset", String(offset));
+          stop.setAttribute("stop-color", "currentColor");
+          stop.setAttribute("stop-opacity", String(opacity));
+          gradient.appendChild(stop);
+        });
+        defs.appendChild(gradient);
+        svg.appendChild(defs);
+
+        const stem = document.createElementNS(ns, "path");
+        stem.setAttribute(
+          "d",
+          "M 205 690 C 220 580 205 470 173 370 C 143 278 121 184 110 84"
+        );
+        stem.setAttribute("fill", "none");
+        stem.setAttribute("stroke", "currentColor");
+        stem.setAttribute("stroke-width", "2.1");
+        stem.setAttribute("stroke-linecap", "round");
+        stem.setAttribute("opacity", "0.5");
+        svg.appendChild(stem);
+
+        const leafPath = "M0 0 C -18 -6 -33 -25 -25 -49 C -7 -41 6 -19 0 0 Z";
+        const leaves = [
+          { x: 205, y: 652, r: -22, s: 1.02 },
+          { x: 207, y: 592, r: -26, s: 1 },
+          { x: 201, y: 534, r: -32, s: 0.96 },
+          { x: 192, y: 478, r: -38, s: 0.91 },
+          { x: 181, y: 424, r: -44, s: 0.86 },
+          { x: 168, y: 372, r: -50, s: 0.81 },
+          { x: 155, y: 322, r: -56, s: 0.76 },
+          { x: 144, y: 274, r: -62, s: 0.7 },
+          { x: 135, y: 230, r: -68, s: 0.64 },
+          { x: 128, y: 188, r: -74, s: 0.57 },
+          { x: 122, y: 150, r: -80, s: 0.5 },
+          { x: 118, y: 114, r: -86, s: 0.42 },
+        ];
+
+        leaves.forEach(leaf => {
+          for (const inner of [false, true]) {
+            const path = document.createElementNS(ns, "path");
+            path.setAttribute("d", leafPath);
+            path.setAttribute("fill", `url(#${gradientId})`);
+            const scale = inner ? leaf.s * 0.75 : leaf.s;
+            path.setAttribute(
+              "transform",
+              `translate(${leaf.x} ${leaf.y}) rotate(${leaf.r}) scale(${
+                inner ? -scale : scale
+              } ${scale})`
+            );
+            svg.appendChild(path);
+          }
+        });
+
+        return svg;
+      };
+
+      wreath.append(makeBranch("left"), makeBranch("right"));
+
+      const sparks = document.createElement("div");
+      sparks.className = "np-wreath-sparks";
+      scope(sparks);
+      for (let spark = 0; spark < 18; spark += 1) {
+        const dot = document.createElement("i");
+        const side =
+          spark % 2 === 0 ? 4 + ((spark * 13) % 22) : 74 + ((spark * 11) % 22);
+        dot.style.setProperty("--x", `${side}%`);
+        dot.style.setProperty("--y", `${16 + ((spark * 29) % 70)}%`);
+        dot.style.setProperty("--s", `${1.8 + (spark % 3) * 0.65}px`);
+        dot.style.setProperty("--d", `${7.4 + (spark % 5) * 1.05}s`);
+        dot.style.setProperty("--delay", `${-0.8 - ((spark * 0.83) % 7)}s`);
+        if (spark % 5 === 0) dot.classList.add("is-bright");
+        scope(dot);
+        sparks.appendChild(dot);
+      }
+      wreath.appendChild(sparks);
+
+      let wheelDragging = false;
+      let wheelDragStartY = 0;
+      let wheelDragStartCenter = 0;
+      let wheelDragStep = 0;
+
+      wheel.addEventListener("pointerdown", event => {
+        if (!expandedOpen || expandedClosing) return;
+        event.preventDefault();
+        event.stopPropagation();
+        wheelDragging = true;
+        wheelDragStartY = event.clientY;
+        wheelDragStartCenter = expandedCenter;
+        wheelDragStep = 0;
+        wheel.classList.add("is-dragging");
+        try {
+          wheel.setPointerCapture?.(event.pointerId);
+        } catch {
+          /* pointer may already be gone */
+        }
+      });
+
+      wheel.addEventListener("pointermove", event => {
+        if (!wheelDragging) return;
+        const step = Math.trunc((event.clientY - wheelDragStartY) / 32);
+        if (step === wheelDragStep) return;
+        wheelDragStep = step;
+        selectExpanded(wheelDragStartCenter + step);
+      });
+
+      const endWheelDrag = (event: PointerEvent) => {
+        if (!wheelDragging) return;
+        wheelDragging = false;
+        wheel.classList.remove("is-dragging");
+        try {
+          if (wheel.hasPointerCapture?.(event.pointerId)) {
+            wheel.releasePointerCapture(event.pointerId);
+          }
+        } catch {
+          /* capture may already be released */
+        }
+      };
+
+      wheel.addEventListener("pointerup", endWheelDrag);
+      wheel.addEventListener("pointercancel", endWheelDrag);
 
       const close = document.createElement("button");
       close.type = "button";
@@ -2591,11 +3127,8 @@ const totalLabel = formatTime(first.duration);
       hint.textContent = "↑ ↓ · ESC";
       scope(hint);
 
-      dialog.append(glass, stage, close, hint);
+      dialog.append(glass, wreath, stage, wheel, close, hint);
 
-      dialog.addEventListener("click", event => {
-        if (event.target === glass) closeExpanded();
-      });
       close.addEventListener("click", () => closeExpanded());
       dialog.addEventListener("cancel", event => {
         event.preventDefault();
@@ -2603,6 +3136,15 @@ const totalLabel = formatTime(first.duration);
       });
       dialog.addEventListener("keydown", event => {
         if (!expandedOpen || expandedClosing) return;
+
+        if (
+          (event.ctrlKey || event.metaKey) &&
+          event.key.toLowerCase() === "a"
+        ) {
+          event.preventDefault();
+          return;
+        }
+
         if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
           event.preventDefault();
           selectExpanded(expandedCenter - 1);
@@ -2612,14 +3154,39 @@ const totalLabel = formatTime(first.duration);
         }
       });
 
+      dialog.addEventListener(
+        "wheel",
+        event => {
+          if (!expandedOpen || expandedClosing) return;
+          event.preventDefault();
+          wheelAccum += event.deltaY;
+          const step = Math.trunc(wheelAccum / 38);
+          if (!step) return;
+          wheelAccum -= step * 38;
+          selectExpanded(expandedCenter + step);
+        },
+        { passive: false }
+      );
+
+      document.addEventListener("keydown", event => {
+        if (!expandedOpen) return;
+        if (
+          (event.ctrlKey || event.metaKey) &&
+          event.key.toLowerCase() === "a"
+        ) {
+          event.preventDefault();
+        }
+      });
+
       expandedDialog = dialog;
       expandedStage = stage;
-      expandedClose = close;
+      expandedWheel = wheel;
 
       expandedCards = tracks.map((track, trackIndex) => {
         const el = serverCard.cloneNode(true) as HTMLElement;
         el.classList.add("np-expand-card");
         el.removeAttribute("data-np-card");
+        el.removeAttribute("data-np-role");
         el.removeAttribute("data-np-track-index");
         el.querySelectorAll("[id]").forEach(node => node.removeAttribute("id"));
 
@@ -2663,7 +3230,17 @@ const totalLabel = formatTime(first.duration);
       const outerHalf = (expandedBaseH * expandedCenterScale * 0.56) / 2;
       const maxHalf = window.innerHeight * 0.43;
       expandedStep = clamp((maxHalf - outerHalf) / 4, 36, 88);
+      const centerHeight = expandedBaseH * expandedCenterScale;
+      expandedBelowSteps = [0.86, 1.2, 1.46, 1.68].map(
+        factor => factor * centerHeight
+      );
 
+      if (expandedWheel) {
+        const half = (expandedBaseW * expandedCenterScale) / 2;
+        expandedWheel.style.left = `calc(50% + ${half + 26}px)`;
+      }
+
+      expandedDialog?.style.setProperty("--np-expand-h", `${expandedBaseH}px`);
       expandedStage?.style.setProperty("--np-expand-w", `${expandedBaseW}px`);
     };
 
@@ -2692,14 +3269,20 @@ const totalLabel = formatTime(first.duration);
         const sign = Math.sign(offset);
         const scale = scaleFactors[abs]! * expandedCenterScale;
         const angle = sign * abs * 8;
+        const offsetY =
+          offset === 0
+            ? 0
+            : offset < 0
+              ? offset * expandedStep
+              : (expandedBelowSteps[abs - 1] ?? 0);
 
-        el.style.transform = `translate(-50%, -50%) translateY(${
-          offset * expandedStep
-        }px) translateZ(${-abs * 18}px) rotateX(${angle}deg) scale(${scale})`;
+        el.style.transform = `translate(-50%, -50%) translateY(${offsetY}px) translateZ(${
+          -abs * 18
+        }px) rotateX(${angle}deg) scale(${scale})`;
         el.style.opacity = String(opacityFactors[abs]!);
         el.style.filter =
           blurFactors[abs]! > 0.01 ? `blur(${blurFactors[abs]}px)` : "none";
-        el.style.zIndex = String(100 - abs * 10);
+        el.style.zIndex = String(50 + offset);
         el.dataset.npExpandOffset = String(offset);
 
         const clickable = abs >= 1 && abs <= 3;
@@ -2715,6 +3298,8 @@ const totalLabel = formatTime(first.duration);
           el.removeAttribute("aria-label");
         }
       });
+
+      expandedWheel?.setAttribute("aria-valuenow", String(expandedCenter));
     };
 
     const selectExpanded = (trackIndex: number) => {
@@ -2768,7 +3353,7 @@ const totalLabel = formatTime(first.duration);
       expandedDialog.classList.toggle("is-playing", isPlaying);
       expandedDialog.removeAttribute("data-ready");
       if (!expandedDialog.open) expandedDialog.showModal();
-      expandedClose?.focus({ preventScroll: true });
+      expandedDialog.focus({ preventScroll: true });
 
       const source = activeCard.getBoundingClientRect();
       const target = expandedTargetRect();
