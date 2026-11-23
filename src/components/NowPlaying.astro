@@ -1128,13 +1128,13 @@ const totalLabel = formatTime(first.duration);
     border-radius: 1.4rem;
     background: radial-gradient(
       ellipse at 58% 52%,
-      color-mix(in srgb, currentColor 16%, transparent),
-      color-mix(in srgb, currentColor 6%, transparent) 46%,
+      color-mix(in srgb, currentColor 14%, transparent),
+      color-mix(in srgb, currentColor 5%, transparent) 46%,
       transparent 72%
     );
     filter: blur(20px);
     content: "";
-    opacity: 0.38;
+    opacity: 0.32;
     pointer-events: none;
     animation: np-aura-breathe 7.6s ease-in-out infinite;
   }
@@ -1148,8 +1148,8 @@ const totalLabel = formatTime(first.duration);
     border-radius: 50%;
     background: currentColor;
     box-shadow:
-      0 0 5px currentColor,
-      0 0 12px 1px color-mix(in srgb, currentColor 42%, transparent);
+      0 0 4px currentColor,
+      0 0 10px 1px color-mix(in srgb, currentColor 36%, transparent);
     opacity: 0;
     animation: np-spark-rise var(--d, 8s) ease-in-out infinite;
     animation-delay: var(--delay, 0s);
@@ -1195,7 +1195,7 @@ const totalLabel = formatTime(first.duration);
 
   .np-aura i:nth-child(4n)::before,
   .np-aura i:nth-child(4n)::after {
-    opacity: 0.52;
+    opacity: 0.44;
   }
 
   .np-aura i:nth-child(1) {
@@ -1273,11 +1273,11 @@ const totalLabel = formatTime(first.duration);
   @keyframes np-aura-breathe {
     0%,
     100% {
-      opacity: 0.3;
+      opacity: 0.25;
       transform: scale(0.985);
     }
     50% {
-      opacity: 0.56;
+      opacity: 0.48;
       transform: scale(1.02);
     }
   }
@@ -1288,11 +1288,11 @@ const totalLabel = formatTime(first.duration);
       transform: translateY(0.5rem) scale(0.4);
     }
     10% {
-      opacity: 0.88;
+      opacity: 0.8;
       transform: translateY(0) scale(1);
     }
     70% {
-      opacity: 0.34;
+      opacity: 0.3;
       transform: translateY(-3.5rem) scale(0.65);
     }
     100% {
