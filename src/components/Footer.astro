@@ -55,57 +55,59 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
   <div class="h-px w-full bg-linear-to-r from-transparent via-border/40 to-transparent"></div>
 
   <div class="app-layout py-10 sm:py-12">
-    <!-- Main footer: brand on the left, credits in the middle, music on the right -->
+    <!-- Main footer: brand + connect on the left, credits in the middle, music on the right -->
     <div class="footer-grid">
-      <!-- Brand column -->
-      <div class="footer-brand flex flex-col items-center gap-4 sm:items-start">
-        <a
-          href={locale === "es" ? "/es" : locale === "zh" ? "/zh" : "/"}
-          aria-label={
-            locale === "es"
-              ? `Ir al inicio de ${SITE.title}`
-              : `Go to home of ${SITE.title}`
-          }
-          class="group footer-home-link relative flex items-center gap-2 rounded-md"
-        >
-          <SiteLogo class="text-[1.7rem] opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
-          <span class="sr-only">{SITE.title}</span>
-        </a>
+      <div class="footer-identity">
+        <!-- Brand column -->
+        <div class="footer-brand flex flex-col items-center gap-4 sm:items-start">
+          <a
+            href={locale === "es" ? "/es" : locale === "zh" ? "/zh" : "/"}
+            aria-label={
+              locale === "es"
+                ? `Ir al inicio de ${SITE.title}`
+                : `Go to home of ${SITE.title}`
+            }
+            class="group footer-home-link relative flex items-center gap-2 rounded-md"
+          >
+            <SiteLogo class="text-[1.7rem] opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
+            <span class="sr-only">{SITE.title}</span>
+          </a>
 
-        <p class="max-w-sm text-center font-firacode text-[11px] leading-relaxed tracking-wide text-foreground/55 sm:text-start">
-          {t("footer.desc")}
-        </p>
-      </div>
+          <p class="max-w-sm text-center font-firacode text-[11px] leading-relaxed tracking-wide text-foreground/55 sm:text-start">
+            {t("footer.desc")}
+          </p>
+        </div>
 
-      <!-- Connect: social links and the shared like counter -->
-      <div class="footer-connect flex flex-col items-center gap-3 sm:items-start">
-        <p class="footer-connect-label">{t("footer.connect")}</p>
-        <nav class="flex flex-col items-center gap-3 sm:items-start">
-          <ul class="footer-socials flex items-center gap-3" role="list">
-            {socialLinks.map(social => (
-              <li>
-                <LinkButton
-                  href={social.href}
-                  target={social.isExternal ? "_blank" : undefined}
-                  rel={social.isExternal ? "noopener noreferrer" : undefined}
-                  aria-label={social.linkTitle}
-                  class="footer-social-btn group relative flex size-8 items-center justify-center text-foreground/45 transition-colors duration-200 hover:text-accent focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:outline-none"
-                >
-                  <social.icon class="size-[1.15rem] fill-current" />
-                  <span class="sr-only">{social.linkTitle}</span>
-                </LinkButton>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <!-- Connect: social links and the shared like counter -->
+        <div class="footer-connect flex flex-col items-center gap-3 sm:items-start">
+          <p class="footer-connect-label">{t("footer.connect")}</p>
+          <nav class="flex flex-col items-center gap-3 sm:items-start">
+            <ul class="footer-socials flex items-center gap-3" role="list">
+              {socialLinks.map(social => (
+                <li>
+                  <LinkButton
+                    href={social.href}
+                    target={social.isExternal ? "_blank" : undefined}
+                    rel={social.isExternal ? "noopener noreferrer" : undefined}
+                    aria-label={social.linkTitle}
+                    class="footer-social-btn group relative flex size-8 items-center justify-center text-foreground/45 transition-colors duration-200 hover:text-accent focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:outline-none"
+                  >
+                    <social.icon class="size-[1.35rem] fill-current" />
+                    <span class="sr-only">{social.linkTitle}</span>
+                  </LinkButton>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-        {SITE.likes.enabled && (
-          <FooterLike
-            base={SITE.likes.base}
-            likeLabel={t("footer.likes")}
-            ariaLabel={t("footer.likeSite")}
-          />
-        )}
+          {SITE.likes.enabled && (
+            <FooterLike
+              base={SITE.likes.base}
+              likeLabel={t("footer.likes")}
+              ariaLabel={t("footer.likeSite")}
+            />
+          )}
+        </div>
       </div>
 
       <!-- Credits -->
@@ -243,81 +245,54 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
     transform: translateY(-0.01em);
   }
 
-  /* Footer layout: brand | connect | music */
+  /* Footer layout: brand + connect | credits | music */
   .footer-grid {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 2.5rem;
+  }
+
+  .footer-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   @media (min-width: 1024px) {
     .footer-grid {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 31rem);
-      align-items: start;
-      gap: 2.25rem 3rem;
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
     }
 
-    .footer-brand {
-      grid-column: 1;
-      grid-row: 1;
+    .footer-identity {
+      flex: 0 1 auto;
     }
 
     .footer-connect {
-      grid-column: 1;
-      grid-row: 2;
-      justify-self: center;
+      align-self: flex-end;
     }
 
     .footer-credits {
-      grid-column: 2;
-      grid-row: 2;
-      justify-self: end;
-      align-self: center;
+      flex: 0 0 auto;
     }
 
-    .footer-music {
-      grid-column: 2;
-      grid-row: 1;
-      justify-self: end;
+    :global(.footer-music) {
+      flex: 0 0 min(26rem, 42vw);
+      width: min(26rem, 42vw);
+      max-width: 100%;
+      margin-left: auto;
     }
   }
 
   @media (min-width: 1280px) {
-    .footer-grid {
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 29rem);
-      align-items: center;
-      gap: 2rem;
-    }
-
-    .footer-brand {
-      grid-column: 1;
-      grid-row: 1;
-    }
-
     .footer-connect {
-      grid-column: 2;
-      grid-row: 1;
-      justify-self: center;
-    }
-
-    .footer-credits {
-      grid-column: 1 / -1;
-      grid-row: 2;
-      justify-self: center;
-    }
-
-    .footer-music {
-      grid-column: 3;
-      grid-row: 1;
-      justify-self: stretch;
+      align-self: flex-start;
     }
   }
 
   .footer-social-btn {
     border-radius: 0.4rem;
-  }
-
-  .footer-social-btn:hover {
-    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
   }
 
   .footer-credits {

@@ -433,6 +433,12 @@ const totalLabel = formatTime(first.duration);
     cursor: pointer;
   }
 
+  .now-playing[data-np-returning="true"] .np-card {
+    transition:
+      opacity 0.26s ease,
+      filter 0.26s ease;
+  }
+
   .np-hover-title {
     position: absolute;
     z-index: 3;
@@ -808,15 +814,15 @@ const totalLabel = formatTime(first.duration);
   .np-controls {
     display: flex;
     align-items: center;
-    gap: 0.7rem;
+    gap: 0.85rem;
     padding-top: 0.6rem;
   }
 
   .np-skip {
     display: inline-grid;
     flex: none;
-    width: 1.55rem;
-    height: 1.55rem;
+    width: 1.7rem;
+    height: 1.7rem;
     place-items: center;
     border: 0;
     border-radius: 999px;
@@ -841,8 +847,8 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-skip svg {
-    width: 0.82rem;
-    height: 0.82rem;
+    width: 0.9rem;
+    height: 0.9rem;
     fill: currentColor;
     stroke: currentColor;
     stroke-width: 1.2;
@@ -854,8 +860,8 @@ const totalLabel = formatTime(first.duration);
     position: relative;
     display: inline-grid;
     flex: none;
-    width: 2.1rem;
-    height: 2.1rem;
+    width: 2.3rem;
+    height: 2.3rem;
     place-items: center;
     border: 0;
     border-radius: 999px;
@@ -876,8 +882,8 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-icon {
-    width: 0.85rem;
-    height: 0.85rem;
+    width: 0.95rem;
+    height: 0.95rem;
     fill: currentColor;
   }
 
@@ -896,9 +902,9 @@ const totalLabel = formatTime(first.duration);
   .np-restart {
     display: inline-grid;
     flex: none;
-    width: 1.55rem;
-    height: 1.55rem;
-    margin-left: 0.15rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    margin-left: 0.2rem;
     place-items: center;
     border: 0;
     border-radius: 999px;
@@ -914,8 +920,8 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-restart svg {
-    width: 0.82rem;
-    height: 0.82rem;
+    width: 0.9rem;
+    height: 0.9rem;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.5;
@@ -926,9 +932,9 @@ const totalLabel = formatTime(first.duration);
   .np-mode {
     display: inline-grid;
     flex: none;
-    width: 1.55rem;
-    height: 1.55rem;
-    margin-left: 0.15rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    margin-left: 0.2rem;
     place-items: center;
     padding: 0;
     border: 0;
@@ -956,8 +962,8 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-mode svg {
-    width: 0.92rem;
-    height: 0.92rem;
+    width: 1.02rem;
+    height: 1.02rem;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.6;
@@ -1040,7 +1046,7 @@ const totalLabel = formatTime(first.duration);
 
   /* ── Expanded nine-card carousel ─────────────────────────────── */
   .np-expand {
-    --np-wreath-gold: #d8b46a;
+    --np-wreath-gold: #e0bd78;
     position: fixed;
     inset: 0;
     width: 100%;
@@ -1055,6 +1061,7 @@ const totalLabel = formatTime(first.duration);
     color: var(--color-foreground);
     -webkit-user-select: none;
     user-select: none;
+    touch-action: none;
   }
 
   html[data-theme="light"] .np-expand {
@@ -1068,14 +1075,44 @@ const totalLabel = formatTime(first.duration);
     overflow: hidden;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.7s ease 0.1s;
+    transition: opacity 0.3s ease;
   }
 
-  .np-expand.is-open .np-expand-wreath {
+  .np-expand.is-wreath-ready .np-expand-wreath {
     opacity: 1;
   }
 
   .np-expand.is-closing .np-expand-wreath {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+
+  .np-expand-halo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 0;
+    width: min(56rem, 88vw);
+    height: min(34rem, 60vh);
+    border-radius: 50%;
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, var(--np-wreath-gold) 15%, transparent),
+      color-mix(in srgb, var(--color-accent) 6%, transparent) 42%,
+      transparent 70%
+    );
+    filter: blur(18px);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.55s ease 0.04s;
+  }
+
+  .np-expand.is-open .np-expand-halo {
+    opacity: 1;
+  }
+
+  .np-expand.is-closing .np-expand-halo {
     opacity: 0;
     transition-delay: 0s;
   }
@@ -1086,9 +1123,9 @@ const totalLabel = formatTime(first.duration);
     width: clamp(8rem, 19vw, 17rem);
     height: 92%;
     color: var(--np-wreath-gold);
-    opacity: 0.62;
+    opacity: 0.74;
     filter: drop-shadow(
-      0 0 12px color-mix(in srgb, currentColor 16%, transparent)
+      0 0 16px color-mix(in srgb, currentColor 22%, transparent)
     );
     overflow: visible;
   }
@@ -1102,6 +1139,46 @@ const totalLabel = formatTime(first.duration);
     transform: scaleX(-1);
   }
 
+  .np-wreath-branch .np-stem {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  .np-expand.is-wreath-ready .np-wreath-branch .np-stem {
+    animation: np-stem-draw 1.15s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .np-wreath-branch .np-grain {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .np-expand.is-wreath-ready .np-wreath-branch .np-grain {
+    animation: np-grain-grow 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(120ms + var(--i) * 52ms);
+  }
+
+  @keyframes np-stem-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes np-grain-grow {
+    from {
+      opacity: 0;
+      scale: 0.35;
+    }
+    to {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
   .np-wreath-sparks,
   .np-aura {
     position: absolute;
@@ -1113,6 +1190,17 @@ const totalLabel = formatTime(first.duration);
 
   .np-wreath-sparks {
     color: var(--np-wreath-gold);
+    opacity: 0;
+    transition: opacity 0.4s ease 0.05s;
+  }
+
+  .np-expand.is-open .np-wreath-sparks {
+    opacity: 1;
+  }
+
+  .np-expand.is-closing .np-wreath-sparks {
+    opacity: 0;
+    transition-delay: 0s;
   }
 
   .np-aura {
@@ -1129,7 +1217,7 @@ const totalLabel = formatTime(first.duration);
     height: var(--s, 2px);
     border-radius: 50%;
     background: currentColor;
-    box-shadow: 0 0 7px currentColor;
+    box-shadow: 0 0 9px currentColor;
     opacity: 0;
     animation: np-spark-rise var(--d, 8s) ease-in-out infinite;
     animation-delay: var(--delay, 0s);
@@ -1137,8 +1225,8 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-wreath-sparks i.is-bright {
-    background: color-mix(in srgb, var(--np-wreath-gold) 38%, #ffffff);
-    box-shadow: 0 0 10px currentColor;
+    background: color-mix(in srgb, var(--np-wreath-gold) 32%, #ffffff);
+    box-shadow: 0 0 11px currentColor;
   }
 
   .np-aura i:nth-child(1) {
@@ -1195,10 +1283,10 @@ const totalLabel = formatTime(first.duration);
       transform: translateY(0.6rem) scale(0.4);
     }
     12% {
-      opacity: 0.86;
+      opacity: 0.96;
     }
     70% {
-      opacity: 0.36;
+      opacity: 0.42;
     }
     100% {
       opacity: 0;
@@ -1312,6 +1400,14 @@ const totalLabel = formatTime(first.duration);
     pointer-events: none;
   }
 
+  .np-expand-card[data-center="true"] {
+    z-index: 100;
+  }
+
+  .np-expand-card[data-center="true"] .np-body {
+    pointer-events: auto;
+  }
+
   /* Keep the controls above the band where the next lower card overlaps.
      The extra space at the very bottom becomes the shared seam. */
   .np-expand-card .np-controls,
@@ -1356,7 +1452,21 @@ const totalLabel = formatTime(first.duration);
     background: transparent;
     color: color-mix(in srgb, var(--color-foreground) 58%, transparent);
     cursor: pointer;
-    transition: color 0.18s ease;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.3s ease,
+      color 0.18s ease;
+  }
+
+  .np-expand.is-ui-ready .np-expand-close {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .np-expand.is-closing .np-expand-close {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .np-expand-close:hover {
@@ -1388,10 +1498,10 @@ const totalLabel = formatTime(first.duration);
     white-space: nowrap;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.45s ease 0.2s;
+    transition: opacity 0.45s ease 0.1s;
   }
 
-  .np-expand.is-open .np-expand-hint {
+  .np-expand.is-ui-ready .np-expand-hint {
     opacity: 1;
   }
 
@@ -1405,26 +1515,29 @@ const totalLabel = formatTime(first.duration);
     z-index: 40;
     top: 50%;
     left: 50%;
-    width: 5.2rem;
-    height: min(56vh, 31rem);
+    width: 2rem;
+    height: min(72vh, 48rem);
     transform: translateY(-50%);
     transform-origin: 50% 50%;
     color: color-mix(in srgb, var(--color-foreground) 54%, transparent);
     cursor: grab;
     touch-action: none;
     opacity: 0;
-    transition:
-      opacity 0.45s ease 0.12s,
-      color 0.2s ease;
+    pointer-events: none;
+    transition: color 0.2s ease;
   }
 
-  .np-expand.is-open .np-expand-wheel {
+  .np-expand.is-wheel-ready .np-expand-wheel {
     opacity: 1;
+    pointer-events: auto;
   }
 
   .np-expand.is-closing .np-expand-wheel {
     opacity: 0;
-    transition-delay: 0s;
+    pointer-events: none;
+    transition:
+      opacity 0.18s ease,
+      color 0.2s ease;
   }
 
   .np-expand-wheel:hover,
@@ -1450,15 +1563,15 @@ const totalLabel = formatTime(first.duration);
     -webkit-mask-image: linear-gradient(
       to bottom,
       transparent 0,
-      #000 12%,
-      #000 88%,
+      #000 6%,
+      #000 94%,
       transparent 100%
     );
     mask-image: linear-gradient(
       to bottom,
       transparent 0,
-      #000 12%,
-      #000 88%,
+      #000 6%,
+      #000 94%,
       transparent 100%
     );
   }
@@ -1467,23 +1580,28 @@ const totalLabel = formatTime(first.duration);
     position: absolute;
     top: var(--y, 50%);
     left: 50%;
-    width: var(--w, 2rem);
+    width: var(--w, 0.9rem);
     height: 1px;
     border-radius: 999px;
     background: currentColor;
     opacity: var(--o, 0.3);
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 5px color-mix(in srgb, currentColor 18%, transparent);
+    box-shadow: 0 0 4px color-mix(in srgb, currentColor 14%, transparent);
     transition:
       width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
       opacity 0.45s ease;
   }
 
+  .np-wheel-ticks i.is-major {
+    height: 1.2px;
+  }
+
   .np-wheel-ticks i.is-center {
-    height: 1.5px;
+    width: 1.6rem;
+    height: 2px;
     background: var(--color-accent);
     opacity: 0.95;
-    box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent) 35%, transparent);
+    box-shadow: 0 0 9px color-mix(in srgb, var(--color-accent) 40%, transparent);
   }
 
   .np-expand.is-closing .np-expand-wheel {
@@ -1514,8 +1632,10 @@ const totalLabel = formatTime(first.duration);
       0 0 0 1px color-mix(in srgb, var(--color-foreground) 9%, transparent);
     pointer-events: none;
     transform-origin: top left;
-    will-change: transform;
-    transition: transform 0.68s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform, opacity;
+    transition:
+      transform 0.58s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.18s ease;
   }
 
   .np-fly-card .np-body {
@@ -1548,8 +1668,8 @@ const totalLabel = formatTime(first.duration);
     }
 
     .np-wreath-branch {
-      width: 6rem;
-      opacity: 0.28;
+      width: 6.2rem;
+      opacity: 0.46;
     }
 
     .np-wreath-sparks i:nth-child(n + 12) {
@@ -1574,6 +1694,19 @@ const totalLabel = formatTime(first.duration);
     .np-aura i {
       animation: none;
       opacity: 0;
+    }
+
+    .np-wreath-branch .np-grain {
+      opacity: 1;
+      scale: 1;
+    }
+
+    .np-wreath-branch .np-stem {
+      stroke-dashoffset: 0;
+    }
+
+    .now-playing[data-np-returning="true"] .np-card {
+      transition: none;
     }
   }
 
@@ -1612,8 +1745,8 @@ const totalLabel = formatTime(first.duration);
     }
 
     .np-skip {
-      width: 1.4rem;
-      height: 1.4rem;
+      width: 1.5rem;
+      height: 1.5rem;
     }
   }
 
@@ -1973,6 +2106,21 @@ const totalLabel = formatTime(first.duration);
           String(Math.round(durationMs / 1000))
         );
       }
+
+      const center = expandedCards.find(
+        item => item.trackIndex === expandedCenter
+      );
+      if (center) {
+        const centerTotal =
+          center.el.querySelector<HTMLElement>("[data-np-total]");
+        const centerSeek =
+          center.el.querySelector<HTMLElement>("[data-np-seek]");
+        if (centerTotal) centerTotal.textContent = formatTime(durationMs);
+        centerSeek?.setAttribute(
+          "aria-valuemax",
+          String(Math.round(durationMs / 1000))
+        );
+      }
     };
 
     const paintProgress = (ms: number) => {
@@ -1987,12 +2135,33 @@ const totalLabel = formatTime(first.duration);
       seek.setAttribute("aria-valuenow", String(Math.round(positionMs / 1000)));
       seek.setAttribute("aria-valuetext", formatTime(positionMs));
       currentText.textContent = formatTime(positionMs);
+
+      const center = expandedCards.find(
+        item => item.trackIndex === expandedCenter
+      );
+      if (!center) return;
+      const centerSeek = center.el.querySelector<HTMLElement>("[data-np-seek]");
+      const centerCurrent =
+        center.el.querySelector<HTMLElement>("[data-np-current]");
+      centerSeek?.style.setProperty("--np-p", `${ratio * 100}%`);
+      centerSeek?.setAttribute(
+        "aria-valuenow",
+        String(Math.round(positionMs / 1000))
+      );
+      centerSeek?.setAttribute("aria-valuetext", formatTime(positionMs));
+      if (centerCurrent) centerCurrent.textContent = formatTime(positionMs);
     };
 
     const previewEl = () => activeEl<HTMLAnchorElement>("[data-np-preview]");
     const setPreviewHidden = (hidden: boolean) => {
       const preview = previewEl();
       if (preview) preview.hidden = hidden;
+      const center = expandedCards.find(
+        item => item.trackIndex === expandedCenter
+      );
+      const centerPreview =
+        center?.el.querySelector<HTMLAnchorElement>("[data-np-preview]");
+      if (centerPreview) centerPreview.hidden = hidden;
     };
 
     const stopLocalAudio = () => {
@@ -2472,11 +2641,6 @@ const totalLabel = formatTime(first.duration);
     };
 
     const previousTrack = () => {
-      const elapsed = positionMs / 1000;
-      if (elapsed > 3) {
-        seekToSeconds(0);
-        return;
-      }
       requestMove(-1, isPlaying);
     };
 
@@ -2506,18 +2670,26 @@ const totalLabel = formatTime(first.duration);
 
     const setMode = (mode: "order" | "repeat" | "shuffle") => {
       playMode = mode;
-      root
-        .querySelectorAll<HTMLButtonElement>("[data-np-mode]")
-        .forEach(button => {
-          button.dataset.mode = mode;
-          const label =
-            mode === "repeat"
-              ? labels.repeat
-              : mode === "shuffle"
-                ? labels.shuffle
-                : labels.order;
-          button.setAttribute("aria-label", `${labels.mode}: ${label}`);
-        });
+      const modeButtons = [
+        ...Array.from(
+          root.querySelectorAll<HTMLButtonElement>("[data-np-mode]")
+        ),
+        ...Array.from(
+          expandedDialog?.querySelectorAll<HTMLButtonElement>(
+            "[data-np-mode]"
+          ) ?? []
+        ),
+      ];
+      modeButtons.forEach(button => {
+        button.dataset.mode = mode;
+        const label =
+          mode === "repeat"
+            ? labels.repeat
+            : mode === "shuffle"
+              ? labels.shuffle
+              : labels.order;
+        button.setAttribute("aria-label", `${labels.mode}: ${label}`);
+      });
     };
 
     const togglePlayback = () => {
@@ -2867,6 +3039,23 @@ const totalLabel = formatTime(first.duration);
     let expandedReturnFocus: HTMLElement | null = null;
     let expandedPreviousOverflow = "";
     let expandedFly: HTMLElement | null = null;
+    let expandedInteractionReady = false;
+    let expandedRevealTimers: number[] = [];
+    let expandedFlingFrame = 0;
+    let expandedSuppressClickUntil = 0;
+    let expandedMobileDrag = false;
+    let expandedMobileMoved = false;
+    let expandedMobileStartY = 0;
+    let expandedMobileLastY = 0;
+    let expandedMobileLastTime = 0;
+    let expandedMobileVelocity = 0;
+    let expandedMobilePointer = -1;
+    let expandedMobileStartCenter = 0;
+    let deckReturnFinals: Array<{
+      card: HTMLElement;
+      opacity: string;
+      filter: string;
+    }> = [];
 
     const settleDeck = () => {
       draggingDeck = false;
@@ -2951,20 +3140,26 @@ const totalLabel = formatTime(first.duration);
 
       const tickLayer = document.createElement("div");
       tickLayer.className = "np-wheel-ticks";
-      const tickCount = 21;
+      const tickCount = 51;
       for (let tick = 0; tick < tickCount; tick += 1) {
         const t = (tick - (tickCount - 1) / 2) / ((tickCount - 1) / 2);
-        const falloff = 1 - Math.pow(Math.abs(t), 1.35);
+        const falloff = 1 - Math.pow(Math.abs(t), 1.4);
         const line = document.createElement("i");
-        line.style.setProperty("--y", `${50 + t * 43}%`);
-        line.style.setProperty("--w", `${0.55 + falloff * 3.6}rem`);
-        line.style.setProperty("--o", String(0.14 + falloff * 0.66));
+        line.style.setProperty("--y", `${50 + t * 46}%`);
+        line.style.setProperty("--w", `${0.3 + falloff * 1.0}rem`);
+        line.style.setProperty("--o", String(0.13 + falloff * 0.62));
+        if (tick % 5 === 0 && tick !== (tickCount - 1) / 2)
+          line.classList.add("is-major");
         if (Math.abs(t) < 0.001) line.classList.add("is-center");
         scope(line);
         tickLayer.appendChild(line);
       }
       wheel.appendChild(tickLayer);
       scope(tickLayer);
+
+      const halo = document.createElement("div");
+      halo.className = "np-expand-halo";
+      scope(halo);
 
       const wreath = document.createElement("div");
       wreath.className = "np-expand-wreath";
@@ -2973,7 +3168,7 @@ const totalLabel = formatTime(first.duration);
       const makeBranch = (side: "left" | "right") => {
         const ns = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(ns, "svg");
-        svg.setAttribute("viewBox", "0 0 250 720");
+        svg.setAttribute("viewBox", "0 0 300 780");
         svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
         svg.setAttribute("aria-hidden", "true");
         svg.classList.add("np-wreath-branch", `np-wreath-branch--${side}`);
@@ -2985,13 +3180,14 @@ const totalLabel = formatTime(first.duration);
         gradient.setAttribute("id", gradientId);
         gradient.setAttribute("x1", "0");
         gradient.setAttribute("y1", "1");
-        gradient.setAttribute("x2", "0");
+        gradient.setAttribute("x2", "0.18");
         gradient.setAttribute("y2", "0");
         [
-          [0, 0.04],
-          [0.35, 0.42],
-          [0.7, 0.92],
-          [1, 0.3],
+          [0, 0.08],
+          [0.28, 0.46],
+          [0.58, 0.94],
+          [0.82, 0.72],
+          [1, 0.28],
         ].forEach(([offset, opacity]) => {
           const stop = document.createElementNS(ns, "stop");
           stop.setAttribute("offset", String(offset));
@@ -3005,46 +3201,118 @@ const totalLabel = formatTime(first.duration);
         const stem = document.createElementNS(ns, "path");
         stem.setAttribute(
           "d",
-          "M 205 690 C 220 580 205 470 173 370 C 143 278 121 184 110 84"
+          "M 220 752 C 232 626 222 512 196 408 C 166 300 134 198 112 82"
         );
+        stem.setAttribute("pathLength", "1");
         stem.setAttribute("fill", "none");
         stem.setAttribute("stroke", "currentColor");
-        stem.setAttribute("stroke-width", "2.1");
+        stem.setAttribute("stroke-width", "2.2");
         stem.setAttribute("stroke-linecap", "round");
-        stem.setAttribute("opacity", "0.5");
+        stem.setAttribute("opacity", "0.62");
+        stem.classList.add("np-stem");
+        scope(stem);
         svg.appendChild(stem);
 
-        const leafPath = "M0 0 C -18 -6 -33 -25 -25 -49 C -7 -41 6 -19 0 0 Z";
-        const leaves = [
-          { x: 205, y: 652, r: -22, s: 1.02 },
-          { x: 207, y: 592, r: -26, s: 1 },
-          { x: 201, y: 534, r: -32, s: 0.96 },
-          { x: 192, y: 478, r: -38, s: 0.91 },
-          { x: 181, y: 424, r: -44, s: 0.86 },
-          { x: 168, y: 372, r: -50, s: 0.81 },
-          { x: 155, y: 322, r: -56, s: 0.76 },
-          { x: 144, y: 274, r: -62, s: 0.7 },
-          { x: 135, y: 230, r: -68, s: 0.64 },
-          { x: 128, y: 188, r: -74, s: 0.57 },
-          { x: 122, y: 150, r: -80, s: 0.5 },
-          { x: 118, y: 114, r: -86, s: 0.42 },
+        const stemGlow = document.createElementNS(ns, "path");
+        stemGlow.setAttribute(
+          "d",
+          "M 216 744 C 226 626 216 516 191 413 C 162 306 130 202 108 90"
+        );
+        stemGlow.setAttribute("fill", "none");
+        stemGlow.setAttribute("stroke", "currentColor");
+        stemGlow.setAttribute("stroke-width", "0.8");
+        stemGlow.setAttribute("stroke-linecap", "round");
+        stemGlow.setAttribute("opacity", "0.24");
+        stemGlow.classList.add("np-stem-glow");
+        scope(stemGlow);
+        svg.appendChild(stemGlow);
+
+        const grainPath = "M0 0 C -14 -9 -23 -29 -15 -51 C -1 -40 12 -19 0 0 Z";
+        const grainInner =
+          "M0 -6 C -7 -15 -11 -28 -8 -39 C -2 -30 5 -17 0 -6 Z";
+        const awnPath = "M0 -48 C 9 -62 20 -78 32 -94";
+
+        const nodes = [
+          { x: 218, y: 704, r: -12, s: 1.12 },
+          { x: 221, y: 652, r: -15, s: 1.08 },
+          { x: 218, y: 602, r: -18, s: 1.04 },
+          { x: 212, y: 554, r: -21, s: 1 },
+          { x: 205, y: 508, r: -24, s: 0.95 },
+          { x: 197, y: 464, r: -27, s: 0.9 },
+          { x: 188, y: 422, r: -30, s: 0.85 },
+          { x: 179, y: 382, r: -33, s: 0.8 },
+          { x: 170, y: 344, r: -36, s: 0.74 },
+          { x: 161, y: 308, r: -39, s: 0.68 },
+          { x: 152, y: 274, r: -42, s: 0.61 },
+          { x: 143, y: 242, r: -45, s: 0.54 },
+          { x: 133, y: 212, r: -48, s: 0.46 },
+          { x: 123, y: 184, r: -51, s: 0.38 },
         ];
 
-        leaves.forEach(leaf => {
-          for (const inner of [false, true]) {
-            const path = document.createElementNS(ns, "path");
-            path.setAttribute("d", leafPath);
-            path.setAttribute("fill", `url(#${gradientId})`);
-            const scale = inner ? leaf.s * 0.75 : leaf.s;
-            path.setAttribute(
+        nodes.forEach((node, index) => {
+          const group = document.createElementNS(ns, "g");
+          group.classList.add("np-grain");
+          group.style.setProperty("--i", String(index));
+          group.setAttribute("transform", `translate(${node.x} ${node.y})`);
+          scope(group);
+
+          for (const direction of [1, -1]) {
+            const grain = document.createElementNS(ns, "g");
+            grain.setAttribute(
               "transform",
-              `translate(${leaf.x} ${leaf.y}) rotate(${leaf.r}) scale(${
-                inner ? -scale : scale
-              } ${scale})`
+              `rotate(${node.r}) scale(${node.s * direction} ${node.s})`
             );
-            svg.appendChild(path);
+
+            const outer = document.createElementNS(ns, "path");
+            outer.setAttribute("d", grainPath);
+            outer.setAttribute("fill", `url(#${gradientId})`);
+            outer.setAttribute("stroke", "currentColor");
+            outer.setAttribute("stroke-width", "0.55");
+            outer.setAttribute("stroke-opacity", "0.28");
+            grain.appendChild(outer);
+
+            const inner = document.createElementNS(ns, "path");
+            inner.setAttribute("d", grainInner);
+            inner.setAttribute("fill", "currentColor");
+            inner.setAttribute("opacity", "0.18");
+            grain.appendChild(inner);
+
+            const awn = document.createElementNS(ns, "path");
+            awn.setAttribute("d", awnPath);
+            awn.setAttribute("fill", "none");
+            awn.setAttribute("stroke", "currentColor");
+            awn.setAttribute("stroke-width", "1.05");
+            awn.setAttribute("stroke-linecap", "round");
+            awn.setAttribute("opacity", "0.42");
+            grain.appendChild(awn);
+
+            const nodeDot = document.createElementNS(ns, "circle");
+            nodeDot.setAttribute("cx", "0");
+            nodeDot.setAttribute("cy", "2");
+            nodeDot.setAttribute("r", "1.9");
+            nodeDot.setAttribute("fill", "currentColor");
+            nodeDot.setAttribute("opacity", "0.48");
+            grain.appendChild(nodeDot);
+
+            group.appendChild(grain);
           }
+
+          svg.appendChild(group);
         });
+
+        const tie = document.createElementNS(ns, "g");
+        tie.setAttribute("fill", "none");
+        tie.setAttribute("stroke", "currentColor");
+        tie.setAttribute("stroke-linecap", "round");
+        tie.setAttribute("opacity", "0.4");
+        const tieA = document.createElementNS(ns, "path");
+        tieA.setAttribute("d", "M 198 728 C 208 718 228 718 238 730");
+        tieA.setAttribute("stroke-width", "2");
+        const tieB = document.createElementNS(ns, "path");
+        tieB.setAttribute("d", "M 199 736 C 210 744 228 744 236 738");
+        tieB.setAttribute("stroke-width", "1.1");
+        tie.append(tieA, tieB);
+        svg.appendChild(tie);
 
         return svg;
       };
@@ -3054,20 +3322,19 @@ const totalLabel = formatTime(first.duration);
       const sparks = document.createElement("div");
       sparks.className = "np-wreath-sparks";
       scope(sparks);
-      for (let spark = 0; spark < 18; spark += 1) {
+      for (let spark = 0; spark < 26; spark += 1) {
         const dot = document.createElement("i");
         const side =
-          spark % 2 === 0 ? 4 + ((spark * 13) % 22) : 74 + ((spark * 11) % 22);
+          spark % 2 === 0 ? 4 + ((spark * 13) % 24) : 72 + ((spark * 11) % 24);
         dot.style.setProperty("--x", `${side}%`);
-        dot.style.setProperty("--y", `${16 + ((spark * 29) % 70)}%`);
-        dot.style.setProperty("--s", `${1.8 + (spark % 3) * 0.65}px`);
-        dot.style.setProperty("--d", `${7.4 + (spark % 5) * 1.05}s`);
+        dot.style.setProperty("--y", `${12 + ((spark * 29) % 76)}%`);
+        dot.style.setProperty("--s", `${2 + (spark % 4) * 0.72}px`);
+        dot.style.setProperty("--d", `${7.2 + (spark % 5) * 1.15}s`);
         dot.style.setProperty("--delay", `${-0.8 - ((spark * 0.83) % 7)}s`);
-        if (spark % 5 === 0) dot.classList.add("is-bright");
+        if (spark % 4 === 0) dot.classList.add("is-bright");
         scope(dot);
         sparks.appendChild(dot);
       }
-      wreath.appendChild(sparks);
 
       let wheelDragging = false;
       let wheelDragStartY = 0;
@@ -3075,7 +3342,8 @@ const totalLabel = formatTime(first.duration);
       let wheelDragStep = 0;
 
       wheel.addEventListener("pointerdown", event => {
-        if (!expandedOpen || expandedClosing) return;
+        if (!expandedOpen || expandedClosing || !expandedInteractionReady)
+          return;
         event.preventDefault();
         event.stopPropagation();
         wheelDragging = true;
@@ -3092,7 +3360,7 @@ const totalLabel = formatTime(first.duration);
 
       wheel.addEventListener("pointermove", event => {
         if (!wheelDragging) return;
-        const step = Math.trunc((event.clientY - wheelDragStartY) / 32);
+        const step = Math.trunc((event.clientY - wheelDragStartY) / 22);
         if (step === wheelDragStep) return;
         wheelDragStep = step;
         selectExpanded(wheelDragStartCenter + step);
@@ -3127,7 +3395,7 @@ const totalLabel = formatTime(first.duration);
       hint.textContent = "↑ ↓ · ESC";
       scope(hint);
 
-      dialog.append(glass, wreath, stage, wheel, close, hint);
+      dialog.append(glass, halo, sparks, wreath, stage, wheel, close, hint);
 
       close.addEventListener("click", () => closeExpanded());
       dialog.addEventListener("cancel", event => {
@@ -3135,7 +3403,8 @@ const totalLabel = formatTime(first.duration);
         if (!expandedClosing) closeExpanded();
       });
       dialog.addEventListener("keydown", event => {
-        if (!expandedOpen || expandedClosing) return;
+        if (!expandedOpen || expandedClosing || !expandedInteractionReady)
+          return;
 
         if (
           (event.ctrlKey || event.metaKey) &&
@@ -3154,16 +3423,72 @@ const totalLabel = formatTime(first.duration);
         }
       });
 
+      let cardWheelUntil = 0;
+
       dialog.addEventListener(
         "wheel",
         event => {
           if (!expandedOpen || expandedClosing) return;
           event.preventDefault();
-          wheelAccum += event.deltaY;
-          const step = Math.trunc(wheelAccum / 38);
-          if (!step) return;
-          wheelAccum -= step * 38;
-          selectExpanded(expandedCenter + step);
+          if (!expandedInteractionReady) return;
+
+          const target = event.target instanceof Element ? event.target : null;
+          const wheelRect = expandedWheel?.getBoundingClientRect();
+          const centerCard = expandedCards.find(
+            item => item.el.dataset.center === "true"
+          )?.el;
+          const centerRect = centerCard?.getBoundingClientRect();
+          const x = event.clientX;
+          const overWheel = Boolean(target?.closest(".np-expand-wheel"));
+          const overCard = Boolean(target?.closest(".np-expand-card"));
+          const rightZone =
+            overWheel || Boolean(wheelRect && x >= wheelRect.left - 4);
+
+          if (overCard) {
+            const now = performance.now();
+            const discrete =
+              Math.abs(event.deltaY) >= 40 ||
+              event.deltaMode !== WheelEvent.DOM_DELTA_PIXEL;
+            if (discrete) {
+              cardWheelUntil = now + 80;
+              selectExpanded(expandedCenter + Math.sign(event.deltaY));
+            } else if (now >= cardWheelUntil) {
+              cardWheelUntil = now + 260;
+              selectExpanded(expandedCenter + Math.sign(event.deltaY));
+            }
+            return;
+          }
+
+          if (rightZone) {
+            wheelAccum += event.deltaY;
+            const step = Math.trunc(wheelAccum / 22);
+            if (!step) return;
+            wheelAccum -= step * 22;
+            selectExpanded(expandedCenter + Math.max(-3, Math.min(3, step)));
+            return;
+          }
+
+          if (centerRect && x < centerRect.left) {
+            wheelAccum = 0;
+            return;
+          }
+          if (!event.deltaY) return;
+          wheelAccum = 0;
+
+          const now = performance.now();
+          const discrete =
+            Math.abs(event.deltaY) >= 40 ||
+            event.deltaMode !== WheelEvent.DOM_DELTA_PIXEL;
+
+          if (discrete) {
+            cardWheelUntil = now + 80;
+            selectExpanded(expandedCenter + Math.sign(event.deltaY));
+            return;
+          }
+
+          if (now < cardWheelUntil) return;
+          cardWheelUntil = now + 260;
+          selectExpanded(expandedCenter + Math.sign(event.deltaY));
         },
         { passive: false }
       );
@@ -3198,7 +3523,79 @@ const totalLabel = formatTime(first.duration);
         applyCardContent(el, track, trackIndex);
         el.dataset.npExpandOffset = "0";
 
+        const isCenter = () =>
+          expandedOpen &&
+          !expandedClosing &&
+          expandedInteractionReady &&
+          Number(el.dataset.npExpandOffset || "0") === 0;
+
+        const wireButton = (selector: string, action: () => void) => {
+          const button = body?.querySelector<HTMLButtonElement>(selector);
+          button?.addEventListener("click", event => {
+            if (!isCenter()) return;
+            event.stopPropagation();
+            action();
+          });
+        };
+
+        wireButton("[data-np-toggle]", togglePlayback);
+        wireButton("[data-np-prev]", () => selectExpanded(expandedCenter - 1));
+        wireButton("[data-np-next]", () => selectExpanded(expandedCenter + 1));
+        wireButton("[data-np-restart]", () => {
+          seekToSeconds(0);
+          if (source === "local") {
+            void audio.play().catch(() => {});
+          } else {
+            spotifyController?.play();
+          }
+        });
+        wireButton("[data-np-mode]", () => {
+          const order = ["order", "repeat", "shuffle"] as const;
+          const next = order[(order.indexOf(playMode) + 1) % order.length]!;
+          setMode(next);
+        });
+
+        const expandedSeek = body?.querySelector<HTMLElement>("[data-np-seek]");
+        if (expandedSeek) {
+          expandedSeek.addEventListener("pointerdown", event => {
+            if (!isCenter()) return;
+            event.preventDefault();
+            event.stopPropagation();
+            isDragging = true;
+            expandedSeek.dataset.dragging = "true";
+            expandedSeek.setPointerCapture?.(event.pointerId);
+            paintProgress(ratioFromPointer(event, expandedSeek) * durationMs);
+          });
+          expandedSeek.addEventListener("pointermove", event => {
+            if (!isCenter() || !isDragging) return;
+            paintProgress(ratioFromPointer(event, expandedSeek) * durationMs);
+          });
+          const endExpandedSeek = (event: PointerEvent) => {
+            if (!isCenter() || !isDragging) return;
+            isDragging = false;
+            delete expandedSeek.dataset.dragging;
+            seekToRatio(ratioFromPointer(event, expandedSeek));
+            if (expandedSeek.hasPointerCapture?.(event.pointerId)) {
+              expandedSeek.releasePointerCapture(event.pointerId);
+            }
+          };
+          expandedSeek.addEventListener("pointerup", endExpandedSeek);
+          expandedSeek.addEventListener("pointercancel", endExpandedSeek);
+          expandedSeek.addEventListener("keydown", event => {
+            if (!isCenter()) return;
+            let next = positionMs / 1000;
+            if (event.key === "ArrowRight") next += 5;
+            else if (event.key === "ArrowLeft") next -= 5;
+            else if (event.key === "Home") next = 0;
+            else if (event.key === "End") next = durationMs / 1000;
+            else return;
+            event.preventDefault();
+            seekToSeconds(next);
+          });
+        }
+
         el.addEventListener("click", () => {
+          if (!expandedInteractionReady) return;
           if (!expandedOpen || expandedClosing) return;
           const offset = Number(el.dataset.npExpandOffset || "0");
           if (offset === 0 || Math.abs(offset) > 3) return;
@@ -3206,6 +3603,7 @@ const totalLabel = formatTime(first.duration);
         });
         el.addEventListener("keydown", event => {
           if (event.key !== "Enter" && event.key !== " ") return;
+          if (!expandedInteractionReady) return;
           if (!expandedOpen || expandedClosing) return;
           const offset = Number(el.dataset.npExpandOffset || "0");
           if (offset === 0 || Math.abs(offset) > 3) return;
@@ -3216,6 +3614,122 @@ const totalLabel = formatTime(first.duration);
         stage.appendChild(el);
         return { el, trackIndex };
       });
+
+      const isMobileExpanded = () =>
+        window.matchMedia("(max-width: 860px)").matches;
+
+      const cancelExpandedFling = () => {
+        if (expandedFlingFrame) {
+          cancelAnimationFrame(expandedFlingFrame);
+          expandedFlingFrame = 0;
+        }
+      };
+
+      const flingExpanded = (velocity: number) => {
+        const stepPx = Math.max(44, expandedStep * 0.9);
+        const start = expandedCenter;
+        let virtual = start;
+        let speed = velocity / stepPx;
+        if (Math.abs(speed) < 0.002) return;
+
+        let last = performance.now();
+        expandedFlingFrame = requestAnimationFrame(function tick(now) {
+          if (!expandedOpen || expandedClosing || !expandedInteractionReady) {
+            expandedFlingFrame = 0;
+            return;
+          }
+          const dt = Math.min(40, now - last);
+          last = now;
+          virtual += speed * dt;
+          const next = Math.round(virtual);
+          if (next !== expandedCenter) selectExpanded(next);
+          speed *= Math.pow(0.9, dt / 16);
+          if (Math.abs(speed) > 0.0004) {
+            expandedFlingFrame = requestAnimationFrame(tick);
+          } else {
+            expandedFlingFrame = 0;
+          }
+        });
+      };
+
+      dialog.addEventListener(
+        "pointerdown",
+        event => {
+          if (!isMobileExpanded() || event.pointerType === "mouse") return;
+          if (!expandedOpen || expandedClosing || !expandedInteractionReady)
+            return;
+          const target = event.target;
+          if (
+            target instanceof Element &&
+            target.closest(
+              "button, a, input, [role='slider'], [data-np-seek], .np-controls"
+            )
+          ) {
+            return;
+          }
+
+          cancelExpandedFling();
+          expandedMobileDrag = true;
+          expandedMobileMoved = false;
+          expandedMobilePointer = event.pointerId;
+          expandedMobileStartY = event.clientY;
+          expandedMobileLastY = event.clientY;
+          expandedMobileLastTime = performance.now();
+          expandedMobileVelocity = 0;
+          expandedMobileStartCenter = expandedCenter;
+        },
+        { passive: true }
+      );
+
+      dialog.addEventListener(
+        "pointermove",
+        event => {
+          if (!expandedMobileDrag || event.pointerId !== expandedMobilePointer)
+            return;
+
+          const dy = event.clientY - expandedMobileStartY;
+          if (Math.abs(dy) > 6) expandedMobileMoved = true;
+
+          const now = performance.now();
+          const dt = Math.max(8, now - expandedMobileLastTime);
+          expandedMobileVelocity = (expandedMobileLastY - event.clientY) / dt;
+          expandedMobileLastY = event.clientY;
+          expandedMobileLastTime = now;
+
+          const stepPx = Math.max(44, expandedStep * 0.9);
+          const next = expandedMobileStartCenter + Math.round(-dy / stepPx);
+          if (next !== expandedCenter) selectExpanded(next);
+
+          if (expandedMobileMoved) event.preventDefault();
+        },
+        { passive: false }
+      );
+
+      const endExpandedSwipe = (event: PointerEvent) => {
+        if (!expandedMobileDrag || event.pointerId !== expandedMobilePointer)
+          return;
+        const moved = expandedMobileMoved;
+        expandedMobileDrag = false;
+        expandedMobileMoved = false;
+        expandedMobilePointer = -1;
+        if (moved) {
+          expandedSuppressClickUntil = performance.now() + 350;
+          flingExpanded(expandedMobileVelocity);
+        }
+      };
+
+      dialog.addEventListener("pointerup", endExpandedSwipe);
+      dialog.addEventListener("pointercancel", endExpandedSwipe);
+
+      dialog.addEventListener(
+        "click",
+        event => {
+          if (performance.now() >= expandedSuppressClickUntil) return;
+          event.preventDefault();
+          event.stopPropagation();
+        },
+        { capture: true }
+      );
 
       document.body.appendChild(dialog);
     };
@@ -3230,14 +3744,11 @@ const totalLabel = formatTime(first.duration);
       const outerHalf = (expandedBaseH * expandedCenterScale * 0.56) / 2;
       const maxHalf = window.innerHeight * 0.43;
       expandedStep = clamp((maxHalf - outerHalf) / 4, 36, 88);
-      const centerHeight = expandedBaseH * expandedCenterScale;
-      expandedBelowSteps = [0.86, 1.2, 1.46, 1.68].map(
-        factor => factor * centerHeight
-      );
+      expandedBelowSteps = [1, 2, 3, 4].map(index => index * expandedStep);
 
       if (expandedWheel) {
         const half = (expandedBaseW * expandedCenterScale) / 2;
-        expandedWheel.style.left = `calc(50% + ${half + 26}px)`;
+        expandedWheel.style.left = `calc(50% + ${half + 18}px)`;
       }
 
       expandedDialog?.style.setProperty("--np-expand-h", `${expandedBaseH}px`);
@@ -3249,8 +3760,8 @@ const totalLabel = formatTime(first.duration);
 
       const count = tracks.length;
       const scaleFactors = [1, 0.9, 0.78, 0.66, 0.56];
-      const opacityFactors = [1, 0.92, 0.7, 0.45, 0.22];
-      const blurFactors = [0, 0.6, 1.8, 3.8, 7];
+      const opacityFactors = [1, 0.94, 0.74, 0.48, 0.24];
+      const blurFactors = [0, 0.8, 2.2, 4.2, 7];
 
       expandedCards.forEach(({ el, trackIndex }) => {
         let offset = trackIndex - expandedCenter;
@@ -3281,13 +3792,19 @@ const totalLabel = formatTime(first.duration);
         }px) rotateX(${angle}deg) scale(${scale})`;
         el.style.opacity = String(opacityFactors[abs]!);
         el.style.filter =
-          blurFactors[abs]! > 0.01 ? `blur(${blurFactors[abs]}px)` : "none";
-        el.style.zIndex = String(50 + offset);
+          abs === 0
+            ? "none"
+            : blurFactors[abs]! > 0.01
+              ? `blur(${blurFactors[abs]}px)`
+              : "none";
+        el.style.zIndex =
+          abs === 0 ? "100" : String(Math.max(10, 62 - abs * 4));
         el.dataset.npExpandOffset = String(offset);
 
         const clickable = abs >= 1 && abs <= 3;
         el.dataset.clickable = String(clickable);
         el.dataset.center = String(abs === 0);
+        el.style.pointerEvents = clickable || abs === 0 ? "auto" : "none";
         el.tabIndex = clickable ? 0 : -1;
         el.setAttribute("role", clickable ? "button" : "group");
 
@@ -3297,13 +3814,165 @@ const totalLabel = formatTime(first.duration);
         } else {
           el.removeAttribute("aria-label");
         }
+
+        const body = getBody(el);
+        if (body) {
+          const isCenter = abs === 0 && expandedInteractionReady;
+          body.toggleAttribute("inert", !isCenter);
+          if (isCenter) body.removeAttribute("aria-hidden");
+          else body.setAttribute("aria-hidden", "true");
+        }
       });
 
       expandedWheel?.setAttribute("aria-valuenow", String(expandedCenter));
     };
 
-    const selectExpanded = (trackIndex: number) => {
+    type ExpandedFinalStyle = {
+      transform: string;
+      opacity: string;
+      filter: string;
+      zIndex: string;
+    };
+    const expandedFinalStyles = new Map<HTMLElement, ExpandedFinalStyle>();
+
+    const captureExpandedFinals = () => {
+      expandedFinalStyles.clear();
+      expandedCards.forEach(({ el }) => {
+        expandedFinalStyles.set(el, {
+          transform: el.style.transform,
+          opacity: el.style.opacity || "1",
+          filter: el.style.filter || "none",
+          zIndex: el.style.zIndex || "50",
+        });
+      });
+    };
+
+    const hideExpandedForIntro = () => {
+      expandedCards.forEach(({ el }) => {
+        el.style.visibility = "hidden";
+        el.style.opacity = "0";
+        el.style.filter = "blur(7px)";
+        el.tabIndex = -1;
+        el.setAttribute("aria-hidden", "true");
+        const body = getBody(el);
+        body?.setAttribute("inert", "");
+        body?.setAttribute("aria-hidden", "true");
+      });
+    };
+
+    const showExpandedCenter = () => {
+      const center = expandedCards.find(
+        item => item.trackIndex === expandedCenter
+      );
+      if (!center) return;
+      const final = expandedFinalStyles.get(center.el);
+      center.el.style.visibility = "visible";
+      center.el.style.opacity = final?.opacity ?? "1";
+      center.el.style.filter = "none";
+      center.el.style.zIndex = "100";
+      center.el.tabIndex = -1;
+      center.el.removeAttribute("aria-hidden");
+    };
+
+    const setExpandedCenterInteractive = (active: boolean) => {
+      const center = expandedCards.find(
+        item => item.trackIndex === expandedCenter
+      );
+      if (!center) return;
+      const body = getBody(center.el);
+      body?.toggleAttribute("inert", !active);
+      if (active) body?.removeAttribute("aria-hidden");
+      else body?.setAttribute("aria-hidden", "true");
+    };
+
+    const revealExpandedPair = (distance: number) => {
+      const centerTransform = `translate(-50%, -50%) translateY(0px) translateZ(0px) rotateX(0deg) scale(${
+        expandedCenterScale * 0.96
+      })`;
+
+      expandedCards.forEach(({ el }) => {
+        if (Math.abs(Number(el.dataset.npExpandOffset || "0")) !== distance)
+          return;
+        const final = expandedFinalStyles.get(el);
+        if (!final) return;
+
+        el.style.visibility = "visible";
+        el.style.opacity = final.opacity;
+        el.style.filter = final.filter;
+        el.style.transform = final.transform;
+        el.style.zIndex = final.zIndex;
+        el.tabIndex = distance <= 3 ? 0 : -1;
+        el.removeAttribute("aria-hidden");
+
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          el.animate(
+            [
+              {
+                transform: centerTransform,
+                opacity: 0,
+                filter: "blur(7px)",
+              },
+              {
+                transform: final.transform,
+                opacity: Number(final.opacity),
+                filter: final.filter === "none" ? "blur(0px)" : final.filter,
+              },
+            ],
+            {
+              duration: 340,
+              easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+              fill: "backwards",
+            }
+          );
+        }
+      });
+    };
+
+    const clearExpandedTimers = () => {
+      expandedRevealTimers.forEach(timer => window.clearTimeout(timer));
+      expandedRevealTimers = [];
+      window.clearTimeout(expandedOpenTimer);
+      window.clearTimeout(expandedCloseTimer);
+      if (expandedFlingFrame) {
+        cancelAnimationFrame(expandedFlingFrame);
+        expandedFlingFrame = 0;
+      }
+    };
+
+    const finishExpandedReveal = () => {
       if (!expandedOpen || expandedClosing) return;
+      expandedInteractionReady = true;
+      setExpandedCenterInteractive(true);
+      expandedDialog?.setAttribute("data-ready", "true");
+      expandedDialog?.classList.add("is-wheel-ready", "is-ui-ready");
+      expandedRevealTimers.push(
+        window.setTimeout(() => {
+          if (!expandedOpen || expandedClosing) return;
+          expandedDialog?.classList.add("is-wreath-ready");
+        }, 90)
+      );
+    };
+
+    const revealExpandedRing = () => {
+      expandedRevealTimers.push(
+        window.setTimeout(() => revealExpandedPair(1), 60)
+      );
+      expandedRevealTimers.push(
+        window.setTimeout(() => revealExpandedPair(2), 150)
+      );
+      expandedRevealTimers.push(
+        window.setTimeout(() => revealExpandedPair(3), 240)
+      );
+      expandedRevealTimers.push(
+        window.setTimeout(() => revealExpandedPair(4), 330)
+      );
+      expandedRevealTimers.push(
+        window.setTimeout(() => finishExpandedReveal(), 700)
+      );
+    };
+
+    const selectExpanded = (trackIndex: number) => {
+      if (!expandedOpen || expandedClosing || !expandedInteractionReady) return;
       const count = tracks.length;
       if (!count) return;
 
@@ -3336,9 +4005,17 @@ const totalLabel = formatTime(first.duration);
       createExpanded();
       if (!expandedDialog || !expandedStage) return;
 
+      clearExpandedTimers();
+      if (root!.dataset.npReturning === "true") {
+        delete root!.dataset.npReturning;
+        deckReturnFinals = [];
+      }
       measureExpanded();
       expandedCenter = index;
+      expandedInteractionReady = false;
       renderExpanded();
+      captureExpandedFinals();
+      hideExpandedForIntro();
       syncExpandedProgress();
 
       expandedReturnFocus =
@@ -3349,59 +4026,109 @@ const totalLabel = formatTime(first.duration);
       document.body.style.overflow = "hidden";
       expandedOpen = true;
 
-      expandedDialog.classList.remove("is-closing");
+      expandedDialog.classList.remove(
+        "is-open",
+        "is-closing",
+        "is-wheel-ready",
+        "is-wreath-ready",
+        "is-ui-ready"
+      );
       expandedDialog.classList.toggle("is-playing", isPlaying);
       expandedDialog.removeAttribute("data-ready");
+      const hint = expandedDialog.querySelector<HTMLElement>(".np-expand-hint");
+      if (hint) {
+        hint.textContent = window.matchMedia("(max-width: 860px)").matches
+          ? "SWIPE · TAP ×"
+          : "↑ ↓ · ESC";
+      }
       if (!expandedDialog.open) expandedDialog.showModal();
       expandedDialog.focus({ preventScroll: true });
 
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      if (reduce) {
+        expandedDialog.classList.add("is-open");
+        expandedCards.forEach(({ el }) => {
+          const final = expandedFinalStyles.get(el);
+          if (!final) return;
+          el.style.visibility = "visible";
+          el.style.opacity = final.opacity;
+          el.style.filter = final.filter;
+          el.style.transform = final.transform;
+          el.style.zIndex = final.zIndex;
+          el.removeAttribute("aria-hidden");
+        });
+        showExpandedCenter();
+        expandedDialog.setAttribute("data-ready", "true");
+        expandedInteractionReady = true;
+        setExpandedCenterInteractive(true);
+        expandedDialog.classList.add(
+          "is-wheel-ready",
+          "is-ui-ready",
+          "is-wreath-ready"
+        );
+        return;
+      }
+
       const source = activeCard.getBoundingClientRect();
-      const target = expandedTargetRect();
+      const centerCard = expandedCards.find(
+        item => item.trackIndex === expandedCenter
+      )?.el;
+      const target = centerCard
+        ? centerCard.getBoundingClientRect()
+        : expandedTargetRect();
       const fly = makeFlyCard(index);
       fly.style.width = `${expandedBaseW}px`;
       fly.style.left = `${source.left}px`;
       fly.style.top = `${source.top}px`;
+      fly.style.opacity = "0";
       fly.style.transform = `scale(${source.width / expandedBaseW})`;
 
       expandedDialog.appendChild(fly);
       expandedFly = fly;
 
-      const reduce = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-      ).matches;
+      requestAnimationFrame(() => {
+        expandedDialog?.classList.add("is-open");
+        expandedRevealTimers.push(
+          window.setTimeout(() => {
+            if (expandedFly !== fly) return;
+            fly.style.opacity = "1";
+            fly.style.transform = `translate(${
+              target.left - source.left
+            }px, ${target.top - source.top}px) scale(${
+              target.width / expandedBaseW
+            })`;
+          }, 45)
+        );
+      });
 
       const finishOpen = () => {
         window.clearTimeout(expandedOpenTimer);
         if (expandedFly !== fly) return;
         fly.remove();
         expandedFly = null;
-        expandedDialog?.setAttribute("data-ready", "true");
+        showExpandedCenter();
+        expandedDialog?.classList.add("is-open");
+        expandedRevealTimers.push(
+          window.setTimeout(() => revealExpandedRing(), 30)
+        );
       };
 
-      requestAnimationFrame(() => {
-        expandedDialog?.classList.add("is-open");
-        if (reduce) {
-          finishOpen();
-          return;
-        }
-        requestAnimationFrame(() => {
-          fly.style.transform = `translate(${
-            target.left - source.left
-          }px, ${target.top - source.top}px) scale(${
-            target.width / expandedBaseW
-          })`;
-        });
+      fly.addEventListener("transitionend", event => {
+        if (event.propertyName === "transform") finishOpen();
       });
-
-      fly.addEventListener("transitionend", finishOpen, { once: true });
-      expandedOpenTimer = window.setTimeout(finishOpen, reduce ? 0 : 780);
+      expandedOpenTimer = window.setTimeout(finishOpen, 720);
     }
 
     function closeExpanded() {
       if (!expandedOpen || expandedClosing) return;
       expandedClosing = true;
+      expandedInteractionReady = false;
+      setExpandedCenterInteractive(false);
+      clearExpandedTimers();
 
-      window.clearTimeout(expandedOpenTimer);
       if (expandedFly) {
         expandedFly.remove();
         expandedFly = null;
@@ -3415,8 +4142,28 @@ const totalLabel = formatTime(first.duration);
         return;
       }
 
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      deckReturnFinals = deckCards.map(card => ({
+        card,
+        opacity: card.style.opacity || "1",
+        filter: card.style.filter || "none",
+      }));
+      root!.dataset.npReturning = "true";
+      deckCards.forEach(card => {
+        card.style.opacity = "0";
+        card.style.filter = "blur(2px)";
+      });
+
       measureExpanded();
-      const source = expandedTargetRect();
+      const center = expandedCards.find(
+        item => item.trackIndex === expandedCenter
+      );
+      const source = center
+        ? center.el.getBoundingClientRect()
+        : expandedTargetRect();
       const target = activeCard.getBoundingClientRect();
       const fly = makeFlyCard(expandedCenter);
       fly.style.width = `${expandedBaseW}px`;
@@ -3424,14 +4171,30 @@ const totalLabel = formatTime(first.duration);
       fly.style.top = `${source.top}px`;
       fly.style.transform = `scale(${source.width / expandedBaseW})`;
 
+      if (center) center.el.style.visibility = "hidden";
+
       dialog.appendChild(fly);
       expandedFly = fly;
       dialog.classList.remove("is-open");
       dialog.classList.add("is-closing");
 
-      const reduce = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-      ).matches;
+      const revealDeck = (index: number) => {
+        if (index >= deckReturnFinals.length) {
+          expandedRevealTimers.push(
+            window.setTimeout(() => {
+              if (!expandedOpen) delete root!.dataset.npReturning;
+            }, 320)
+          );
+          return;
+        }
+
+        const entry = deckReturnFinals[index]!;
+        entry.card.style.opacity = entry.opacity;
+        entry.card.style.filter = entry.filter;
+        expandedRevealTimers.push(
+          window.setTimeout(() => revealDeck(index + 1), index === 0 ? 30 : 90)
+        );
+      };
 
       const finishClose = () => {
         window.clearTimeout(expandedCloseTimer);
@@ -3439,20 +4202,37 @@ const totalLabel = formatTime(first.duration);
         fly.remove();
         expandedFly = null;
         if (dialog.open) dialog.close();
-        dialog.classList.remove("is-closing");
+        dialog.classList.remove(
+          "is-open",
+          "is-closing",
+          "is-wheel-ready",
+          "is-wreath-ready",
+          "is-ui-ready"
+        );
         dialog.removeAttribute("data-ready");
         document.body.style.overflow = expandedPreviousOverflow;
         expandedOpen = false;
         expandedClosing = false;
         expandedReturnFocus?.focus({ preventScroll: true });
         expandedReturnFocus = null;
+
+        if (reduce) {
+          deckReturnFinals.forEach(entry => {
+            entry.card.style.opacity = entry.opacity;
+            entry.card.style.filter = entry.filter;
+          });
+          delete root!.dataset.npReturning;
+        } else {
+          revealDeck(0);
+        }
       };
 
+      if (reduce) {
+        finishClose();
+        return;
+      }
+
       requestAnimationFrame(() => {
-        if (reduce) {
-          finishClose();
-          return;
-        }
         requestAnimationFrame(() => {
           fly.style.transform = `translate(${
             target.left - source.left
@@ -3462,14 +4242,17 @@ const totalLabel = formatTime(first.duration);
         });
       });
 
-      fly.addEventListener("transitionend", finishClose, { once: true });
-      expandedCloseTimer = window.setTimeout(finishClose, reduce ? 0 : 780);
+      fly.addEventListener("transitionend", event => {
+        if (event.propertyName === "transform") finishClose();
+      });
+      expandedCloseTimer = window.setTimeout(finishClose, 720);
     }
 
     window.addEventListener("resize", () => {
       if (!expandedOpen || expandedClosing) return;
       measureExpanded();
       renderExpanded();
+      if (!expandedInteractionReady) captureExpandedFinals();
     });
 
     // ── Media keyboard shortcuts ──────────────────────────────────
@@ -3534,9 +4317,26 @@ const totalLabel = formatTime(first.duration);
     document.addEventListener(
       "astro:before-swap",
       () => {
-        if (expandedDialog?.open) expandedDialog.close();
+        clearExpandedTimers();
+        if (expandedFly) {
+          expandedFly.remove();
+          expandedFly = null;
+        }
+        if (expandedDialog) {
+          expandedDialog.classList.remove(
+            "is-open",
+            "is-closing",
+            "is-wheel-ready",
+            "is-wreath-ready",
+            "is-ui-ready"
+          );
+          if (expandedDialog.open) expandedDialog.close();
+        }
         expandedOpen = false;
         expandedClosing = false;
+        expandedInteractionReady = false;
+        delete root!.dataset.npReturning;
+        deckReturnFinals = [];
         document.body.style.overflow = expandedPreviousOverflow;
       },
       { once: true }
