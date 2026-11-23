@@ -27,6 +27,62 @@ export function addHeadingLinks() {
   }
 }
 
+/**
+ * Wheel/trackpad scrolling over a code block is eased toward the target
+ * position instead of jumping with the raw wheel delta. Touch scrolling
+ * keeps the browser's native momentum, so only wheel input is damped.
+ */
+function attachDampedHorizontalScroll(codeBlock: HTMLPreElement) {
+  if (codeBlock.dataset.dampedScroll === "true") return;
+  codeBlock.dataset.dampedScroll = "true";
+
+  let target = codeBlock.scrollLeft;
+  let frame = 0;
+
+  const maxScroll = () =>
+    Math.max(0, codeBlock.scrollWidth - codeBlock.clientWidth);
+
+  const tick = () => {
+    const max = maxScroll();
+    target = Math.max(0, Math.min(max, target));
+    const diff = target - codeBlock.scrollLeft;
+
+    if (Math.abs(diff) < 0.5) {
+      codeBlock.scrollLeft = target;
+      frame = 0;
+      return;
+    }
+
+    codeBlock.scrollLeft += diff * 0.16;
+    frame = requestAnimationFrame(tick);
+  };
+
+  codeBlock.addEventListener(
+    "wheel",
+    event => {
+      if (maxScroll() < 1) return;
+
+      const horizontal = Math.abs(event.deltaX) > Math.abs(event.deltaY);
+      if (!horizontal && !event.shiftKey) return;
+
+      event.preventDefault();
+      if (!frame) target = codeBlock.scrollLeft;
+
+      const unit =
+        event.deltaMode === WheelEvent.DOM_DELTA_LINE
+          ? 16
+          : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+            ? codeBlock.clientWidth
+            : 1;
+      const delta = (horizontal ? event.deltaX : event.deltaY) * unit;
+      target += delta;
+
+      if (!frame) frame = requestAnimationFrame(tick);
+    },
+    { passive: false }
+  );
+}
+
 export function attachCopyButtons() {
   const lang = document.documentElement.lang || "en";
   const copyLabel = lang.startsWith("zh")
@@ -46,6 +102,8 @@ export function attachCopyButtons() {
   const codeBlocks = Array.from(
     document.querySelectorAll<HTMLPreElement>("pre")
   );
+  codeBlocks.forEach(attachDampedHorizontalScroll);
+
   const unattachedCodeBlocks = codeBlocks.filter(
     cb => !cb.querySelector(".copy-code")
   );

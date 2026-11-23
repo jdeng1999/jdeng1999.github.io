@@ -1260,14 +1260,15 @@ const whatIcons = {
 
   .featured-rail {
     position: relative;
-    margin-inline: -0.25rem;
   }
 
   .featured-track {
     display: flex;
     gap: 1rem;
     margin: 0;
-    padding: 0.25rem;
+    /* Keep the card borders flush with the article list; the negative
+       inline margins used to push the final card's edge out of alignment. */
+    padding: 0.25rem 0;
     list-style: none;
   }
 
@@ -1279,9 +1280,10 @@ const whatIcons = {
     backface-visibility: hidden;
   }
 
-  /* More than two featured posts: horizontal rail with the next card peeking */
+  /* More than two featured posts stay in the same two-column rhythm so the
+     last card lands exactly on the content edge at maximum scroll. */
   .featured-rail.is-scrollable .featured-track > :global(li) {
-    flex-basis: calc(50% - 1rem);
+    flex-basis: calc(50% - 0.5rem);
   }
 
   .featured-rail.is-scrollable {
@@ -1316,10 +1318,6 @@ const whatIcons = {
     .featured-track > :global(li) {
       flex-basis: auto;
       width: 100%;
-    }
-
-    .featured-rail.is-scrollable {
-      margin-inline: -0.25rem;
     }
 
     .featured-rail.is-scrollable .featured-track {

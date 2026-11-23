@@ -96,7 +96,8 @@
     }
 
     .astro-code code {
-      @apply flex-[1_0_100%] bg-inherit p-0;
+      @apply flex-[1_0_100%] rounded-none border-0 bg-inherit p-0 shadow-none;
+      box-shadow: none;
     }
 
     blockquote {
@@ -247,6 +248,14 @@
 
   .astro-code {
     @apply flex border bg-(--shiki-light-bg) text-(--shiki-light) outline-border [&_span]:text-(--shiki-light);
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .astro-code::-webkit-scrollbar {
+    display: none;
   }
 
   html[data-theme="dark"] .astro-code {

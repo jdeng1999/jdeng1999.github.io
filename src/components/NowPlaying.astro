@@ -434,11 +434,20 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-stage {
+    --np-deck-gap: 0.9rem;
+
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    clip-path: inset(0);
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
+  }
+
+  /* Pulling the next card down from the stack should reveal its top edge,
+     while the opposite gesture keeps the outgoing card clipped cleanly. */
+  .np-stage[data-deck-direction="next"] {
+    clip-path: inset(-3.6rem 0 0 0);
   }
 
   .np-reel {
@@ -508,6 +517,17 @@ const totalLabel = formatTime(first.duration);
 
   .np-stack.is-dealing [data-np-peek="1"] {
     opacity: 0;
+  }
+
+  .np-stack.is-dealing .np-peek--back {
+    opacity: 0.5;
+    transform: rotate(var(--peek-tilt)) translateY(-2px) scale(0.985);
+  }
+
+  .np-stack.is-dealing .np-peek--ghost {
+    opacity: 0.22;
+    transform: rotate(calc(var(--peek-tilt) * 1.5)) translateY(-2px)
+      scale(0.965);
   }
 
   .np-peek--back {
@@ -583,6 +603,8 @@ const totalLabel = formatTime(first.duration);
     z-index: 2;
     isolation: isolate;
     display: grid;
+    transform-origin: 50% 0%;
+    will-change: transform;
     grid-template-columns: 6.75rem minmax(0, 1fr);
     gap: 0.95rem;
     min-height: 10.25rem;
@@ -1807,6 +1829,8 @@ const totalLabel = formatTime(first.duration);
     let deckVelocity = 0;
     let springing = false;
     let resumeAfterCommit = false;
+    let deckGapPx = 14;
+    let deckRestScale = 0.95;
 
     let draggingDeck = false;
     let dragPointerId = -1;
@@ -1823,22 +1847,58 @@ const totalLabel = formatTime(first.duration);
 
     const clampDrag = (value: number) => Math.max(-0.98, Math.min(0.98, value));
 
+    const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+
+    const measureDeck = () => {
+      if (!stage || !card) return;
+      const raw =
+        Number.parseFloat(
+          getComputedStyle(stage).getPropertyValue("--np-deck-gap")
+        ) || 0.9;
+      const rootSize =
+        Number.parseFloat(
+          getComputedStyle(document.documentElement).fontSize
+        ) || 16;
+      deckGapPx = raw * rootSize;
+
+      const nextPeek =
+        peeks.find(button => button.dataset.npPeek === "1") ?? peeks[0];
+      const peekWidth = nextPeek?.offsetWidth ?? 0;
+      const cardWidth = card.offsetWidth || 1;
+      // The outgoing card settles at the width of the card peeking out just
+      // behind the deck in its natural resting state.
+      deckRestScale = peekWidth
+        ? Math.max(0.9, Math.min(0.985, peekWidth / cardWidth))
+        : 0.95;
+    };
+
     const renderDeck = () => {
       const height = getCardHeight();
       if (!height || !card) return;
 
+      // Cards travel a full card height plus a breathing gap, so the deck
+      // reads as a stack of separate cards rather than one continuous strip.
+      const step = height + deckGapPx;
+      const progress = clamp01(Math.abs(deckOffset));
+      const currentScale = 1 - (1 - deckRestScale) * progress;
+      const nextScale = 1 - (1 - deckRestScale) * (1 - clamp01(deckOffset));
+      const prevScale = 1 - (1 - deckRestScale) * (1 - clamp01(-deckOffset));
+
       // The peeks sit above the stage, so "next" comes down from that stack
-      // and "previous" rises from below. Cards stay opaque while they move:
-      // the stage clip reveals one complete card instead of ghosting two.
-      card.style.transform = `translateY(${PEEK + deckOffset * height}px)`;
+      // and "previous" rises from below. The outgoing card shrinks toward
+      // the size of the naturally displayed second card while the incoming
+      // card grows back to the full front-card size.
+      card.style.transform = `translate3d(0, ${
+        PEEK + deckOffset * step
+      }px, 0) scale(${currentScale})`;
 
-      nextClone.style.transform = `translateY(${
-        PEEK + (deckOffset - 1) * height
-      }px)`;
+      nextClone.style.transform = `translate3d(0, ${
+        PEEK + (deckOffset - 1) * step
+      }px, 0) scale(${nextScale})`;
 
-      prevClone.style.transform = `translateY(${
-        PEEK + (deckOffset + 1) * height
-      }px)`;
+      prevClone.style.transform = `translate3d(0, ${
+        PEEK + (deckOffset + 1) * step
+      }px, 0) scale(${prevScale})`;
     };
 
     const commitIfNeeded = () => {
@@ -1915,13 +1975,19 @@ const totalLabel = formatTime(first.duration);
       } else {
         deckFrame = 0;
         stack?.classList.remove("is-dealing");
+        if (stage) stage.dataset.deckDirection = "";
       }
     };
 
     const startDeck = () => {
+      const next = deckTarget > deckOffset + 0.01;
+      const prev = deckTarget < deckOffset - 0.01;
+
       // While advancing forward, hide the immediate next peek: that card is
       // the one sliding down into the front, so showing it twice feels chaotic.
-      stack?.classList.toggle("is-dealing", deckTarget > deckOffset + 0.01);
+      stack?.classList.toggle("is-dealing", next);
+      if (stage)
+        stage.dataset.deckDirection = next ? "next" : prev ? "prev" : "";
       if (!deckFrame) deckFrame = requestAnimationFrame(deckTick);
     };
 
@@ -2181,7 +2247,8 @@ const totalLabel = formatTime(first.duration);
 
       const now = performance.now();
       const dt = Math.max(8, now - dragLastTime);
-      const raw = dragStartOffset + (event.clientY - dragStartY) / height;
+      const step = height + deckGapPx;
+      const raw = dragStartOffset + (event.clientY - dragStartY) / step;
 
       dragVelocity = (raw - dragLastRaw) / dt;
       dragLastRaw = raw;
@@ -2323,11 +2390,13 @@ const totalLabel = formatTime(first.duration);
     paintProgress(0);
     syncClones();
     syncStageHeight();
+    measureDeck();
     renderDeck();
 
     if ("ResizeObserver" in window && card) {
       const stageObserver = new ResizeObserver(() => {
         syncStageHeight();
+        measureDeck();
         renderDeck();
       });
       stageObserver.observe(card);
