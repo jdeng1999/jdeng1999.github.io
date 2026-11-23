@@ -1058,7 +1058,7 @@ const totalLabel = formatTime(first.duration);
 
   /* ── Expanded nine-card carousel ─────────────────────────────── */
   .np-expand {
-    --np-wreath-gold: #f0c35f;
+    --np-expand-gold: #f0c35f;
     position: fixed;
     inset: 0;
     width: 100%;
@@ -1077,103 +1077,7 @@ const totalLabel = formatTime(first.duration);
   }
 
   html[data-theme="light"] .np-expand {
-    --np-wreath-gold: #a97421;
-  }
-
-  .np-expand-wreath {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    overflow: hidden;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .np-expand-wreath::before,
-  .np-expand-wreath::after {
-    position: absolute;
-    top: 12%;
-    width: 26%;
-    height: 76%;
-    background: radial-gradient(
-      closest-side,
-      color-mix(in srgb, var(--np-wreath-gold) 26%, transparent),
-      transparent 72%
-    );
-    filter: blur(30px);
-    opacity: 0.55;
-    content: "";
-  }
-
-  .np-expand-wreath::before {
-    left: 0;
-  }
-
-  .np-expand-wreath::after {
-    right: 0;
-  }
-
-  .np-expand.is-wreath-ready .np-expand-wreath {
-    opacity: 1;
-  }
-
-  .np-expand.is-closing .np-expand-wreath {
-    opacity: 0;
-    transition-delay: 0s;
-  }
-
-  .np-expand-floor {
-    position: absolute;
-    left: 50%;
-    bottom: 9%;
-    z-index: 0;
-    width: min(46rem, 72vw);
-    height: 2px;
-    border-radius: 999px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      var(--np-wreath-gold) 22%,
-      #fff8dc 50%,
-      var(--np-wreath-gold) 78%,
-      transparent
-    );
-    box-shadow:
-      0 0 18px 4px color-mix(in srgb, var(--np-wreath-gold) 55%, transparent),
-      0 0 54px 18px color-mix(in srgb, var(--np-wreath-gold) 20%, transparent);
-    opacity: 0;
-    pointer-events: none;
-    transform: translateX(-50%);
-    transition: opacity 0.55s ease;
-  }
-
-  .np-expand-floor::before {
-    position: absolute;
-    left: 50%;
-    bottom: 50%;
-    width: 92%;
-    height: 18rem;
-    background: radial-gradient(
-      ellipse at center bottom,
-      color-mix(in srgb, var(--np-wreath-gold) 26%, transparent),
-      color-mix(in srgb, var(--np-wreath-gold) 8%, transparent) 38%,
-      transparent 72%
-    );
-    filter: blur(22px);
-    content: "";
-    opacity: 0.7;
-    pointer-events: none;
-    transform: translateX(-50%);
-  }
-
-  .np-expand.is-wreath-ready .np-expand-floor {
-    opacity: 0.72;
-  }
-
-  .np-expand.is-closing .np-expand-floor {
-    opacity: 0;
-    transition-delay: 0s;
+    --np-expand-gold: #a97421;
   }
 
   .np-expand-halo {
@@ -1186,7 +1090,7 @@ const totalLabel = formatTime(first.duration);
     border-radius: 50%;
     background: radial-gradient(
       ellipse at center,
-      color-mix(in srgb, var(--np-wreath-gold) 15%, transparent),
+      color-mix(in srgb, var(--np-expand-gold) 15%, transparent),
       color-mix(in srgb, var(--color-accent) 6%, transparent) 42%,
       transparent 70%
     );
@@ -1206,99 +1110,15 @@ const totalLabel = formatTime(first.duration);
     transition-delay: 0s;
   }
 
-  .np-wreath-branch {
-    position: absolute;
-    top: 2%;
-    width: clamp(9.5rem, 24vw, 20rem);
-    height: 96%;
-    color: var(--np-wreath-gold);
-    opacity: 0.92;
-    filter: drop-shadow(
-        0 0 9px color-mix(in srgb, currentColor 34%, transparent)
-      )
-      drop-shadow(0 0 30px color-mix(in srgb, currentColor 18%, transparent));
-    overflow: visible;
-  }
-
-  .np-wreath-branch--left {
-    left: clamp(-1.5rem, 1vw, 2rem);
-  }
-
-  .np-wreath-branch--right {
-    right: clamp(-1.5rem, 1vw, 2rem);
-    transform: scaleX(-1);
-  }
-
-  .np-wreath-branch .np-stem {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-  }
-
-  .np-expand.is-wreath-ready .np-wreath-branch .np-stem {
-    animation: np-stem-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  .np-wreath-branch .np-grain {
-    opacity: 0;
-    transform-box: fill-box;
-    transform-origin: center;
-  }
-
-  .np-expand.is-wreath-ready .np-wreath-branch .np-grain {
-    animation: np-grain-grow 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-delay: calc(100ms + var(--i) * 34ms);
-  }
-
-  @keyframes np-stem-draw {
-    from {
-      stroke-dashoffset: 1;
-    }
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
-
-  @keyframes np-grain-grow {
-    from {
-      opacity: 0;
-      scale: 0.35;
-    }
-    to {
-      opacity: 1;
-      scale: 1;
-    }
-  }
-
-  .np-wreath-sparks,
   .np-aura {
     position: absolute;
     inset: 0;
+    color: color-mix(in srgb, var(--color-accent) 84%, #ffffff);
     z-index: 0;
     overflow: visible;
     pointer-events: none;
   }
 
-  .np-wreath-sparks {
-    color: var(--np-wreath-gold);
-    opacity: 0;
-    transition: opacity 0.4s ease 0.05s;
-  }
-
-  .np-expand.is-open .np-wreath-sparks {
-    opacity: 1;
-  }
-
-  .np-expand.is-closing .np-wreath-sparks {
-    opacity: 0;
-    transition-delay: 0s;
-  }
-
-  .np-aura {
-    color: color-mix(in srgb, var(--color-accent) 84%, #ffffff);
-    z-index: 0;
-  }
-
-  .np-wreath-sparks i,
   .np-aura i {
     position: absolute;
     left: var(--x, 50%);
@@ -1312,11 +1132,6 @@ const totalLabel = formatTime(first.duration);
     animation: np-spark-rise var(--d, 8s) ease-in-out infinite;
     animation-delay: var(--delay, 0s);
     will-change: transform, opacity;
-  }
-
-  .np-wreath-sparks i.is-bright {
-    background: color-mix(in srgb, var(--np-wreath-gold) 32%, #ffffff);
-    box-shadow: 0 0 11px currentColor;
   }
 
   .np-aura i:nth-child(1) {
@@ -1757,22 +1572,12 @@ const totalLabel = formatTime(first.duration);
     .np-expand-wheel {
       display: none;
     }
-
-    .np-wreath-branch {
-      width: 7.5rem;
-      opacity: 0.55;
-    }
-
-    .np-wreath-sparks i:nth-child(n + 12) {
-      display: none;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .np-expand-glass,
     .np-expand-stage,
     .np-expand-hint,
-    .np-expand-wreath,
     .np-fly-card {
       transition: none !important;
     }
@@ -1781,19 +1586,9 @@ const totalLabel = formatTime(first.duration);
       transition: none !important;
     }
 
-    .np-wreath-sparks i,
     .np-aura i {
       animation: none;
       opacity: 0;
-    }
-
-    .np-wreath-branch .np-grain {
-      opacity: 1;
-      scale: 1;
-    }
-
-    .np-wreath-branch .np-stem {
-      stroke-dashoffset: 0;
     }
 
     .now-playing[data-np-returning="true"] .np-card {
@@ -3571,277 +3366,6 @@ const totalLabel = formatTime(first.duration);
       halo.className = "np-expand-halo";
       scope(halo);
 
-      const wreath = document.createElement("div");
-      wreath.className = "np-expand-wreath";
-      scope(wreath);
-
-      const makeBranch = (side: "left" | "right") => {
-        const ns = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(ns, "svg");
-        svg.setAttribute("viewBox", "0 0 300 780");
-        svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-        svg.setAttribute("aria-hidden", "true");
-        svg.classList.add("np-wreath-branch", `np-wreath-branch--${side}`);
-        scope(svg);
-
-        const gradientId = `np-wreath-gold-${side}`;
-        const highlightId = `np-leaf-light-${side}`;
-        const defs = document.createElementNS(ns, "defs");
-        const gradient = document.createElementNS(ns, "linearGradient");
-        gradient.setAttribute("id", gradientId);
-        gradient.setAttribute("x1", "0");
-        gradient.setAttribute("y1", "1");
-        gradient.setAttribute("x2", "0.18");
-        gradient.setAttribute("y2", "0");
-        [
-          [0, "#6b3d0a"],
-          [0.2, "#c18426"],
-          [0.48, "#f2c15a"],
-          [0.72, "#fff0b8"],
-          [1, "#a96615"],
-        ].forEach(([offset, color]) => {
-          const stop = document.createElementNS(ns, "stop");
-          stop.setAttribute("offset", String(offset));
-          stop.setAttribute("stop-color", String(color));
-          gradient.appendChild(stop);
-        });
-        defs.appendChild(gradient);
-
-        const highlight = document.createElementNS(ns, "radialGradient");
-        highlight.setAttribute("id", highlightId);
-        highlight.setAttribute("cx", "0.32");
-        highlight.setAttribute("cy", "0.2");
-        highlight.setAttribute("r", "0.82");
-        [
-          [0, "#fff3bd", 0.46],
-          [0.35, "#ffe7a3", 0.2],
-          [1, "#ffffff", 0],
-        ].forEach(([offset, color, opacity]) => {
-          const stop = document.createElementNS(ns, "stop");
-          stop.setAttribute("offset", String(offset));
-          stop.setAttribute("stop-color", String(color));
-          stop.setAttribute("stop-opacity", String(opacity));
-          highlight.appendChild(stop);
-        });
-        defs.appendChild(highlight);
-        svg.appendChild(defs);
-
-        const stem = document.createElementNS(ns, "path");
-        stem.setAttribute(
-          "d",
-          "M 244 752 C 258 622 246 508 216 398 C 184 288 150 178 116 82"
-        );
-        stem.setAttribute("pathLength", "1");
-        stem.setAttribute("fill", "none");
-        stem.setAttribute("stroke", "currentColor");
-        stem.setAttribute("stroke-width", "2.2");
-        stem.setAttribute("stroke-linecap", "round");
-        stem.setAttribute("opacity", "0.62");
-        stem.classList.add("np-stem");
-        scope(stem);
-        svg.appendChild(stem);
-
-        const stemGlow = document.createElementNS(ns, "path");
-        stemGlow.setAttribute(
-          "d",
-          "M 240 744 C 252 622 239 512 211 403 C 180 294 146 180 112 90"
-        );
-        stemGlow.setAttribute("fill", "none");
-        stemGlow.setAttribute("stroke", "currentColor");
-        stemGlow.setAttribute("stroke-width", "0.8");
-        stemGlow.setAttribute("stroke-linecap", "round");
-        stemGlow.setAttribute("opacity", "0.24");
-        stemGlow.classList.add("np-stem-glow");
-        scope(stemGlow);
-        svg.appendChild(stemGlow);
-
-        const leafPath =
-          "M0 0 C -32 -12 -54 -48 -40 -106 C -12 -96 24 -52 0 0 Z";
-        const leafPathAlt =
-          "M0 0 C -25 -15 -47 -55 -33 -109 C -7 -91 19 -46 0 0 Z";
-        const leafInner =
-          "M-6 -12 C -24 -40 -32 -70 -25 -94 C -12 -74 8 -44 -6 -12 Z";
-        const leafInnerAlt =
-          "M-5 -14 C -20 -44 -27 -73 -21 -96 C -8 -76 7 -42 -5 -14 Z";
-        const midrib = "M0 -3 C -10 -34 -21 -69 -32 -98";
-        const veinA = "M-10 -36 C -23 -44 -32 -55 -36 -66";
-        const veinB = "M-17 -61 C -28 -69 -36 -78 -39 -89";
-        const tipAwn = "M-40 -106 C -44 -118 -46 -128 -44 -139";
-
-        const nodes = [
-          { x: 242, y: 700, r: -24, s: 1.4 },
-          { x: 238, y: 624, r: -29, s: 1.3 },
-          { x: 230, y: 550, r: -34, s: 1.2 },
-          { x: 219, y: 480, r: -39, s: 1.08 },
-          { x: 205, y: 414, r: -44, s: 0.96 },
-          { x: 189, y: 354, r: -49, s: 0.84 },
-          { x: 171, y: 300, r: -54, s: 0.72 },
-          { x: 151, y: 252, r: -59, s: 0.6 },
-          { x: 131, y: 208, r: -64, s: 0.48 },
-          { x: 114, y: 174, r: -68, s: 0.38 },
-          { x: 101, y: 144, r: -72, s: 0.3 },
-          { x: 90, y: 118, r: -76, s: 0.23 },
-        ];
-
-        const addLeaf = (
-          parent: SVGGElement,
-          transform: string,
-          scale: number,
-          accent = false,
-          variant = 0
-        ) => {
-          const leaf = document.createElementNS(ns, "g");
-          leaf.setAttribute("transform", transform);
-          const pathData = variant ? leafPathAlt : leafPath;
-          const innerData = variant ? leafInnerAlt : leafInner;
-
-          const shadow = document.createElementNS(ns, "path");
-          shadow.setAttribute("d", pathData);
-          shadow.setAttribute("fill", "#3a2106");
-          shadow.setAttribute("opacity", accent ? "0.28" : "0.42");
-          shadow.setAttribute("transform", "translate(3 5)");
-          leaf.appendChild(shadow);
-
-          const outer = document.createElementNS(ns, "path");
-          outer.setAttribute("d", pathData);
-          outer.setAttribute("fill", `url(#${gradientId})`);
-          outer.setAttribute("stroke", "#6f3d08");
-          outer.setAttribute("stroke-width", accent ? "0.55" : "0.95");
-          outer.setAttribute("stroke-opacity", accent ? "0.35" : "0.62");
-          leaf.appendChild(outer);
-
-          const gloss = document.createElementNS(ns, "path");
-          gloss.setAttribute("d", pathData);
-          gloss.setAttribute("fill", `url(#${highlightId})`);
-          leaf.appendChild(gloss);
-
-          const rim = document.createElementNS(ns, "path");
-          rim.setAttribute("d", pathData);
-          rim.setAttribute("fill", "none");
-          rim.setAttribute("stroke", "#fff8dc");
-          rim.setAttribute("stroke-width", accent ? "0.7" : "1.15");
-          rim.setAttribute("stroke-opacity", accent ? "0.1" : "0.2");
-          leaf.appendChild(rim);
-
-          const inner = document.createElementNS(ns, "path");
-          inner.setAttribute("d", innerData);
-          inner.setAttribute("fill", "#fff1bf");
-          inner.setAttribute("opacity", accent ? "0.14" : "0.28");
-          leaf.appendChild(inner);
-
-          const veins = document.createElementNS(ns, "g");
-          veins.setAttribute("fill", "none");
-          veins.setAttribute("stroke", "#7a4a12");
-          veins.setAttribute("stroke-linecap", "round");
-          veins.setAttribute("stroke-opacity", accent ? "0.35" : "0.6");
-          for (const [d, width] of [
-            [midrib, 1.15],
-            [veinA, 0.8],
-            [veinB, 0.68],
-          ] as const) {
-            const vein = document.createElementNS(ns, "path");
-            vein.setAttribute("d", d);
-            vein.setAttribute("stroke-width", String(width));
-            veins.appendChild(vein);
-          }
-          leaf.appendChild(veins);
-
-          const tip = document.createElementNS(ns, "path");
-          tip.setAttribute("d", tipAwn);
-          tip.setAttribute("fill", "none");
-          tip.setAttribute("stroke", "#fff0b0");
-          tip.setAttribute("stroke-width", accent ? "0.6" : "0.9");
-          tip.setAttribute("stroke-linecap", "round");
-          tip.setAttribute("stroke-opacity", accent ? "0.24" : "0.48");
-          leaf.appendChild(tip);
-
-          const shine = document.createElementNS(ns, "path");
-          shine.setAttribute("d", "M-8 -20 C -18 -40 -23 -65 -18 -84");
-          shine.setAttribute("fill", "none");
-          shine.setAttribute("stroke", "#ffffff");
-          shine.setAttribute("stroke-width", "0.9");
-          shine.setAttribute("stroke-linecap", "round");
-          shine.setAttribute("stroke-opacity", accent ? "0.1" : "0.22");
-          leaf.appendChild(shine);
-
-          const nodeDot = document.createElementNS(ns, "circle");
-          nodeDot.setAttribute("cx", "0");
-          nodeDot.setAttribute("cy", "1.5");
-          nodeDot.setAttribute("r", accent ? "1.2" : "1.8");
-          nodeDot.setAttribute("fill", "#ffe9ab");
-          nodeDot.setAttribute("opacity", accent ? "0.35" : "0.65");
-          leaf.appendChild(nodeDot);
-
-          leaf.setAttribute("data-leaf-scale", String(scale));
-          parent.appendChild(leaf);
-          return leaf;
-        };
-
-        nodes.forEach((node, index) => {
-          const group = document.createElementNS(ns, "g");
-          group.classList.add("np-grain");
-          group.style.setProperty("--i", String(index));
-          group.setAttribute("transform", `translate(${node.x} ${node.y})`);
-          scope(group);
-
-          for (const direction of [1, -1]) {
-            const angle =
-              node.r +
-              (direction === 1 ? (index % 3) - 1 : 1 - (index % 3)) * 2.4;
-            addLeaf(
-              group,
-              `translate(0 ${direction === 1 ? 0 : -16}) rotate(${angle}) scale(${
-                node.s * direction
-              } ${node.s})`,
-              node.s,
-              false,
-              (index + (direction === 1 ? 0 : 1)) % 2
-            );
-          }
-
-          svg.appendChild(group);
-        });
-
-        const tie = document.createElementNS(ns, "g");
-        tie.setAttribute("fill", "none");
-        tie.setAttribute("stroke", "currentColor");
-        tie.setAttribute("stroke-linecap", "round");
-        tie.setAttribute("opacity", "0.4");
-        const tieA = document.createElementNS(ns, "path");
-        tieA.setAttribute("d", "M 228 728 C 238 718 258 718 268 730");
-        tieA.setAttribute("stroke-width", "2");
-        const tieB = document.createElementNS(ns, "path");
-        tieB.setAttribute("d", "M 229 736 C 240 744 258 744 266 738");
-        tieB.setAttribute("stroke-width", "1.1");
-        tie.append(tieA, tieB);
-        svg.appendChild(tie);
-
-        return svg;
-      };
-
-      wreath.append(makeBranch("left"), makeBranch("right"));
-
-      const floor = document.createElement("div");
-      floor.className = "np-expand-floor";
-      scope(floor);
-
-      const sparks = document.createElement("div");
-      sparks.className = "np-wreath-sparks";
-      scope(sparks);
-      for (let spark = 0; spark < 26; spark += 1) {
-        const dot = document.createElement("i");
-        const side =
-          spark % 2 === 0 ? 4 + ((spark * 13) % 24) : 72 + ((spark * 11) % 24);
-        dot.style.setProperty("--x", `${side}%`);
-        dot.style.setProperty("--y", `${12 + ((spark * 29) % 76)}%`);
-        dot.style.setProperty("--s", `${2 + (spark % 4) * 0.72}px`);
-        dot.style.setProperty("--d", `${7.2 + (spark % 5) * 1.15}s`);
-        dot.style.setProperty("--delay", `${-0.8 - ((spark * 0.83) % 7)}s`);
-        if (spark % 4 === 0) dot.classList.add("is-bright");
-        scope(dot);
-        sparks.appendChild(dot);
-      }
-
       let wheelDragging = false;
       let wheelDragStartY = 0;
       let wheelDragStartCenter = 0;
@@ -3901,17 +3425,7 @@ const totalLabel = formatTime(first.duration);
       hint.textContent = "↑ ↓ · ESC";
       scope(hint);
 
-      dialog.append(
-        glass,
-        halo,
-        sparks,
-        wreath,
-        floor,
-        stage,
-        wheel,
-        close,
-        hint
-      );
+      dialog.append(glass, halo, stage, wheel, close, hint);
 
       close.addEventListener("click", () => closeExpanded());
       dialog.addEventListener("cancel", event => {
@@ -4462,12 +3976,6 @@ const totalLabel = formatTime(first.duration);
       setExpandedCenterInteractive(true);
       expandedDialog?.setAttribute("data-ready", "true");
       expandedDialog?.classList.add("is-wheel-ready", "is-ui-ready");
-      expandedRevealTimers.push(
-        window.setTimeout(() => {
-          if (!expandedOpen || expandedClosing) return;
-          expandedDialog?.classList.add("is-wreath-ready");
-        }, 50)
-      );
     };
 
     const revealExpandedRing = () => {
@@ -4574,7 +4082,6 @@ const totalLabel = formatTime(first.duration);
         "is-open",
         "is-closing",
         "is-wheel-ready",
-        "is-wreath-ready",
         "is-ui-ready"
       );
       expandedDialog.classList.toggle("is-playing", isPlaying);
@@ -4608,11 +4115,7 @@ const totalLabel = formatTime(first.duration);
         expandedDialog.setAttribute("data-ready", "true");
         expandedInteractionReady = true;
         setExpandedCenterInteractive(true);
-        expandedDialog.classList.add(
-          "is-wheel-ready",
-          "is-ui-ready",
-          "is-wreath-ready"
-        );
+        expandedDialog.classList.add("is-wheel-ready", "is-ui-ready");
         return;
       }
 
@@ -4752,7 +4255,6 @@ const totalLabel = formatTime(first.duration);
           "is-open",
           "is-closing",
           "is-wheel-ready",
-          "is-wreath-ready",
           "is-ui-ready"
         );
         dialog.removeAttribute("data-ready");
@@ -4922,7 +4424,6 @@ const totalLabel = formatTime(first.duration);
             "is-open",
             "is-closing",
             "is-wheel-ready",
-            "is-wreath-ready",
             "is-ui-ready"
           );
           if (expandedDialog.open) expandedDialog.close();
