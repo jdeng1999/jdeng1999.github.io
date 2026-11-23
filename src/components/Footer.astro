@@ -134,23 +134,25 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
 
       <!-- Music -->
       {SITE.spotify.enabled && (
-        <NowPlaying
-          label={t("footer.listening")}
-          enjoyLabel={t("footer.enjoy")}
-          openLabel={t("footer.openSpotify")}
-          playLabel={t("footer.play")}
-          pauseLabel={t("footer.pause")}
-          restartLabel={t("footer.restart")}
-          seekLabel={t("footer.seek")}
-          previewLabel={t("footer.preview")}
-          previousLabel={t("footer.previous")}
-          nextLabel={t("footer.next")}
-          modeLabel={t("footer.playMode")}
-          orderLabel={t("footer.modeOrder")}
-          repeatLabel={t("footer.modeRepeat")}
-          shuffleLabel={t("footer.modeShuffle")}
-          class="footer-music w-full"
-        />
+        <div id="site-music-player" class="footer-music" transition:persist>
+          <NowPlaying
+            label={t("footer.listening")}
+            enjoyLabel={t("footer.enjoy")}
+            openLabel={t("footer.openSpotify")}
+            playLabel={t("footer.play")}
+            pauseLabel={t("footer.pause")}
+            restartLabel={t("footer.restart")}
+            seekLabel={t("footer.seek")}
+            previewLabel={t("footer.preview")}
+            previousLabel={t("footer.previous")}
+            nextLabel={t("footer.next")}
+            modeLabel={t("footer.playMode")}
+            orderLabel={t("footer.modeOrder")}
+            repeatLabel={t("footer.modeRepeat")}
+            shuffleLabel={t("footer.modeShuffle")}
+            class="w-full"
+          />
+        </div>
       )}
     </div>
 

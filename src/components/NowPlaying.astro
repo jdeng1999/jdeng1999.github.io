@@ -579,7 +579,7 @@ const totalLabel = formatTime(first.duration);
     transform-origin: bottom;
   }
 
-  .now-playing[data-np-playing="true"] .np-card.np-active .np-eq i {
+  .np-card[data-np-playing="true"] .np-eq i {
     animation: np-eq 1.05s ease-in-out infinite;
     animation-delay: calc(var(--i) * -0.17s);
   }
@@ -799,6 +799,18 @@ const totalLabel = formatTime(first.duration);
     pointer-events: none;
   }
 
+  .np-card[data-np-progress="empty"] .np-seek-rail {
+    background: transparent;
+  }
+
+  .np-card[data-np-progress="empty"] .np-seek-fill {
+    opacity: 0;
+  }
+
+  .np-card[data-np-progress="empty"] .np-seek-thumb {
+    display: none;
+  }
+
   .np-seek:hover .np-seek-rail,
   .np-seek[data-dragging="true"] .np-seek-rail {
     height: 3px;
@@ -891,11 +903,11 @@ const totalLabel = formatTime(first.duration);
     display: none;
   }
 
-  .now-playing[data-np-playing="true"] .np-card.np-active .np-icon-play {
+  .np-card[data-np-playing="true"] .np-icon-play {
     display: none;
   }
 
-  .now-playing[data-np-playing="true"] .np-card.np-active .np-icon-pause {
+  .np-card[data-np-playing="true"] .np-icon-pause {
     display: block;
   }
 
@@ -1046,7 +1058,7 @@ const totalLabel = formatTime(first.duration);
 
   /* ── Expanded nine-card carousel ─────────────────────────────── */
   .np-expand {
-    --np-wreath-gold: #e0bd78;
+    --np-wreath-gold: #f0c35f;
     position: fixed;
     inset: 0;
     width: 100%;
@@ -1065,7 +1077,7 @@ const totalLabel = formatTime(first.duration);
   }
 
   html[data-theme="light"] .np-expand {
-    --np-wreath-gold: #a87834;
+    --np-wreath-gold: #a97421;
   }
 
   .np-expand-wreath {
@@ -1078,11 +1090,88 @@ const totalLabel = formatTime(first.duration);
     transition: opacity 0.3s ease;
   }
 
+  .np-expand-wreath::before,
+  .np-expand-wreath::after {
+    position: absolute;
+    top: 12%;
+    width: 26%;
+    height: 76%;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--np-wreath-gold) 26%, transparent),
+      transparent 72%
+    );
+    filter: blur(30px);
+    opacity: 0.55;
+    content: "";
+  }
+
+  .np-expand-wreath::before {
+    left: 0;
+  }
+
+  .np-expand-wreath::after {
+    right: 0;
+  }
+
   .np-expand.is-wreath-ready .np-expand-wreath {
     opacity: 1;
   }
 
   .np-expand.is-closing .np-expand-wreath {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+
+  .np-expand-floor {
+    position: absolute;
+    left: 50%;
+    bottom: 9%;
+    z-index: 0;
+    width: min(46rem, 72vw);
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--np-wreath-gold) 22%,
+      #fff8dc 50%,
+      var(--np-wreath-gold) 78%,
+      transparent
+    );
+    box-shadow:
+      0 0 18px 4px color-mix(in srgb, var(--np-wreath-gold) 55%, transparent),
+      0 0 54px 18px color-mix(in srgb, var(--np-wreath-gold) 20%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%);
+    transition: opacity 0.55s ease;
+  }
+
+  .np-expand-floor::before {
+    position: absolute;
+    left: 50%;
+    bottom: 50%;
+    width: 92%;
+    height: 18rem;
+    background: radial-gradient(
+      ellipse at center bottom,
+      color-mix(in srgb, var(--np-wreath-gold) 26%, transparent),
+      color-mix(in srgb, var(--np-wreath-gold) 8%, transparent) 38%,
+      transparent 72%
+    );
+    filter: blur(22px);
+    content: "";
+    opacity: 0.7;
+    pointer-events: none;
+    transform: translateX(-50%);
+  }
+
+  .np-expand.is-wreath-ready .np-expand-floor {
+    opacity: 0.72;
+  }
+
+  .np-expand.is-closing .np-expand-floor {
     opacity: 0;
     transition-delay: 0s;
   }
@@ -1119,14 +1208,15 @@ const totalLabel = formatTime(first.duration);
 
   .np-wreath-branch {
     position: absolute;
-    top: 4%;
-    width: clamp(8rem, 19vw, 17rem);
-    height: 92%;
+    top: 2%;
+    width: clamp(9.5rem, 24vw, 20rem);
+    height: 96%;
     color: var(--np-wreath-gold);
-    opacity: 0.74;
+    opacity: 0.92;
     filter: drop-shadow(
-      0 0 16px color-mix(in srgb, currentColor 22%, transparent)
-    );
+        0 0 9px color-mix(in srgb, currentColor 34%, transparent)
+      )
+      drop-shadow(0 0 30px color-mix(in srgb, currentColor 18%, transparent));
     overflow: visible;
   }
 
@@ -1145,7 +1235,7 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-expand.is-wreath-ready .np-wreath-branch .np-stem {
-    animation: np-stem-draw 1.15s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: np-stem-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .np-wreath-branch .np-grain {
@@ -1155,8 +1245,8 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-expand.is-wreath-ready .np-wreath-branch .np-grain {
-    animation: np-grain-grow 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-delay: calc(120ms + var(--i) * 52ms);
+    animation: np-grain-grow 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(100ms + var(--i) * 34ms);
   }
 
   @keyframes np-stem-draw {
@@ -1401,7 +1491,7 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-expand-card[data-center="true"] {
-    z-index: 100;
+    z-index: 50;
   }
 
   .np-expand-card[data-center="true"] .np-body {
@@ -1412,7 +1502,7 @@ const totalLabel = formatTime(first.duration);
      The extra space at the very bottom becomes the shared seam. */
   .np-expand-card .np-controls,
   .np-fly-card .np-controls {
-    margin-bottom: 1.35rem;
+    margin-bottom: 2rem;
     padding-top: 0.35rem;
   }
 
@@ -1515,8 +1605,8 @@ const totalLabel = formatTime(first.duration);
     z-index: 40;
     top: 50%;
     left: 50%;
-    width: 2rem;
-    height: min(72vh, 48rem);
+    width: 1.6rem;
+    height: min(74vh, 50rem);
     transform: translateY(-50%);
     transform-origin: 50% 50%;
     color: color-mix(in srgb, var(--color-foreground) 54%, transparent);
@@ -1556,7 +1646,7 @@ const totalLabel = formatTime(first.duration);
     color: color-mix(in srgb, var(--color-foreground) 84%, transparent);
   }
 
-  .np-wheel-ticks {
+  .np-wheel-viewport {
     position: absolute;
     inset: 0;
     overflow: hidden;
@@ -1576,11 +1666,19 @@ const totalLabel = formatTime(first.duration);
     );
   }
 
+  .np-wheel-ticks {
+    position: absolute;
+    inset: -18% 0;
+    transform: translate3d(0, var(--np-wheel-shift, 0px), 0);
+    transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+
   .np-wheel-ticks i {
     position: absolute;
     top: var(--y, 50%);
     left: 50%;
-    width: var(--w, 0.9rem);
+    width: var(--w, 0.62rem);
     height: 1px;
     border-radius: 999px;
     background: currentColor;
@@ -1596,34 +1694,27 @@ const totalLabel = formatTime(first.duration);
     height: 1.2px;
   }
 
-  .np-wheel-ticks i.is-center {
-    width: 1.6rem;
+  .np-wheel-pointer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1.4rem;
     height: 2px;
+    border-radius: 999px;
     background: var(--color-accent);
-    opacity: 0.95;
-    box-shadow: 0 0 9px color-mix(in srgb, var(--color-accent) 40%, transparent);
+    box-shadow: 0 0 10px
+      color-mix(in srgb, var(--color-accent) 48%, transparent);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
   }
 
   .np-expand.is-closing .np-expand-wheel {
     pointer-events: none;
   }
 
-  .np-expand.is-playing .np-expand-card[data-center="true"] .np-icon-play {
-    display: none;
-  }
-
-  .np-expand.is-playing .np-expand-card[data-center="true"] .np-icon-pause {
-    display: block;
-  }
-
-  .np-expand.is-playing .np-expand-card[data-center="true"] .np-eq i {
-    animation: np-eq 1.05s ease-in-out infinite;
-    animation-delay: calc(var(--i) * -0.17s);
-  }
-
   .np-fly-card {
     position: absolute;
-    z-index: 50;
+    z-index: 80;
     min-height: var(--np-expand-h, 0);
     margin: 0;
     border-radius: 1.05rem;
@@ -1634,7 +1725,7 @@ const totalLabel = formatTime(first.duration);
     transform-origin: top left;
     will-change: transform, opacity;
     transition:
-      transform 0.58s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.44s cubic-bezier(0.16, 1, 0.3, 1),
       opacity 0.18s ease;
   }
 
@@ -1668,8 +1759,8 @@ const totalLabel = formatTime(first.duration);
     }
 
     .np-wreath-branch {
-      width: 6.2rem;
-      opacity: 0.46;
+      width: 7.5rem;
+      opacity: 0.55;
     }
 
     .np-wreath-sparks i:nth-child(n + 12) {
@@ -1759,7 +1850,7 @@ const totalLabel = formatTime(first.duration);
       transition: none;
     }
 
-    .now-playing[data-np-playing="true"] .np-eq i {
+    .np-card[data-np-playing="true"] .np-eq i {
       animation: none;
     }
 
@@ -1886,6 +1977,83 @@ const totalLabel = formatTime(first.duration);
   let apiPromise: Promise<SpotifyIframeApi> | null = null;
   let mediaKeysCleanup: AbortController | null = null;
 
+  const MUSIC_STATE_KEY = "jdeng:music-state";
+  type PlayMode = "order" | "repeat" | "shuffle";
+  type StoredMusicState = {
+    trackIndex: number;
+    position: number;
+    playing: boolean;
+    mode: PlayMode;
+    browseIndex: number;
+    source: "local" | "spotify";
+  };
+  type GlobalMusicPlayer = {
+    audio: HTMLAudioElement;
+    trackIndex: number;
+    positionMs: number;
+    playing: boolean;
+    mode: PlayMode;
+    browseIndex: number;
+    source: "local" | "spotify";
+    started: boolean;
+    listeners: AbortController | null;
+    lifecycle: AbortController | null;
+  };
+
+  const getGlobalMusicPlayer = (): GlobalMusicPlayer => {
+    const holder = window as Window & {
+      __devosferaMusicPlayer?: GlobalMusicPlayer;
+    };
+    if (!holder.__devosferaMusicPlayer) {
+      const audio = new Audio();
+      audio.preload = "metadata";
+      holder.__devosferaMusicPlayer = {
+        audio,
+        trackIndex: 0,
+        positionMs: 0,
+        playing: false,
+        mode: "order",
+        browseIndex: 0,
+        source: "local",
+        started: false,
+        listeners: null,
+        lifecycle: null,
+      };
+    }
+    return holder.__devosferaMusicPlayer;
+  };
+
+  const readStoredMusicState = (): StoredMusicState | null => {
+    try {
+      const raw = sessionStorage.getItem(MUSIC_STATE_KEY);
+      if (!raw) return null;
+      const value = JSON.parse(raw) as Partial<StoredMusicState>;
+      if (
+        typeof value.trackIndex !== "number" ||
+        typeof value.position !== "number" ||
+        typeof value.playing !== "boolean" ||
+        typeof value.browseIndex !== "number" ||
+        (value.source !== "local" && value.source !== "spotify")
+      ) {
+        return null;
+      }
+      const mode: PlayMode =
+        value.mode === "repeat" || value.mode === "shuffle"
+          ? value.mode
+          : "order";
+      return {
+        trackIndex: value.trackIndex,
+        position: value.position,
+        playing: value.playing,
+        mode,
+        browseIndex: value.browseIndex,
+        source: value.source,
+      };
+    } catch {
+      return null;
+    }
+  };
+
   const loadSpotifyApi = (): Promise<SpotifyIframeApi> => {
     if (spotifyApi) return Promise.resolve(spotifyApi);
     if (apiPromise) return apiPromise;
@@ -1958,24 +2126,38 @@ const totalLabel = formatTime(first.duration);
     const data = readData();
     if (!data?.tracks.length) return;
 
+    const globalPlayer = getGlobalMusicPlayer();
+    const liveState = globalPlayer.started;
+    const storedState = liveState ? null : readStoredMusicState();
+
+    globalPlayer.listeners?.abort();
+    const audioListeners = new AbortController();
+    globalPlayer.listeners = audioListeners;
+
     root.dataset.npReady = "true";
+
+    globalPlayer.lifecycle?.abort();
+    const lifecycle = new AbortController();
+    globalPlayer.lifecycle = lifecycle;
 
     const labels = data.labels;
     const tracks = data.tracks;
     const visibleCount = Math.min(tracks.length, 4);
     let expandedDialog: HTMLDialogElement | null = null;
-    // Front, next, next-next, previous. Keeping the previous card on the
-    // deepest layer makes both drag directions advance one track through the
-    // whole playlist, even when it is longer than the four visible cards.
-    const deckSlotOffsets = [0, 1, 2, -1];
+    // Front, then the next three tracks stacked above it. Keeping the window
+    // aligned with the expanded carousel makes every card keep the same
+    // above/below relation in both states.
+    const deckSlotOffsets = [0, 1, 2, 3];
 
     const stack = root.querySelector<HTMLElement>("[data-np-stack]");
     const stage = root.querySelector<HTMLElement>("[data-np-stage]");
     const serverCard = root.querySelector<HTMLElement>("[data-np-card]");
     const embedHost = root.querySelector<HTMLElement>("[data-np-embed]");
-    const audio = root.querySelector<HTMLAudioElement>("[data-np-audio]");
+    root.querySelector<HTMLAudioElement>("[data-np-audio]")?.remove();
 
-    if (!stack || !stage || !serverCard || !embedHost || !audio) return;
+    if (!stack || !stage || !serverCard || !embedHost) return;
+
+    const audio = globalPlayer.audio;
 
     // One full card per track. Cloning the server card keeps the complete
     // markup in a single place while giving the deck four independent layers.
@@ -1992,12 +2174,25 @@ const totalLabel = formatTime(first.duration);
     }
 
     let activeCard = deckCards[0]!;
-    let index = 0;
+    const initialTrackIndex = Math.min(
+      Math.max(
+        (liveState ? globalPlayer.trackIndex : storedState?.trackIndex) ?? 0,
+        0
+      ),
+      tracks.length - 1
+    );
+    const initialBrowseIndex = Math.min(
+      Math.max(
+        (liveState ? globalPlayer.browseIndex : storedState?.browseIndex) ?? 0,
+        0
+      ),
+      tracks.length - 1
+    );
+    let index = initialBrowseIndex;
+    let playbackIndex = initialTrackIndex;
 
     const getBody = (card: HTMLElement) =>
       card.querySelector<HTMLElement>("[data-np-body]");
-    const activeEl = <T extends Element>(selector: string) =>
-      activeCard.querySelector<T>(selector);
 
     const setText = (card: HTMLElement, selector: string, value: string) => {
       const node = card.querySelector<HTMLElement>(selector);
@@ -2040,7 +2235,7 @@ const totalLabel = formatTime(first.duration);
     deckCards.forEach((card, slot) => {
       const offset = deckSlotOffsets[slot] ?? 0;
       const trackIndex =
-        ((offset % tracks.length) + tracks.length) % tracks.length;
+        (((index + offset) % tracks.length) + tracks.length) % tracks.length;
       applyCardContent(card, tracks[trackIndex]!, trackIndex);
     });
 
@@ -2063,14 +2258,97 @@ const totalLabel = formatTime(first.duration);
     let isPlaying = false;
     let isDragging = false;
     let positionMs = 0;
-    let durationMs = tracks[0]!.duration * 1000;
+    let durationMs = tracks[initialTrackIndex]!.duration * 1000;
     let requestedPlay = false;
     let connecting = false;
     let spotifyController: SpotifyEmbedController | null = null;
     let spotifyUri = "";
     let localFailed = false;
     let endedHandled = false;
-    let playMode: "order" | "repeat" | "shuffle" = "order";
+    let playMode: PlayMode = "order";
+    let restorePositionMs = 0;
+    let restoreWantsPlayback = false;
+    let restorePending = Boolean(storedState);
+
+    if (liveState) {
+      source = globalPlayer.source;
+      playMode = globalPlayer.mode;
+      if (source === "local") {
+        positionMs = Number.isFinite(audio.currentTime)
+          ? audio.currentTime * 1000
+          : globalPlayer.positionMs;
+        durationMs =
+          Number.isFinite(audio.duration) && audio.duration > 0
+            ? audio.duration * 1000
+            : tracks[initialTrackIndex]!.duration * 1000;
+        isPlaying = !audio.paused;
+      } else {
+        positionMs = globalPlayer.positionMs;
+        isPlaying = globalPlayer.playing;
+      }
+    } else if (storedState) {
+      source = storedState.source;
+      playMode = storedState.mode;
+      positionMs = storedState.position * 1000;
+      restorePositionMs = positionMs;
+      restoreWantsPlayback = storedState.playing;
+      isPlaying = false;
+    }
+
+    const cardTrackIndex = (card: HTMLElement) =>
+      Number(card.dataset.npTrackIndex) || 0;
+
+    const paintCardState = (card: HTMLElement) => {
+      const trackIndex = cardTrackIndex(card);
+      const isCurrent = trackIndex === playbackIndex;
+      const cardPlaying = isCurrent && isPlaying;
+      card.dataset.npPlaying = String(cardPlaying);
+      card.dataset.npCurrent = String(isCurrent);
+
+      const toggle = card.querySelector<HTMLButtonElement>("[data-np-toggle]");
+      if (toggle) {
+        toggle.setAttribute("aria-pressed", String(cardPlaying));
+        toggle.setAttribute(
+          "aria-label",
+          cardPlaying ? labels.pause : labels.play
+        );
+      }
+    };
+
+    const paintCardProgress = (card: HTMLElement) => {
+      const trackIndex = cardTrackIndex(card);
+      const track = tracks[trackIndex];
+      if (!track) return;
+      const isCurrent = trackIndex === playbackIndex;
+      const total = isCurrent ? durationMs : track.duration * 1000;
+      const position = isCurrent ? clamp(positionMs, 0, total) : 0;
+      const hasProgress = isCurrent && position > 0;
+      const ratio = total > 0 ? position / total : 0;
+
+      const seek = card.querySelector<HTMLElement>("[data-np-seek]");
+      const fill = card.querySelector<HTMLElement>("[data-np-fill]");
+      const currentText = card.querySelector<HTMLElement>("[data-np-current]");
+      const totalText = card.querySelector<HTMLElement>("[data-np-total]");
+
+      card.dataset.npProgress = hasProgress ? "active" : "empty";
+      if (totalText) totalText.textContent = formatTime(total);
+      if (currentText) currentText.textContent = formatTime(position);
+      seek?.style.setProperty("--np-p", `${ratio * 100}%`);
+      seek?.setAttribute("aria-valuemax", String(Math.round(total / 1000)));
+      seek?.setAttribute("aria-valuenow", String(Math.round(position / 1000)));
+      seek?.setAttribute("aria-valuetext", formatTime(position));
+      if (fill) fill.style.opacity = hasProgress ? "1" : "0";
+    };
+
+    const paintCard = (card: HTMLElement) => {
+      paintCardState(card);
+      paintCardProgress(card);
+    };
+
+    const paintAllCards = () => {
+      deckCards.forEach(paintCard);
+      expandedCards.forEach(({ el }) => paintCard(el));
+    };
 
     const nowPlayingLabel = root.getAttribute("aria-label") ?? "On repeat";
 
@@ -2080,88 +2358,64 @@ const totalLabel = formatTime(first.duration);
       );
     };
 
+    let lastPersistAt = 0;
+    const saveMusicState = (persist = false) => {
+      globalPlayer.trackIndex = playbackIndex;
+      globalPlayer.browseIndex = index;
+      globalPlayer.mode = playMode;
+      globalPlayer.playing = isPlaying;
+      globalPlayer.source = source;
+      globalPlayer.started = true;
+      globalPlayer.positionMs =
+        source === "local" && Number.isFinite(audio.currentTime)
+          ? audio.currentTime * 1000
+          : positionMs;
+
+      const now = performance.now();
+      if (!persist && now - lastPersistAt < 800) return;
+      lastPersistAt = now;
+      try {
+        const stored: StoredMusicState = {
+          trackIndex: playbackIndex,
+          position: globalPlayer.positionMs / 1000,
+          playing: isPlaying,
+          mode: playMode,
+          browseIndex: index,
+          source,
+        };
+        sessionStorage.setItem(MUSIC_STATE_KEY, JSON.stringify(stored));
+      } catch {
+        /* private browsing can disable sessionStorage */
+      }
+    };
+
     const setPlaying = (playing: boolean) => {
       isPlaying = playing;
       root.dataset.npPlaying = String(playing);
       expandedDialog?.classList.toggle("is-playing", playing);
-      root
-        .querySelectorAll<HTMLButtonElement>("[data-np-toggle]")
-        .forEach(toggle => {
-          toggle.setAttribute("aria-pressed", String(playing));
-          toggle.setAttribute(
-            "aria-label",
-            playing ? labels.pause : labels.play
-          );
-        });
+      paintAllCards();
+      saveMusicState();
       emitState();
     };
 
     const paintDuration = () => {
-      const totalText = activeEl<HTMLElement>("[data-np-total]");
-      const seek = activeEl<HTMLElement>("[data-np-seek]");
-      if (totalText) totalText.textContent = formatTime(durationMs);
-      if (seek) {
-        seek.setAttribute(
-          "aria-valuemax",
-          String(Math.round(durationMs / 1000))
-        );
-      }
-
-      const center = expandedCards.find(
-        item => item.trackIndex === expandedCenter
-      );
-      if (center) {
-        const centerTotal =
-          center.el.querySelector<HTMLElement>("[data-np-total]");
-        const centerSeek =
-          center.el.querySelector<HTMLElement>("[data-np-seek]");
-        if (centerTotal) centerTotal.textContent = formatTime(durationMs);
-        centerSeek?.setAttribute(
-          "aria-valuemax",
-          String(Math.round(durationMs / 1000))
-        );
-      }
+      paintAllCards();
     };
 
     const paintProgress = (ms: number) => {
-      const seek = activeEl<HTMLElement>("[data-np-seek]");
-      const fill = activeEl<HTMLElement>("[data-np-fill]");
-      const currentText = activeEl<HTMLElement>("[data-np-current]");
-      if (!seek || !fill || !currentText) return;
-
       positionMs = clamp(ms, 0, Math.max(durationMs, 0));
-      const ratio = durationMs > 0 ? positionMs / durationMs : 0;
-      seek.style.setProperty("--np-p", `${ratio * 100}%`);
-      seek.setAttribute("aria-valuenow", String(Math.round(positionMs / 1000)));
-      seek.setAttribute("aria-valuetext", formatTime(positionMs));
-      currentText.textContent = formatTime(positionMs);
-
-      const center = expandedCards.find(
-        item => item.trackIndex === expandedCenter
-      );
-      if (!center) return;
-      const centerSeek = center.el.querySelector<HTMLElement>("[data-np-seek]");
-      const centerCurrent =
-        center.el.querySelector<HTMLElement>("[data-np-current]");
-      centerSeek?.style.setProperty("--np-p", `${ratio * 100}%`);
-      centerSeek?.setAttribute(
-        "aria-valuenow",
-        String(Math.round(positionMs / 1000))
-      );
-      centerSeek?.setAttribute("aria-valuetext", formatTime(positionMs));
-      if (centerCurrent) centerCurrent.textContent = formatTime(positionMs);
+      paintAllCards();
     };
 
-    const previewEl = () => activeEl<HTMLAnchorElement>("[data-np-preview]");
     const setPreviewHidden = (hidden: boolean) => {
-      const preview = previewEl();
-      if (preview) preview.hidden = hidden;
-      const center = expandedCards.find(
-        item => item.trackIndex === expandedCenter
-      );
-      const centerPreview =
-        center?.el.querySelector<HTMLAnchorElement>("[data-np-preview]");
-      if (centerPreview) centerPreview.hidden = hidden;
+      const apply = (card: HTMLElement) => {
+        if (cardTrackIndex(card) !== playbackIndex) return;
+        const preview =
+          card.querySelector<HTMLAnchorElement>("[data-np-preview]");
+        if (preview) preview.hidden = hidden;
+      };
+      deckCards.forEach(apply);
+      expandedCards.forEach(({ el }) => apply(el));
     };
 
     const stopLocalAudio = () => {
@@ -2176,7 +2430,8 @@ const totalLabel = formatTime(first.duration);
 
     const connectSpotify = async (
       track: MusicTrack,
-      autoplay: boolean
+      autoplay: boolean,
+      startAtSeconds = 0
     ): Promise<SpotifyEmbedController | null> => {
       if (!track.spotifyUri) {
         root.dataset.npUnavailable = "true";
@@ -2188,7 +2443,9 @@ const totalLabel = formatTime(first.duration);
           spotifyController.pause();
           spotifyController.loadUri(track.spotifyUri);
           spotifyUri = track.spotifyUri;
-          spotifyController.seek(0);
+          spotifyController.seek(startAtSeconds);
+        } else if (startAtSeconds > 0) {
+          spotifyController.seek(startAtSeconds);
         }
 
         if (autoplay) {
@@ -2258,6 +2515,10 @@ const totalLabel = formatTime(first.duration);
                 }
               });
 
+              if (startAtSeconds > 0) {
+                embed.seek(startAtSeconds);
+              }
+
               if (autoplay || requestedPlay) {
                 requestedPlay = false;
                 embed.play();
@@ -2276,15 +2537,17 @@ const totalLabel = formatTime(first.duration);
       return spotifyController;
     };
 
-    const activateTrack = (autoplay: boolean) => {
-      const track = tracks[index];
+    const loadPlaybackTrack = (targetIndex: number, autoplay: boolean) => {
+      const track = tracks[targetIndex];
       if (!track) return;
 
+      playbackIndex = targetIndex;
       endedHandled = false;
+      localFailed = false;
       durationMs = track.duration * 1000;
       positionMs = 0;
-      paintDuration();
-      paintProgress(0);
+      setPlaying(false);
+      paintAllCards();
 
       if (track.isLocal && !localFailed) {
         source = "local";
@@ -2302,6 +2565,8 @@ const totalLabel = formatTime(first.duration);
             source = "spotify";
             void connectSpotify(track, true);
           });
+        } else {
+          setPlaying(false);
         }
         emitState();
         return;
@@ -2311,14 +2576,13 @@ const totalLabel = formatTime(first.duration);
       stopLocalAudio();
       setPreviewHidden(false);
       root.dataset.npSource = "spotify";
-      // Keep an already-created embed in sync even when the new track is
-      // selected without autoplay. Otherwise the next play would still toggle
-      // the previous track that the controller was loaded with.
       if (spotifyController) {
         void connectSpotify(track, autoplay);
       } else if (autoplay) {
         requestedPlay = true;
         void connectSpotify(track, true);
+      } else {
+        setPlaying(false);
       }
       emitState();
     };
@@ -2362,6 +2626,7 @@ const totalLabel = formatTime(first.duration);
     const slotRotate = [0, -1.15, -2.15, -3.05];
     const slotZ = [4, 3, 2, 1];
     const lastRole = visibleCount - 1;
+    let deckSuspended = false;
 
     const measureDeck = () => {
       remSize = unitRem();
@@ -2388,6 +2653,7 @@ const totalLabel = formatTime(first.duration);
     };
 
     const renderDeck = () => {
+      if (deckSuspended) return;
       const phase = deckOffset;
       const settled =
         !draggingDeck &&
@@ -2462,7 +2728,6 @@ const totalLabel = formatTime(first.duration);
     let deckFrame = 0;
     let deckVelocity = 0;
     let springing = false;
-    let resumeAfterCommit = false;
 
     let draggingDeck = false;
     let dragPointerId = -1;
@@ -2481,10 +2746,7 @@ const totalLabel = formatTime(first.duration);
     let wheelLocked = false;
     let wheelUnlockTimer = 0;
 
-    const pendingMoves: Array<{
-      direction: 1 | -1;
-      autoplay: boolean;
-    }> = [];
+    const pendingMoves: Array<{ direction: 1 | -1 }> = [];
 
     const clampDrag = (value: number) => Math.max(-1, Math.min(1, value));
 
@@ -2494,6 +2756,7 @@ const totalLabel = formatTime(first.duration);
 
     const commitIfNeeded = () => {
       let moved = 0;
+      const count = tracks.length;
 
       while (deckOffset >= 1) {
         deckCards.push(deckCards.shift()!);
@@ -2511,19 +2774,18 @@ const totalLabel = formatTime(first.duration);
 
       if (!moved) return false;
 
+      const previousIndex = index;
       deckOffset = 0;
       deckTarget = 0;
       deckVelocity = 0;
       springing = false;
 
       setActiveCard(deckCards[0]!);
+      index = (((previousIndex + moved) % count) + count) % count;
       applyDeckWindow();
-      const autoplay = resumeAfterCommit;
-      resumeAfterCommit = false;
-      if (!autoplay) pauseCurrent();
-      localFailed = false;
-      activateTrack(autoplay);
+      paintAllCards();
       syncStageHeight();
+      saveMusicState();
       return true;
     };
 
@@ -2570,15 +2832,13 @@ const totalLabel = formatTime(first.duration);
         deckFrame = 0;
         if (pendingMoves.length) {
           const next = pendingMoves.shift()!;
-          slideToTrack(next.direction, next.autoplay);
+          slideToTrack(next.direction);
         }
       }
     };
 
-    const slideToTrack = (direction: 1 | -1, autoplay = false) => {
+    const slideToTrack = (direction: 1 | -1) => {
       if (visibleCount < 2) return;
-      resumeAfterCommit = autoplay;
-      if (!autoplay) pauseCurrent();
       springing = false;
       deckVelocity = 0;
       const base = Math.round(deckOffset);
@@ -2586,29 +2846,64 @@ const totalLabel = formatTime(first.duration);
       startDeck();
     };
 
-    const requestMove = (direction: 1 | -1, autoplay = false) => {
+    const requestMove = (direction: 1 | -1) => {
       const busy =
         draggingDeck || springing || Math.abs(deckTarget - deckOffset) > 0.0005;
 
       if (busy) {
         if (pendingMoves.length < 6) {
-          pendingMoves.push({ direction, autoplay });
+          pendingMoves.push({ direction });
         }
         return;
       }
 
-      slideToTrack(direction, autoplay);
+      slideToTrack(direction);
+    };
+
+    const resumePlayback = () => {
+      const track = tracks[playbackIndex];
+      if (!track) return;
+      if (source === "local" && audio.getAttribute("src")) {
+        if (audio.paused) {
+          void audio.play().catch(() => {
+            localFailed = true;
+            source = "spotify";
+            void connectSpotify(track, true);
+          });
+        }
+        return;
+      }
+      if (spotifyController) {
+        spotifyController.play();
+        return;
+      }
+      requestedPlay = true;
+      void connectSpotify(track, true);
+    };
+
+    const revealExpandedTarget = (target: number) => {
+      if (!expandedOpen || expandedClosing) return;
+      applyExpandedCenter(target);
     };
 
     const jumpToTrack = (targetIndex: number, autoplay: boolean) => {
-      setDeckWindow(targetIndex, autoplay);
+      const count = tracks.length;
+      if (!count) return;
+      const target = ((targetIndex % count) + count) % count;
+      setDeckWindow(target);
+      revealExpandedTarget(target);
+      if (target === playbackIndex) {
+        if (autoplay) resumePlayback();
+        else pauseCurrent();
+      } else {
+        loadPlaybackTrack(target, autoplay);
+      }
     };
 
-    // Re-seat the four-card footer deck on any track in the full collection.
-    // Slot order is current / next / next-next / previous, so both gesture
-    // directions continue through the whole playlist instead of a four-song
-    // loop.
-    function setDeckWindow(centerIndex: number, autoplay: boolean) {
+    // Re-seat the four-card footer deck on any track in the full collection
+    // without touching playback. Card browsing is independent from the song
+    // that is currently sounding.
+    function setDeckWindow(centerIndex: number) {
       const count = tracks.length;
       if (!count) return;
 
@@ -2630,18 +2925,53 @@ const totalLabel = formatTime(first.duration);
       setActiveCard(deckCards[0]!);
       applyDeckWindow();
       renderDeck();
-      localFailed = false;
-      if (!autoplay) pauseCurrent();
-      activateTrack(autoplay);
+      paintAllCards();
       syncStageHeight();
+      saveMusicState();
     }
 
+    const skipTarget = (
+      direction: 1 | -1,
+      fromIndex: number
+    ): number | null => {
+      const count = tracks.length;
+      if (count < 2) return null;
+      if (playMode === "shuffle") {
+        let target = fromIndex;
+        while (target === fromIndex) {
+          target = Math.floor(Math.random() * count);
+        }
+        return target;
+      }
+
+      const raw = fromIndex + direction;
+      if (raw < 0) return playMode === "order" ? null : count - 1;
+      if (raw >= count) return playMode === "order" ? null : 0;
+      return raw;
+    };
+
+    const skipPlayback = (
+      direction: 1 | -1,
+      fromIndex: number,
+      autoplay: boolean
+    ) => {
+      const target = skipTarget(direction, fromIndex);
+      if (target === null) return;
+      setDeckWindow(target);
+      revealExpandedTarget(target);
+      if (target === playbackIndex) {
+        if (autoplay) resumePlayback();
+      } else {
+        loadPlaybackTrack(target, autoplay);
+      }
+    };
+
     const nextTrack = (forceAutoplay?: boolean) => {
-      requestMove(1, forceAutoplay ?? isPlaying);
+      skipPlayback(1, index, forceAutoplay ?? isPlaying);
     };
 
     const previousTrack = () => {
-      requestMove(-1, isPlaying);
+      skipPlayback(-1, index, isPlaying);
     };
 
     const advanceByMode = () => {
@@ -2657,15 +2987,24 @@ const totalLabel = formatTime(first.duration);
       }
 
       if (playMode === "shuffle" && tracks.length > 1) {
-        let target = index;
-        while (target === index) {
+        let target = playbackIndex;
+        while (target === playbackIndex) {
           target = Math.floor(Math.random() * tracks.length);
         }
-        jumpToTrack(target, true);
+        setDeckWindow(target);
+        revealExpandedTarget(target);
+        loadPlaybackTrack(target, true);
         return;
       }
 
-      requestMove(1, true);
+      const target = playbackIndex + 1;
+      if (target < tracks.length) {
+        setDeckWindow(target);
+        revealExpandedTarget(target);
+        loadPlaybackTrack(target, true);
+      } else {
+        setPlaying(false);
+      }
     };
 
     const setMode = (mode: "order" | "repeat" | "shuffle") => {
@@ -2690,14 +3029,21 @@ const totalLabel = formatTime(first.duration);
               : labels.order;
         button.setAttribute("aria-label", `${labels.mode}: ${label}`);
       });
+      saveMusicState();
     };
 
-    const togglePlayback = () => {
-      if (source === "local") {
+    const togglePlayback = (targetIndex = index) => {
+      if (targetIndex !== playbackIndex) {
+        localFailed = false;
+        loadPlaybackTrack(targetIndex, true);
+        return;
+      }
+
+      if (source === "local" && audio.getAttribute("src")) {
         if (audio.paused) {
+          const track = tracks[playbackIndex];
           void audio.play().catch(() => {
             localFailed = true;
-            const track = tracks[index];
             if (track) {
               source = "spotify";
               setPreviewHidden(false);
@@ -2715,10 +3061,32 @@ const totalLabel = formatTime(first.duration);
         return;
       }
 
-      const track = tracks[index];
+      const track = tracks[playbackIndex];
       if (track) {
         requestedPlay = true;
         void connectSpotify(track, true);
+      }
+    };
+
+    const restartTrack = (targetIndex = index) => {
+      if (targetIndex !== playbackIndex) {
+        localFailed = false;
+        loadPlaybackTrack(targetIndex, true);
+        return;
+      }
+      seekToSeconds(0);
+      if (source === "local") {
+        if (audio.getAttribute("src")) {
+          void audio.play().catch(() => {});
+        } else {
+          loadPlaybackTrack(targetIndex, true);
+        }
+      } else if (spotifyController) {
+        spotifyController.seek(0);
+        spotifyController.play();
+      } else {
+        const track = tracks[playbackIndex];
+        if (track) void connectSpotify(track, true);
       }
     };
 
@@ -2747,9 +3115,9 @@ const totalLabel = formatTime(first.duration);
     };
 
     const getState = (): MusicState => {
-      const track = tracks[index]!;
+      const track = tracks[playbackIndex]!;
       return {
-        index,
+        index: playbackIndex,
         count: tracks.length,
         title: track.title,
         artist: track.artist,
@@ -2765,29 +3133,64 @@ const totalLabel = formatTime(first.duration);
     };
 
     // ── Local audio events ────────────────────────────────────────
-    audio.addEventListener("play", () => setPlaying(true));
-    audio.addEventListener("pause", () => setPlaying(false));
-    audio.addEventListener("ended", () => {
-      setPlaying(false);
-      advanceByMode();
-    });
-    audio.addEventListener("loadedmetadata", () => {
-      if (Number.isFinite(audio.duration) && audio.duration > 0) {
-        durationMs = audio.duration * 1000;
-        paintDuration();
-      }
-    });
-    audio.addEventListener("timeupdate", () => {
-      if (!isDragging) paintProgress(audio.currentTime * 1000);
-    });
-    audio.addEventListener("error", () => {
-      if (source !== "local") return;
-      localFailed = true;
-      source = "spotify";
-      setPreviewHidden(false);
-      const track = tracks[index];
-      if (track) void connectSpotify(track, isPlaying);
-    });
+    const audioEventOptions = { signal: audioListeners.signal };
+    audio.addEventListener("play", () => setPlaying(true), audioEventOptions);
+    audio.addEventListener("pause", () => setPlaying(false), audioEventOptions);
+    audio.addEventListener(
+      "ended",
+      () => {
+        setPlaying(false);
+        advanceByMode();
+      },
+      audioEventOptions
+    );
+    audio.addEventListener(
+      "loadedmetadata",
+      () => {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          durationMs = audio.duration * 1000;
+          paintDuration();
+        }
+        if (restorePending) {
+          restorePending = false;
+          const target = clamp(
+            restorePositionMs / 1000,
+            0,
+            Number.isFinite(audio.duration)
+              ? audio.duration
+              : Number.MAX_SAFE_INTEGER
+          );
+          audio.currentTime = target;
+          positionMs = target * 1000;
+          paintAllCards();
+          if (restoreWantsPlayback) {
+            restoreWantsPlayback = false;
+            resumePlayback();
+          }
+        }
+      },
+      audioEventOptions
+    );
+    audio.addEventListener(
+      "timeupdate",
+      () => {
+        if (!isDragging) paintProgress(audio.currentTime * 1000);
+        saveMusicState();
+      },
+      audioEventOptions
+    );
+    audio.addEventListener(
+      "error",
+      () => {
+        if (source !== "local") return;
+        localFailed = true;
+        source = "spotify";
+        setPreviewHidden(false);
+        const track = tracks[playbackIndex];
+        if (track) void connectSpotify(track, isPlaying);
+      },
+      audioEventOptions
+    );
 
     const canStartDeckDrag = (target: EventTarget | null) =>
       !(target instanceof Element) ||
@@ -2873,7 +3276,6 @@ const totalLabel = formatTime(first.duration);
       if (projected > 0.5) target = 1;
       else if (projected < -0.5) target = -1;
 
-      resumeAfterCommit = false;
       deckTarget = target;
       deckVelocity = Math.max(-0.16, Math.min(0.16, dragVelocity * 18));
       springing = true;
@@ -2889,10 +3291,10 @@ const totalLabel = formatTime(first.duration);
       if (pressedRole === 0) {
         openExpanded();
       } else if (pressedRole === 1) {
-        requestMove(1, false);
+        requestMove(1);
       } else if (pressedRole === 2) {
-        requestMove(1, false);
-        requestMove(1, false);
+        requestMove(1);
+        requestMove(1);
       }
       // The deepest card (role 3) intentionally stays inert on hover/click;
       // it still participates in the drag gesture.
@@ -2920,7 +3322,7 @@ const totalLabel = formatTime(first.duration);
         window.clearTimeout(wheelTimer);
         wheelTimer = window.setTimeout(() => {
           if (Math.abs(wheelAccum) >= 24) {
-            requestMove(wheelAccum > 0 ? -1 : 1, false);
+            requestMove(wheelAccum > 0 ? -1 : 1);
           }
           wheelAccum = 0;
           wheelLocked = true;
@@ -2948,9 +3350,12 @@ const totalLabel = formatTime(first.duration);
         body.querySelector<HTMLButtonElement>("[data-np-mode]");
       const seek = body.querySelector<HTMLElement>("[data-np-seek]");
 
+      const cardIndex = () => cardTrackIndex(card);
+      const isPlaybackCard = () => cardIndex() === playbackIndex;
+
       toggle?.addEventListener("click", () => {
         if (card !== activeCard) return;
-        togglePlayback();
+        togglePlayback(cardIndex());
       });
       prevButton?.addEventListener("click", () => {
         if (card !== activeCard) return;
@@ -2962,12 +3367,7 @@ const totalLabel = formatTime(first.duration);
       });
       restartButton?.addEventListener("click", () => {
         if (card !== activeCard) return;
-        seekToSeconds(0);
-        if (source === "local") {
-          void audio.play().catch(() => {});
-        } else {
-          spotifyController?.play();
-        }
+        restartTrack(cardIndex());
       });
       modeButton?.addEventListener("click", () => {
         if (card !== activeCard) return;
@@ -2978,7 +3378,7 @@ const totalLabel = formatTime(first.duration);
 
       if (seek) {
         seek.addEventListener("pointerdown", event => {
-          if (card !== activeCard) return;
+          if (card !== activeCard || !isPlaybackCard()) return;
           isDragging = true;
           seek.dataset.dragging = "true";
           seek.setPointerCapture?.(event.pointerId);
@@ -2986,12 +3386,12 @@ const totalLabel = formatTime(first.duration);
         });
 
         seek.addEventListener("pointermove", event => {
-          if (card !== activeCard || !isDragging) return;
+          if (card !== activeCard || !isDragging || !isPlaybackCard()) return;
           paintProgress(ratioFromPointer(event, seek) * durationMs);
         });
 
         const endSeek = (event: PointerEvent) => {
-          if (card !== activeCard || !isDragging) return;
+          if (card !== activeCard || !isDragging || !isPlaybackCard()) return;
           isDragging = false;
           delete seek.dataset.dragging;
           seekToRatio(ratioFromPointer(event, seek));
@@ -3004,7 +3404,7 @@ const totalLabel = formatTime(first.duration);
         seek.addEventListener("pointerup", endSeek);
         seek.addEventListener("pointercancel", endSeek);
         seek.addEventListener("keydown", event => {
-          if (card !== activeCard) return;
+          if (card !== activeCard || !isPlaybackCard()) return;
           let next = positionMs / 1000;
           if (event.key === "ArrowRight") next += 5;
           else if (event.key === "ArrowLeft") next -= 5;
@@ -3034,6 +3434,7 @@ const totalLabel = formatTime(first.duration);
     let expandedCenterScale = 1.2;
     let expandedStep = 70;
     let expandedBelowSteps: number[] = [];
+    let expandedWheelShift = 0;
     let expandedOpenTimer = 0;
     let expandedCloseTimer = 0;
     let expandedReturnFocus: HTMLElement | null = null;
@@ -3138,24 +3539,33 @@ const totalLabel = formatTime(first.duration);
       wheel.setAttribute("aria-valuemax", String(tracks.length - 1));
       scope(wheel);
 
+      const viewport = document.createElement("div");
+      viewport.className = "np-wheel-viewport";
+      scope(viewport);
+
       const tickLayer = document.createElement("div");
       tickLayer.className = "np-wheel-ticks";
-      const tickCount = 51;
+      const tickCount = 91;
       for (let tick = 0; tick < tickCount; tick += 1) {
         const t = (tick - (tickCount - 1) / 2) / ((tickCount - 1) / 2);
         const falloff = 1 - Math.pow(Math.abs(t), 1.4);
         const line = document.createElement("i");
         line.style.setProperty("--y", `${50 + t * 46}%`);
-        line.style.setProperty("--w", `${0.3 + falloff * 1.0}rem`);
-        line.style.setProperty("--o", String(0.13 + falloff * 0.62));
-        if (tick % 5 === 0 && tick !== (tickCount - 1) / 2)
-          line.classList.add("is-major");
-        if (Math.abs(t) < 0.001) line.classList.add("is-center");
+        line.style.setProperty("--w", `${0.22 + falloff * 0.62}rem`);
+        line.style.setProperty("--o", String(0.12 + falloff * 0.58));
+        if (tick % 5 === 0) line.classList.add("is-major");
         scope(line);
         tickLayer.appendChild(line);
       }
-      wheel.appendChild(tickLayer);
       scope(tickLayer);
+      viewport.appendChild(tickLayer);
+
+      const wheelPointer = document.createElement("span");
+      wheelPointer.className = "np-wheel-pointer";
+      wheelPointer.setAttribute("aria-hidden", "true");
+      scope(wheelPointer);
+
+      wheel.append(viewport, wheelPointer);
 
       const halo = document.createElement("div");
       halo.className = "np-expand-halo";
@@ -3175,6 +3585,7 @@ const totalLabel = formatTime(first.duration);
         scope(svg);
 
         const gradientId = `np-wreath-gold-${side}`;
+        const highlightId = `np-leaf-light-${side}`;
         const defs = document.createElementNS(ns, "defs");
         const gradient = document.createElementNS(ns, "linearGradient");
         gradient.setAttribute("id", gradientId);
@@ -3183,25 +3594,42 @@ const totalLabel = formatTime(first.duration);
         gradient.setAttribute("x2", "0.18");
         gradient.setAttribute("y2", "0");
         [
-          [0, 0.08],
-          [0.28, 0.46],
-          [0.58, 0.94],
-          [0.82, 0.72],
-          [1, 0.28],
-        ].forEach(([offset, opacity]) => {
+          [0, "#6b3d0a"],
+          [0.2, "#c18426"],
+          [0.48, "#f2c15a"],
+          [0.72, "#fff0b8"],
+          [1, "#a96615"],
+        ].forEach(([offset, color]) => {
           const stop = document.createElementNS(ns, "stop");
           stop.setAttribute("offset", String(offset));
-          stop.setAttribute("stop-color", "currentColor");
-          stop.setAttribute("stop-opacity", String(opacity));
+          stop.setAttribute("stop-color", String(color));
           gradient.appendChild(stop);
         });
         defs.appendChild(gradient);
+
+        const highlight = document.createElementNS(ns, "radialGradient");
+        highlight.setAttribute("id", highlightId);
+        highlight.setAttribute("cx", "0.32");
+        highlight.setAttribute("cy", "0.2");
+        highlight.setAttribute("r", "0.82");
+        [
+          [0, "#fff3bd", 0.46],
+          [0.35, "#ffe7a3", 0.2],
+          [1, "#ffffff", 0],
+        ].forEach(([offset, color, opacity]) => {
+          const stop = document.createElementNS(ns, "stop");
+          stop.setAttribute("offset", String(offset));
+          stop.setAttribute("stop-color", String(color));
+          stop.setAttribute("stop-opacity", String(opacity));
+          highlight.appendChild(stop);
+        });
+        defs.appendChild(highlight);
         svg.appendChild(defs);
 
         const stem = document.createElementNS(ns, "path");
         stem.setAttribute(
           "d",
-          "M 220 752 C 232 626 222 512 196 408 C 166 300 134 198 112 82"
+          "M 244 752 C 258 622 246 508 216 398 C 184 288 150 178 116 82"
         );
         stem.setAttribute("pathLength", "1");
         stem.setAttribute("fill", "none");
@@ -3216,7 +3644,7 @@ const totalLabel = formatTime(first.duration);
         const stemGlow = document.createElementNS(ns, "path");
         stemGlow.setAttribute(
           "d",
-          "M 216 744 C 226 626 216 516 191 413 C 162 306 130 202 108 90"
+          "M 240 744 C 252 622 239 512 211 403 C 180 294 146 180 112 90"
         );
         stemGlow.setAttribute("fill", "none");
         stemGlow.setAttribute("stroke", "currentColor");
@@ -3227,27 +3655,127 @@ const totalLabel = formatTime(first.duration);
         scope(stemGlow);
         svg.appendChild(stemGlow);
 
-        const grainPath = "M0 0 C -14 -9 -23 -29 -15 -51 C -1 -40 12 -19 0 0 Z";
-        const grainInner =
-          "M0 -6 C -7 -15 -11 -28 -8 -39 C -2 -30 5 -17 0 -6 Z";
-        const awnPath = "M0 -48 C 9 -62 20 -78 32 -94";
+        const leafPath =
+          "M0 0 C -32 -12 -54 -48 -40 -106 C -12 -96 24 -52 0 0 Z";
+        const leafPathAlt =
+          "M0 0 C -25 -15 -47 -55 -33 -109 C -7 -91 19 -46 0 0 Z";
+        const leafInner =
+          "M-6 -12 C -24 -40 -32 -70 -25 -94 C -12 -74 8 -44 -6 -12 Z";
+        const leafInnerAlt =
+          "M-5 -14 C -20 -44 -27 -73 -21 -96 C -8 -76 7 -42 -5 -14 Z";
+        const midrib = "M0 -3 C -10 -34 -21 -69 -32 -98";
+        const veinA = "M-10 -36 C -23 -44 -32 -55 -36 -66";
+        const veinB = "M-17 -61 C -28 -69 -36 -78 -39 -89";
+        const tipAwn = "M-40 -106 C -44 -118 -46 -128 -44 -139";
 
         const nodes = [
-          { x: 218, y: 704, r: -12, s: 1.12 },
-          { x: 221, y: 652, r: -15, s: 1.08 },
-          { x: 218, y: 602, r: -18, s: 1.04 },
-          { x: 212, y: 554, r: -21, s: 1 },
-          { x: 205, y: 508, r: -24, s: 0.95 },
-          { x: 197, y: 464, r: -27, s: 0.9 },
-          { x: 188, y: 422, r: -30, s: 0.85 },
-          { x: 179, y: 382, r: -33, s: 0.8 },
-          { x: 170, y: 344, r: -36, s: 0.74 },
-          { x: 161, y: 308, r: -39, s: 0.68 },
-          { x: 152, y: 274, r: -42, s: 0.61 },
-          { x: 143, y: 242, r: -45, s: 0.54 },
-          { x: 133, y: 212, r: -48, s: 0.46 },
-          { x: 123, y: 184, r: -51, s: 0.38 },
+          { x: 242, y: 700, r: -24, s: 1.4 },
+          { x: 238, y: 624, r: -29, s: 1.3 },
+          { x: 230, y: 550, r: -34, s: 1.2 },
+          { x: 219, y: 480, r: -39, s: 1.08 },
+          { x: 205, y: 414, r: -44, s: 0.96 },
+          { x: 189, y: 354, r: -49, s: 0.84 },
+          { x: 171, y: 300, r: -54, s: 0.72 },
+          { x: 151, y: 252, r: -59, s: 0.6 },
+          { x: 131, y: 208, r: -64, s: 0.48 },
+          { x: 114, y: 174, r: -68, s: 0.38 },
+          { x: 101, y: 144, r: -72, s: 0.3 },
+          { x: 90, y: 118, r: -76, s: 0.23 },
         ];
+
+        const addLeaf = (
+          parent: SVGGElement,
+          transform: string,
+          scale: number,
+          accent = false,
+          variant = 0
+        ) => {
+          const leaf = document.createElementNS(ns, "g");
+          leaf.setAttribute("transform", transform);
+          const pathData = variant ? leafPathAlt : leafPath;
+          const innerData = variant ? leafInnerAlt : leafInner;
+
+          const shadow = document.createElementNS(ns, "path");
+          shadow.setAttribute("d", pathData);
+          shadow.setAttribute("fill", "#3a2106");
+          shadow.setAttribute("opacity", accent ? "0.28" : "0.42");
+          shadow.setAttribute("transform", "translate(3 5)");
+          leaf.appendChild(shadow);
+
+          const outer = document.createElementNS(ns, "path");
+          outer.setAttribute("d", pathData);
+          outer.setAttribute("fill", `url(#${gradientId})`);
+          outer.setAttribute("stroke", "#6f3d08");
+          outer.setAttribute("stroke-width", accent ? "0.55" : "0.95");
+          outer.setAttribute("stroke-opacity", accent ? "0.35" : "0.62");
+          leaf.appendChild(outer);
+
+          const gloss = document.createElementNS(ns, "path");
+          gloss.setAttribute("d", pathData);
+          gloss.setAttribute("fill", `url(#${highlightId})`);
+          leaf.appendChild(gloss);
+
+          const rim = document.createElementNS(ns, "path");
+          rim.setAttribute("d", pathData);
+          rim.setAttribute("fill", "none");
+          rim.setAttribute("stroke", "#fff8dc");
+          rim.setAttribute("stroke-width", accent ? "0.7" : "1.15");
+          rim.setAttribute("stroke-opacity", accent ? "0.1" : "0.2");
+          leaf.appendChild(rim);
+
+          const inner = document.createElementNS(ns, "path");
+          inner.setAttribute("d", innerData);
+          inner.setAttribute("fill", "#fff1bf");
+          inner.setAttribute("opacity", accent ? "0.14" : "0.28");
+          leaf.appendChild(inner);
+
+          const veins = document.createElementNS(ns, "g");
+          veins.setAttribute("fill", "none");
+          veins.setAttribute("stroke", "#7a4a12");
+          veins.setAttribute("stroke-linecap", "round");
+          veins.setAttribute("stroke-opacity", accent ? "0.35" : "0.6");
+          for (const [d, width] of [
+            [midrib, 1.15],
+            [veinA, 0.8],
+            [veinB, 0.68],
+          ] as const) {
+            const vein = document.createElementNS(ns, "path");
+            vein.setAttribute("d", d);
+            vein.setAttribute("stroke-width", String(width));
+            veins.appendChild(vein);
+          }
+          leaf.appendChild(veins);
+
+          const tip = document.createElementNS(ns, "path");
+          tip.setAttribute("d", tipAwn);
+          tip.setAttribute("fill", "none");
+          tip.setAttribute("stroke", "#fff0b0");
+          tip.setAttribute("stroke-width", accent ? "0.6" : "0.9");
+          tip.setAttribute("stroke-linecap", "round");
+          tip.setAttribute("stroke-opacity", accent ? "0.24" : "0.48");
+          leaf.appendChild(tip);
+
+          const shine = document.createElementNS(ns, "path");
+          shine.setAttribute("d", "M-8 -20 C -18 -40 -23 -65 -18 -84");
+          shine.setAttribute("fill", "none");
+          shine.setAttribute("stroke", "#ffffff");
+          shine.setAttribute("stroke-width", "0.9");
+          shine.setAttribute("stroke-linecap", "round");
+          shine.setAttribute("stroke-opacity", accent ? "0.1" : "0.22");
+          leaf.appendChild(shine);
+
+          const nodeDot = document.createElementNS(ns, "circle");
+          nodeDot.setAttribute("cx", "0");
+          nodeDot.setAttribute("cy", "1.5");
+          nodeDot.setAttribute("r", accent ? "1.2" : "1.8");
+          nodeDot.setAttribute("fill", "#ffe9ab");
+          nodeDot.setAttribute("opacity", accent ? "0.35" : "0.65");
+          leaf.appendChild(nodeDot);
+
+          leaf.setAttribute("data-leaf-scale", String(scale));
+          parent.appendChild(leaf);
+          return leaf;
+        };
 
         nodes.forEach((node, index) => {
           const group = document.createElementNS(ns, "g");
@@ -3257,44 +3785,18 @@ const totalLabel = formatTime(first.duration);
           scope(group);
 
           for (const direction of [1, -1]) {
-            const grain = document.createElementNS(ns, "g");
-            grain.setAttribute(
-              "transform",
-              `rotate(${node.r}) scale(${node.s * direction} ${node.s})`
+            const angle =
+              node.r +
+              (direction === 1 ? (index % 3) - 1 : 1 - (index % 3)) * 2.4;
+            addLeaf(
+              group,
+              `translate(0 ${direction === 1 ? 0 : -16}) rotate(${angle}) scale(${
+                node.s * direction
+              } ${node.s})`,
+              node.s,
+              false,
+              (index + (direction === 1 ? 0 : 1)) % 2
             );
-
-            const outer = document.createElementNS(ns, "path");
-            outer.setAttribute("d", grainPath);
-            outer.setAttribute("fill", `url(#${gradientId})`);
-            outer.setAttribute("stroke", "currentColor");
-            outer.setAttribute("stroke-width", "0.55");
-            outer.setAttribute("stroke-opacity", "0.28");
-            grain.appendChild(outer);
-
-            const inner = document.createElementNS(ns, "path");
-            inner.setAttribute("d", grainInner);
-            inner.setAttribute("fill", "currentColor");
-            inner.setAttribute("opacity", "0.18");
-            grain.appendChild(inner);
-
-            const awn = document.createElementNS(ns, "path");
-            awn.setAttribute("d", awnPath);
-            awn.setAttribute("fill", "none");
-            awn.setAttribute("stroke", "currentColor");
-            awn.setAttribute("stroke-width", "1.05");
-            awn.setAttribute("stroke-linecap", "round");
-            awn.setAttribute("opacity", "0.42");
-            grain.appendChild(awn);
-
-            const nodeDot = document.createElementNS(ns, "circle");
-            nodeDot.setAttribute("cx", "0");
-            nodeDot.setAttribute("cy", "2");
-            nodeDot.setAttribute("r", "1.9");
-            nodeDot.setAttribute("fill", "currentColor");
-            nodeDot.setAttribute("opacity", "0.48");
-            grain.appendChild(nodeDot);
-
-            group.appendChild(grain);
           }
 
           svg.appendChild(group);
@@ -3306,10 +3808,10 @@ const totalLabel = formatTime(first.duration);
         tie.setAttribute("stroke-linecap", "round");
         tie.setAttribute("opacity", "0.4");
         const tieA = document.createElementNS(ns, "path");
-        tieA.setAttribute("d", "M 198 728 C 208 718 228 718 238 730");
+        tieA.setAttribute("d", "M 228 728 C 238 718 258 718 268 730");
         tieA.setAttribute("stroke-width", "2");
         const tieB = document.createElementNS(ns, "path");
-        tieB.setAttribute("d", "M 199 736 C 210 744 228 744 236 738");
+        tieB.setAttribute("d", "M 229 736 C 240 744 258 744 266 738");
         tieB.setAttribute("stroke-width", "1.1");
         tie.append(tieA, tieB);
         svg.appendChild(tie);
@@ -3318,6 +3820,10 @@ const totalLabel = formatTime(first.duration);
       };
 
       wreath.append(makeBranch("left"), makeBranch("right"));
+
+      const floor = document.createElement("div");
+      floor.className = "np-expand-floor";
+      scope(floor);
 
       const sparks = document.createElement("div");
       sparks.className = "np-wreath-sparks";
@@ -3395,7 +3901,17 @@ const totalLabel = formatTime(first.duration);
       hint.textContent = "↑ ↓ · ESC";
       scope(hint);
 
-      dialog.append(glass, halo, sparks, wreath, stage, wheel, close, hint);
+      dialog.append(
+        glass,
+        halo,
+        sparks,
+        wreath,
+        floor,
+        stage,
+        wheel,
+        close,
+        hint
+      );
 
       close.addEventListener("click", () => closeExpanded());
       dialog.addEventListener("cancel", event => {
@@ -3528,6 +4044,8 @@ const totalLabel = formatTime(first.duration);
           !expandedClosing &&
           expandedInteractionReady &&
           Number(el.dataset.npExpandOffset || "0") === 0;
+        const isPlaybackCenter = () =>
+          isCenter() && expandedCenter === playbackIndex;
 
         const wireButton = (selector: string, action: () => void) => {
           const button = body?.querySelector<HTMLButtonElement>(selector);
@@ -3538,17 +4056,14 @@ const totalLabel = formatTime(first.duration);
           });
         };
 
-        wireButton("[data-np-toggle]", togglePlayback);
-        wireButton("[data-np-prev]", () => selectExpanded(expandedCenter - 1));
-        wireButton("[data-np-next]", () => selectExpanded(expandedCenter + 1));
-        wireButton("[data-np-restart]", () => {
-          seekToSeconds(0);
-          if (source === "local") {
-            void audio.play().catch(() => {});
-          } else {
-            spotifyController?.play();
-          }
-        });
+        wireButton("[data-np-toggle]", () => togglePlayback(expandedCenter));
+        wireButton("[data-np-prev]", () =>
+          skipPlayback(-1, expandedCenter, isPlaying)
+        );
+        wireButton("[data-np-next]", () =>
+          skipPlayback(1, expandedCenter, isPlaying)
+        );
+        wireButton("[data-np-restart]", () => restartTrack(expandedCenter));
         wireButton("[data-np-mode]", () => {
           const order = ["order", "repeat", "shuffle"] as const;
           const next = order[(order.indexOf(playMode) + 1) % order.length]!;
@@ -3558,7 +4073,7 @@ const totalLabel = formatTime(first.duration);
         const expandedSeek = body?.querySelector<HTMLElement>("[data-np-seek]");
         if (expandedSeek) {
           expandedSeek.addEventListener("pointerdown", event => {
-            if (!isCenter()) return;
+            if (!isPlaybackCenter()) return;
             event.preventDefault();
             event.stopPropagation();
             isDragging = true;
@@ -3567,11 +4082,11 @@ const totalLabel = formatTime(first.duration);
             paintProgress(ratioFromPointer(event, expandedSeek) * durationMs);
           });
           expandedSeek.addEventListener("pointermove", event => {
-            if (!isCenter() || !isDragging) return;
+            if (!isPlaybackCenter() || !isDragging) return;
             paintProgress(ratioFromPointer(event, expandedSeek) * durationMs);
           });
           const endExpandedSeek = (event: PointerEvent) => {
-            if (!isCenter() || !isDragging) return;
+            if (!isPlaybackCenter() || !isDragging) return;
             isDragging = false;
             delete expandedSeek.dataset.dragging;
             seekToRatio(ratioFromPointer(event, expandedSeek));
@@ -3744,11 +4259,14 @@ const totalLabel = formatTime(first.duration);
       const outerHalf = (expandedBaseH * expandedCenterScale * 0.56) / 2;
       const maxHalf = window.innerHeight * 0.43;
       expandedStep = clamp((maxHalf - outerHalf) / 4, 36, 88);
-      expandedBelowSteps = [1, 2, 3, 4].map(index => index * expandedStep);
+      const centerHeight = expandedBaseH * expandedCenterScale;
+      expandedBelowSteps = [0.86, 1.2, 1.46, 1.68].map(
+        factor => factor * centerHeight
+      );
 
       if (expandedWheel) {
         const half = (expandedBaseW * expandedCenterScale) / 2;
-        expandedWheel.style.left = `calc(50% + ${half + 18}px)`;
+        expandedWheel.style.left = `calc(50% + ${half + 50}px)`;
       }
 
       expandedDialog?.style.setProperty("--np-expand-h", `${expandedBaseH}px`);
@@ -3779,12 +4297,12 @@ const totalLabel = formatTime(first.duration);
         el.hidden = false;
         const sign = Math.sign(offset);
         const scale = scaleFactors[abs]! * expandedCenterScale;
-        const angle = sign * abs * 8;
+        const angle = sign * abs * 7;
         const offsetY =
           offset === 0
             ? 0
-            : offset < 0
-              ? offset * expandedStep
+            : offset > 0
+              ? -offset * expandedStep
               : (expandedBelowSteps[abs - 1] ?? 0);
 
         el.style.transform = `translate(-50%, -50%) translateY(${offsetY}px) translateZ(${
@@ -3797,8 +4315,7 @@ const totalLabel = formatTime(first.duration);
             : blurFactors[abs]! > 0.01
               ? `blur(${blurFactors[abs]}px)`
               : "none";
-        el.style.zIndex =
-          abs === 0 ? "100" : String(Math.max(10, 62 - abs * 4));
+        el.style.zIndex = abs === 0 ? "50" : String(Math.max(1, 50 - offset));
         el.dataset.npExpandOffset = String(offset);
 
         const clickable = abs >= 1 && abs <= 3;
@@ -3869,7 +4386,7 @@ const totalLabel = formatTime(first.duration);
       center.el.style.visibility = "visible";
       center.el.style.opacity = final?.opacity ?? "1";
       center.el.style.filter = "none";
-      center.el.style.zIndex = "100";
+      center.el.style.zIndex = "50";
       center.el.tabIndex = -1;
       center.el.removeAttribute("aria-hidden");
     };
@@ -3949,27 +4466,58 @@ const totalLabel = formatTime(first.duration);
         window.setTimeout(() => {
           if (!expandedOpen || expandedClosing) return;
           expandedDialog?.classList.add("is-wreath-ready");
-        }, 90)
+        }, 50)
       );
     };
 
     const revealExpandedRing = () => {
       expandedRevealTimers.push(
-        window.setTimeout(() => revealExpandedPair(1), 60)
+        window.setTimeout(() => revealExpandedPair(1), 40)
       );
       expandedRevealTimers.push(
-        window.setTimeout(() => revealExpandedPair(2), 150)
+        window.setTimeout(() => revealExpandedPair(2), 105)
       );
       expandedRevealTimers.push(
-        window.setTimeout(() => revealExpandedPair(3), 240)
+        window.setTimeout(() => revealExpandedPair(3), 170)
       );
       expandedRevealTimers.push(
-        window.setTimeout(() => revealExpandedPair(4), 330)
+        window.setTimeout(() => revealExpandedPair(4), 235)
       );
       expandedRevealTimers.push(
-        window.setTimeout(() => finishExpandedReveal(), 700)
+        window.setTimeout(() => finishExpandedReveal(), 600)
       );
     };
+
+    const shiftExpandedWheel = (delta: number) => {
+      if (!expandedWheel || !delta) return;
+      const tickLayer =
+        expandedWheel.querySelector<HTMLElement>(".np-wheel-ticks");
+      if (!tickLayer) return;
+      const layerHeight = tickLayer.getBoundingClientRect().height;
+      const ticks = tickLayer.querySelectorAll("i").length;
+      const spacing = (layerHeight * 0.92) / Math.max(1, ticks - 1);
+      expandedWheelShift -= delta * spacing;
+      tickLayer.style.setProperty(
+        "--np-wheel-shift",
+        `${expandedWheelShift}px`
+      );
+    };
+
+    function applyExpandedCenter(target: number) {
+      const count = tracks.length;
+      if (!count) return;
+      const next = ((target % count) + count) % count;
+      const previous = expandedCenter;
+      let delta = next - previous;
+      if (delta > count / 2) delta -= count;
+      if (delta < -count / 2) delta += count;
+      expandedCenter = next;
+      shiftExpandedWheel(delta);
+      setDeckWindow(next);
+      renderExpanded();
+      paintAllCards();
+      syncExpandedProgress();
+    }
 
     const selectExpanded = (trackIndex: number) => {
       if (!expandedOpen || expandedClosing || !expandedInteractionReady) return;
@@ -3978,32 +4526,24 @@ const totalLabel = formatTime(first.duration);
 
       const next = ((trackIndex % count) + count) % count;
       if (next === expandedCenter) return;
-
-      expandedCenter = next;
-      setDeckWindow(next, isPlaying);
-      renderExpanded();
-      syncExpandedProgress();
+      applyExpandedCenter(next);
     };
 
     const syncExpandedProgress = () => {
-      const center = expandedCards.find(
-        item => item.trackIndex === expandedCenter
-      );
-      if (!center) return;
-
-      const seek = center.el.querySelector<HTMLElement>("[data-np-seek]");
-      const current = center.el.querySelector<HTMLElement>("[data-np-current]");
-      const ratio = durationMs > 0 ? positionMs / durationMs : 0;
-      seek?.style.setProperty("--np-p", `${ratio * 100}%`);
-      if (current) current.textContent = formatTime(positionMs);
+      paintAllCards();
     };
 
     function openExpanded() {
       if (expandedOpen || expandedClosing) return;
 
+      deckSuspended = false;
       settleDeck();
+      deckSuspended = true;
       createExpanded();
-      if (!expandedDialog || !expandedStage) return;
+      if (!expandedDialog || !expandedStage) {
+        deckSuspended = false;
+        return;
+      }
 
       clearExpandedTimers();
       if (root!.dataset.npReturning === "true") {
@@ -4012,6 +4552,10 @@ const totalLabel = formatTime(first.duration);
       }
       measureExpanded();
       expandedCenter = index;
+      expandedWheelShift = 0;
+      expandedWheel
+        ?.querySelector<HTMLElement>(".np-wheel-ticks")
+        ?.style.setProperty("--np-wheel-shift", "0px");
       expandedInteractionReady = false;
       renderExpanded();
       captureExpandedFinals();
@@ -4112,20 +4656,21 @@ const totalLabel = formatTime(first.duration);
         showExpandedCenter();
         expandedDialog?.classList.add("is-open");
         expandedRevealTimers.push(
-          window.setTimeout(() => revealExpandedRing(), 30)
+          window.setTimeout(() => revealExpandedRing(), 20)
         );
       };
 
       fly.addEventListener("transitionend", event => {
         if (event.propertyName === "transform") finishOpen();
       });
-      expandedOpenTimer = window.setTimeout(finishOpen, 720);
+      expandedOpenTimer = window.setTimeout(finishOpen, 560);
     }
 
     function closeExpanded() {
       if (!expandedOpen || expandedClosing) return;
       expandedClosing = true;
       expandedInteractionReady = false;
+      deckSuspended = true;
       setExpandedCenterInteractive(false);
       clearExpandedTimers();
 
@@ -4183,7 +4728,8 @@ const totalLabel = formatTime(first.duration);
           expandedRevealTimers.push(
             window.setTimeout(() => {
               if (!expandedOpen) delete root!.dataset.npReturning;
-            }, 320)
+              deckSuspended = false;
+            }, 240)
           );
           return;
         }
@@ -4192,7 +4738,7 @@ const totalLabel = formatTime(first.duration);
         entry.card.style.opacity = entry.opacity;
         entry.card.style.filter = entry.filter;
         expandedRevealTimers.push(
-          window.setTimeout(() => revealDeck(index + 1), index === 0 ? 30 : 90)
+          window.setTimeout(() => revealDeck(index + 1), index === 0 ? 20 : 65)
         );
       };
 
@@ -4222,6 +4768,7 @@ const totalLabel = formatTime(first.duration);
             entry.card.style.filter = entry.filter;
           });
           delete root!.dataset.npReturning;
+          deckSuspended = false;
         } else {
           revealDeck(0);
         }
@@ -4245,7 +4792,7 @@ const totalLabel = formatTime(first.duration);
       fly.addEventListener("transitionend", event => {
         if (event.propertyName === "transform") finishClose();
       });
-      expandedCloseTimer = window.setTimeout(finishClose, 720);
+      expandedCloseTimer = window.setTimeout(finishClose, 560);
     }
 
     window.addEventListener("resize", () => {
@@ -4306,10 +4853,57 @@ const totalLabel = formatTime(first.duration);
 
     // ── Initialise ────────────────────────────────────────────────
     setActiveCard(deckCards[0]!);
-    setMode("order");
-    activateTrack(false);
+    setMode(playMode);
+
+    if (liveState) {
+      globalPlayer.started = true;
+      if (source === "local" && audio.getAttribute("src")) {
+        root.dataset.npSource = "local";
+        setPreviewHidden(true);
+        positionMs = Number.isFinite(audio.currentTime)
+          ? audio.currentTime * 1000
+          : globalPlayer.positionMs;
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          durationMs = audio.duration * 1000;
+        }
+        setPlaying(!audio.paused);
+      } else if (source === "local") {
+        loadPlaybackTrack(playbackIndex, false);
+      } else {
+        root.dataset.npSource = "spotify";
+        setPreviewHidden(false);
+        positionMs = globalPlayer.positionMs;
+        isPlaying = false;
+        paintAllCards();
+        const track = tracks[playbackIndex];
+        if (track) {
+          void connectSpotify(
+            track,
+            globalPlayer.playing,
+            globalPlayer.positionMs / 1000
+          );
+        }
+      }
+    } else if (storedState) {
+      if (source === "local") {
+        loadPlaybackTrack(playbackIndex, false);
+      } else {
+        restorePending = false;
+        positionMs = storedState.position * 1000;
+        isPlaying = false;
+        paintAllCards();
+        const track = tracks[playbackIndex];
+        if (track) {
+          void connectSpotify(track, storedState.playing, storedState.position);
+        }
+      }
+    } else {
+      loadPlaybackTrack(0, false);
+    }
+
     paintDuration();
-    paintProgress(0);
+    paintProgress(positionMs);
+    saveMusicState(true);
     syncStageHeight();
     measureDeck();
     renderDeck();
@@ -4317,6 +4911,7 @@ const totalLabel = formatTime(first.duration);
     document.addEventListener(
       "astro:before-swap",
       () => {
+        saveMusicState(true);
         clearExpandedTimers();
         if (expandedFly) {
           expandedFly.remove();
@@ -4331,19 +4926,28 @@ const totalLabel = formatTime(first.duration);
             "is-ui-ready"
           );
           if (expandedDialog.open) expandedDialog.close();
+          expandedDialog.remove();
+          expandedDialog = null;
+          expandedStage = null;
+          expandedWheel = null;
+          expandedCards = [];
+          expandedFinalStyles.clear();
         }
         expandedOpen = false;
         expandedClosing = false;
         expandedInteractionReady = false;
+        expandedWheelShift = 0;
+        deckSuspended = false;
         delete root!.dataset.npReturning;
         deckReturnFinals = [];
         document.body.style.overflow = expandedPreviousOverflow;
       },
-      { once: true }
+      { signal: lifecycle.signal }
     );
 
     if ("ResizeObserver" in window) {
       const stageObserver = new ResizeObserver(() => {
+        if (deckSuspended) return;
         measureDeck();
         renderDeck();
       });
@@ -4400,5 +5004,23 @@ const totalLabel = formatTime(first.duration);
   };
 
   document.addEventListener("astro:page-load", initNowPlaying);
+  window.addEventListener("pagehide", () => {
+    const player = getGlobalMusicPlayer();
+    try {
+      sessionStorage.setItem(
+        MUSIC_STATE_KEY,
+        JSON.stringify({
+          trackIndex: player.trackIndex,
+          position: player.positionMs / 1000,
+          playing: player.playing,
+          mode: player.mode,
+          browseIndex: player.browseIndex,
+          source: player.source,
+        })
+      );
+    } catch {
+      /* storage can be unavailable */
+    }
+  });
   initNowPlaying();
 </script>
