@@ -210,7 +210,7 @@ export const SITE = {
     ],
   },
   likes: {
-    enabled: true, // show/hide the local like button in the footer
-    base: 3744, // displayed count before the visitor likes the site
+    enabled: true, // show/hide the shared like button in the footer
+    base: 3744, // starting total when the public counter is first created
   },
 } as const;

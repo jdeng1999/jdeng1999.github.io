@@ -96,11 +96,15 @@ const { id, label = "Image viewer" } = Astro.props;
                 draggable="false"
                 data-lb-img-next
               />
+              <span
+                class="lightbox-end-note"
+                data-lb-end-note
+                aria-hidden="true"
+              >
+                - end -
+              </span>
             </div>
           </div>
-          <span class="lightbox-end-note" data-lb-end-note aria-hidden="true">
-            - end -
-          </span>
         </div>
         <p class="lightbox-caption text-foreground/80" data-lb-caption></p>
       </div>
@@ -817,11 +821,11 @@ const { id, label = "Image viewer" } = Astro.props;
   .lightbox-end-note {
     position: absolute;
     top: 50%;
-    right: 0.5rem;
+    left: 22%;
     font-family: var(--font-firacode), ui-monospace, monospace;
     font-size: 0.68rem;
     letter-spacing: 0.22em;
-    color: color-mix(in srgb, var(--foreground) 22%, transparent);
+    color: color-mix(in srgb, var(--foreground) 26%, transparent);
     opacity: 0;
     pointer-events: none;
     user-select: none;
@@ -829,7 +833,7 @@ const { id, label = "Image viewer" } = Astro.props;
     transition: opacity 0.15s ease;
   }
 
-  .lightbox-slider[data-at-end="true"] .lightbox-end-note {
+  .lightbox-slide[data-empty="true"] .lightbox-end-note {
     opacity: 1;
   }
 

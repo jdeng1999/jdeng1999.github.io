@@ -71,8 +71,8 @@ export default defineConfig({
         optional: true,
       }),
       // ── Personal / social links ──────────────────────────────────────────
-      // Set these in .env (never commit personal data to the repo).
-      // Any variable left unset will simply hide that social link.
+      // Set these in .env to override the public defaults in src/constants.ts.
+      // Set a variable to an empty string to hide that social link.
       // See .env.example for the full list.
       PUBLIC_SOCIAL_GITHUB: envField.string({
         access: "public",

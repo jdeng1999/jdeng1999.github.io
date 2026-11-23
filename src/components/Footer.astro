@@ -75,7 +75,11 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
         <p class="max-w-sm text-center font-firacode text-[11px] leading-relaxed tracking-wide text-foreground/55 sm:text-start">
           {t("footer.desc")}
         </p>
+      </div>
 
+      <!-- Connect: social links and the shared like counter -->
+      <div class="footer-connect flex flex-col items-center gap-3 sm:items-start">
+        <p class="footer-connect-label">{t("footer.connect")}</p>
         <nav class="flex flex-col items-center gap-3 sm:items-start">
           <ul class="footer-socials flex items-center gap-3" role="list">
             {socialLinks.map(social => (
@@ -154,9 +158,24 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
     </div>
 
     <div class="mt-4 text-center">
-      <p class="font-firacode text-[11px] tracking-wide text-foreground/50">
-        &copy; {currentYear}
-        {SITE.title}. {t("footer.rights")}
+      <p class="footer-copyright">
+        <svg
+          class="footer-copyright-mark"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M15.6 8.2a4.8 4.8 0 1 0 0 7.6"></path>
+        </svg>
+        <span class="sr-only">{t("footer.copyright")}</span>
+        <span>
+          {currentYear} {SITE.title}. {t("footer.rights")}
+        </span>
       </p>
     </div>
   </div>
@@ -187,7 +206,44 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
     outline-offset: 4px;
   }
 
-  /* Footer layout: brand | credits | music */
+  .footer-connect {
+    gap: 0.7rem;
+  }
+
+  .footer-connect-label {
+    margin: 0;
+    color: color-mix(in srgb, var(--color-foreground) 38%, transparent);
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .footer-socials {
+    gap: 0.3rem;
+  }
+
+  .footer-copyright {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin: 0;
+    color: color-mix(in srgb, var(--color-foreground) 50%, transparent);
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
+  }
+
+  .footer-copyright-mark {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    color: color-mix(in srgb, var(--color-foreground) 64%, transparent);
+    transform: translateY(-0.01em);
+  }
+
+  /* Footer layout: brand | connect | music */
   .footer-grid {
     display: grid;
     gap: 2.5rem;
@@ -197,7 +253,7 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
     .footer-grid {
       grid-template-columns: minmax(0, 1fr) minmax(0, 31rem);
       align-items: start;
-      gap: 2rem 3.5rem;
+      gap: 2.25rem 3rem;
     }
 
     .footer-brand {
@@ -205,16 +261,23 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
       grid-row: 1;
     }
 
+    .footer-connect {
+      grid-column: 1;
+      grid-row: 2;
+      justify-self: center;
+    }
+
+    .footer-credits {
+      grid-column: 2;
+      grid-row: 2;
+      justify-self: end;
+      align-self: center;
+    }
+
     .footer-music {
       grid-column: 2;
       grid-row: 1;
       justify-self: end;
-    }
-
-    .footer-credits {
-      grid-column: 1 / -1;
-      grid-row: 2;
-      justify-self: center;
     }
   }
 
@@ -230,11 +293,16 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
       grid-row: 1;
     }
 
-    .footer-credits {
+    .footer-connect {
       grid-column: 2;
       grid-row: 1;
       justify-self: center;
-      transform: translateX(-1.5rem);
+    }
+
+    .footer-credits {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      justify-self: center;
     }
 
     .footer-music {
@@ -246,6 +314,10 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
 
   .footer-social-btn {
     border-radius: 0.4rem;
+  }
+
+  .footer-social-btn:hover {
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
   }
 
   .footer-credits {

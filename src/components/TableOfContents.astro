@@ -35,7 +35,7 @@ if (tocHeadings.length === 0) {
           class="toc-link block font-firacode text-[12.5px] text-foreground/60 no-underline hover:text-accent"
           data-toc-link
         >
-          {heading.text}
+          <span class="toc-label">{heading.text}</span>
         </a>
       </li>
     ))}
@@ -160,6 +160,210 @@ if (tocHeadings.length === 0) {
   });
 </script>
 
+<script>
+  let tocInteractionCleanup: AbortController | null = null;
+
+  function initTocInteractions() {
+    tocInteractionCleanup?.abort();
+    const controller = new AbortController();
+    tocInteractionCleanup = controller;
+    const { signal } = controller;
+
+    let preview = document.getElementById("toc-hover-preview");
+    if (!preview) {
+      preview = document.createElement("div");
+      preview.id = "toc-hover-preview";
+      preview.className = "toc-hover-preview";
+      preview.setAttribute("aria-hidden", "true");
+      document.body.appendChild(preview);
+    }
+
+    const hidePreview = () => {
+      preview?.classList.remove("is-open");
+      document
+        .querySelectorAll<HTMLElement>(".toc-link.is-previewing")
+        .forEach(link => link.classList.remove("is-previewing"));
+    };
+
+    const showPreview = (link: HTMLAnchorElement) => {
+      if (!preview || link.closest(".mobile-toc")) return;
+      if (link.scrollWidth <= link.clientWidth + 2) {
+        hidePreview();
+        return;
+      }
+
+      const rect = link.getBoundingClientRect();
+      preview.textContent = link.textContent?.trim() ?? "";
+      const previewWidth = preview.offsetWidth;
+      const left = Math.min(
+        Math.max(8, rect.left - 7),
+        window.innerWidth - previewWidth - 8
+      );
+      preview.style.left = `${Math.round(left)}px`;
+      preview.style.top = `${Math.round(rect.top - 3)}px`;
+      preview.classList.add("is-open");
+
+      document
+        .querySelectorAll<HTMLElement>(".toc-link.is-previewing")
+        .forEach(item => {
+          if (item !== link) item.classList.remove("is-previewing");
+        });
+      link.classList.add("is-previewing");
+    };
+
+    document
+      .querySelectorAll<HTMLAnchorElement>(".toc-link[data-toc-link]")
+      .forEach(link => {
+        if (link.closest(".mobile-toc")) return;
+        link.addEventListener(
+          "pointerenter",
+          event => {
+            if (event.pointerType === "touch") return;
+            showPreview(link);
+          },
+          { signal }
+        );
+        link.addEventListener("pointerleave", hidePreview, { signal });
+        link.addEventListener("focus", () => showPreview(link), { signal });
+        link.addEventListener("blur", hidePreview, { signal });
+      });
+
+    window.addEventListener("scroll", hidePreview, {
+      passive: true,
+      capture: true,
+      signal,
+    });
+    window.addEventListener("resize", hidePreview, { signal });
+
+    // Mobile: drag a truncated heading horizontally with edge resistance.
+    document
+      .querySelectorAll<HTMLAnchorElement>(
+        ".mobile-toc .toc-link[data-toc-link]"
+      )
+      .forEach(link => {
+        const label = link.querySelector<HTMLElement>(".toc-label");
+        if (!label) return;
+
+        let shift = 0;
+        let dragging = false;
+        let moved = false;
+        let startX = 0;
+        let startShift = 0;
+        let pointerId = -1;
+
+        const minShift = () =>
+          Math.min(0, link.clientWidth - label.scrollWidth);
+
+        const apply = (value: number, animate: boolean) => {
+          shift = value;
+          link.classList.toggle("is-toc-shifted", value < -0.5);
+          label.style.transition = animate ? "" : "none";
+          label.style.setProperty("--toc-shift", `${value}px`);
+        };
+
+        link.addEventListener(
+          "pointerdown",
+          event => {
+            if (event.pointerType === "mouse") return;
+            if (label.scrollWidth <= link.clientWidth + 2) return;
+
+            dragging = true;
+            moved = false;
+            pointerId = event.pointerId;
+            startX = event.clientX;
+            startShift = shift;
+            link.classList.add("is-toc-dragging");
+
+            try {
+              link.setPointerCapture?.(event.pointerId);
+            } catch {
+              /* pointer may already be gone */
+            }
+          },
+          { signal }
+        );
+
+        link.addEventListener(
+          "pointermove",
+          event => {
+            if (!dragging || event.pointerId !== pointerId) return;
+
+            const dx = event.clientX - startX;
+            if (Math.abs(dx) > 4) moved = true;
+
+            const min = minShift();
+            let next = startShift + dx;
+            if (next > 0) next *= 0.3;
+            else if (next < min) next = min + (next - min) * 0.3;
+
+            apply(next, false);
+            if (moved) event.preventDefault();
+          },
+          { signal }
+        );
+
+        const endDrag = (event: PointerEvent) => {
+          if (!dragging || event.pointerId !== pointerId) return;
+
+          dragging = false;
+          pointerId = -1;
+          link.classList.remove("is-toc-dragging");
+
+          const min = minShift();
+          apply(Math.max(min, Math.min(0, shift)), true);
+
+          try {
+            if (link.hasPointerCapture?.(event.pointerId)) {
+              link.releasePointerCapture(event.pointerId);
+            }
+          } catch {
+            /* capture may already be released */
+          }
+
+          if (moved) {
+            link.dataset.tocDragged = "true";
+            window.setTimeout(() => {
+              delete link.dataset.tocDragged;
+            }, 240);
+          }
+        };
+
+        link.addEventListener("pointerup", endDrag, { signal });
+        link.addEventListener("pointercancel", endDrag, { signal });
+        link.addEventListener(
+          "click",
+          event => {
+            if (link.dataset.tocDragged !== "true") return;
+            event.preventDefault();
+            event.stopPropagation();
+          },
+          { capture: true, signal }
+        );
+
+        window.addEventListener(
+          "resize",
+          () => {
+            apply(Math.max(minShift(), Math.min(0, shift)), false);
+          },
+          { signal }
+        );
+      });
+
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        hidePreview();
+        controller.abort();
+        tocInteractionCleanup = null;
+      },
+      { once: true, signal }
+    );
+  }
+
+  initTocInteractions();
+  document.addEventListener("astro:page-load", initTocInteractions);
+</script>
+
 <style>
   .toc-navigation {
     position: relative;
@@ -205,9 +409,64 @@ if (tocHeadings.length === 0) {
     );
   }
 
+  .toc-label {
+    display: block;
+    width: max-content;
+    min-width: 100%;
+    transform: translate3d(var(--toc-shift, 0px), 0, 0);
+    transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .toc-link.is-toc-dragging .toc-label {
+    transition: none;
+  }
+
+  .toc-link.is-previewing {
+    color: transparent !important;
+    text-shadow: none !important;
+  }
+
   .toc-link.active {
     color: var(--accent) !important;
     font-weight: 500;
     text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+
+  :global(.toc-hover-preview) {
+    position: fixed;
+    z-index: 220;
+    max-width: none;
+    padding: 0.2rem 0.45rem;
+    border-radius: 0.35rem;
+    background: color-mix(in srgb, var(--background) 96%, transparent);
+    box-shadow: 0 0 14px 6px
+      color-mix(in srgb, var(--background) 80%, transparent);
+    color: var(--accent);
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    white-space: nowrap;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  :global(.toc-hover-preview.is-open) {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  @media (max-width: 1023px) {
+    :global(.mobile-toc) .toc-link {
+      touch-action: pan-y;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    :global(.mobile-toc) .toc-link.is-toc-shifted {
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
   }
 </style>

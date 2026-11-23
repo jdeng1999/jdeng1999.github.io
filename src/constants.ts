@@ -25,34 +25,49 @@ interface Social {
 }
 
 // ── Profile socials ────────────────────────────────────────────────────────
-// URLs come from environment variables (see .env.example).
-// Any entry whose URL is empty/unset is automatically excluded from the list,
-// so forkers of this repo won't expose the original author's personal data.
+// URLs can be overridden with PUBLIC_SOCIAL_* environment variables (see
+// .env.example). The deployed build has no .env file, so public defaults keep
+// the site's profile links visible; forks should replace them or set the env
+// variables. An empty value hides that link.
+const envOrFallback = (value: string | undefined, fallback: string) =>
+  value === "" ? "" : (value ?? fallback);
+
+const socialGithub = envOrFallback(
+  PUBLIC_SOCIAL_GITHUB,
+  "https://github.com/jdeng1999"
+);
+const socialX = envOrFallback(PUBLIC_SOCIAL_X, "https://x.com/JiaDeng12947");
+const socialLinkedin = envOrFallback(
+  PUBLIC_SOCIAL_LINKEDIN,
+  "http://www.linkedin.com/in/jdeng1999"
+);
+const socialEmail = envOrFallback(PUBLIC_SOCIAL_EMAIL, "dengjiaaa@gmail.com");
+
 export const SOCIALS: Social[] = (
   [
     {
       name: "GitHub",
-      href: PUBLIC_SOCIAL_GITHUB ?? "",
+      href: socialGithub,
       linkTitle: `${SITE.title} on GitHub`,
       icon: IconGithubSolid,
     },
     {
       name: "X",
-      href: PUBLIC_SOCIAL_X ?? "",
+      href: socialX,
       linkTitle: `${SITE.title} on X`,
       icon: IconXSolid,
     },
     {
       name: "LinkedIn",
-      href: PUBLIC_SOCIAL_LINKEDIN ?? "",
+      href: socialLinkedin,
       linkTitle: `${SITE.title} on LinkedIn`,
       icon: IconLinkedinSolid,
     },
     {
       name: "Mail",
-      href: PUBLIC_SOCIAL_EMAIL
+      href: socialEmail
         ? `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-            PUBLIC_SOCIAL_EMAIL
+            socialEmail
           )}`
         : "",
       linkTitle: `Send an email to ${SITE.title}`,

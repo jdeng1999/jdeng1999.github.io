@@ -1,10 +1,11 @@
 ---
 /**
- * FooterLike — a lightweight, local-only like counter.
+ * FooterLike — a shared like counter backed by a public counting API.
  *
- * The site is fully static, so there is no backend to aggregate likes.
- * The button remembers the visitor's own like in localStorage and keeps
- * the display count in sync, which is enough for the footer affordance.
+ * The site is fully static, so the running total lives in a small public
+ * counter service. Every visitor sees and increments the same number, while
+ * the visitor's own pressed state is remembered in localStorage. If the
+ * network request fails, the optimistic increment is rolled back.
  */
 interface Props {
   base?: number;
@@ -116,6 +117,7 @@ const formatted = new Intl.NumberFormat(Astro.currentLocale || "en").format(
     color: var(--color-accent);
     border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    cursor: default;
   }
 
   .footer-like[aria-pressed="true"] .footer-like-heart {
@@ -156,6 +158,12 @@ const formatted = new Intl.NumberFormat(Astro.currentLocale || "en").format(
 
 <script>
   const STORAGE_KEY = "jdeng:liked";
+  const LIKE_API = "https://countapi.mileshilliard.com/api/v1";
+  const LIKE_KEY = "jdeng1999_github_io_footer_likes";
+
+  let remoteLikes: number | null = null;
+  let remotePromise: Promise<number | null> | null = null;
+  let localChange = 0;
 
   const readLiked = () => {
     try {
@@ -173,33 +181,106 @@ const formatted = new Intl.NumberFormat(Astro.currentLocale || "en").format(
     }
   };
 
-  const sync = () => {
+  const likeButtons = () =>
+    Array.from(
+      document.querySelectorAll<HTMLButtonElement>("[data-footer-like]")
+    );
+
+  const paint = () => {
     const liked = readLiked();
     const locale = document.documentElement.lang || "en";
+    const formatter = new Intl.NumberFormat(locale);
 
-    document
-      .querySelectorAll<HTMLButtonElement>("[data-footer-like]")
-      .forEach(button => {
-        const base = Number(button.dataset.base ?? 0);
-        const count = button.querySelector<HTMLElement>(
-          "[data-footer-like-count]"
-        );
-        const label = button.querySelector<HTMLElement>(
-          "[data-footer-like-label]"
-        );
+    likeButtons().forEach(button => {
+      const base = Number(button.dataset.base ?? 0);
+      const count = button.querySelector<HTMLElement>(
+        "[data-footer-like-count]"
+      );
+      const label = button.querySelector<HTMLElement>(
+        "[data-footer-like-label]"
+      );
 
-        button.setAttribute("aria-pressed", String(liked));
+      button.setAttribute("aria-pressed", String(liked));
+      if (count) count.textContent = formatter.format(remoteLikes ?? base);
+      if (label) label.textContent = button.dataset.labelLike ?? "Likes";
+    });
+  };
 
-        if (count) {
-          count.textContent = new Intl.NumberFormat(locale).format(
-            liked ? base + 1 : base
-          );
-        }
-
-        if (label) {
-          label.textContent = button.dataset.labelLike ?? "Likes";
-        }
+  const request = async (url: string) => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 8000);
+    try {
+      return await fetch(url, {
+        signal: controller.signal,
+        cache: "no-store",
+        headers: { Accept: "application/json" },
       });
+    } finally {
+      window.clearTimeout(timer);
+    }
+  };
+
+  const readValue = async (response: Response) => {
+    if (!response.ok) return null;
+    const data = (await response.json()) as { value?: number | string };
+    const value = Number(data.value);
+    return Number.isFinite(value) ? value : null;
+  };
+
+  const loadRemote = () => {
+    if (remotePromise) return remotePromise;
+
+    const promise = (async () => {
+      const version = localChange;
+      try {
+        let response = await request(`${LIKE_API}/get/${LIKE_KEY}`);
+
+        // Seed the shared counter on the first deployment. The baseline is the
+        // count shown before real likes existed; after this one-time
+        // initialisation every click increments the same public counter.
+        if (response.status === 404) {
+          const base = Number(likeButtons()[0]?.dataset.base ?? 0);
+          response = await request(`${LIKE_API}/set/${LIKE_KEY}?value=${base}`);
+        }
+
+        const value = await readValue(response);
+        if (value !== null && version === localChange) remoteLikes = value;
+      } catch {
+        /* Keep the server-rendered baseline when the network is unavailable. */
+      }
+
+      return remoteLikes;
+    })();
+
+    remotePromise = promise;
+    void promise.finally(() => {
+      // An in-flight read from the previous page must not clear the promise
+      // belonging to the page that replaced it.
+      if (remotePromise === promise) remotePromise = null;
+      paint();
+    });
+
+    return promise;
+  };
+
+  const incrementRemote = async () => {
+    localChange += 1;
+    const previous = remoteLikes;
+    const base = Number(likeButtons()[0]?.dataset.base ?? 0);
+    remoteLikes = (remoteLikes ?? base) + 1;
+    paint();
+
+    try {
+      const response = await request(`${LIKE_API}/hit/${LIKE_KEY}`);
+      const value = await readValue(response);
+      if (value === null) throw new Error("Like counter did not respond");
+      remoteLikes = value;
+    } catch {
+      remoteLikes = previous;
+      writeLiked(false);
+    }
+
+    paint();
   };
 
   document.addEventListener("click", event => {
@@ -207,13 +288,11 @@ const formatted = new Intl.NumberFormat(Astro.currentLocale || "en").format(
     if (!(target instanceof Element)) return;
 
     const button = target.closest<HTMLButtonElement>("[data-footer-like]");
-    if (!button) return;
+    if (!button || readLiked()) return;
 
-    const liked = !readLiked();
-    writeLiked(liked);
-    sync();
-
-    if (!liked) return;
+    writeLiked(true);
+    paint();
+    void incrementRemote();
 
     button.classList.remove("is-popping");
     requestAnimationFrame(() => button.classList.add("is-popping"));
@@ -224,6 +303,24 @@ const formatted = new Intl.NumberFormat(Astro.currentLocale || "en").format(
     );
   });
 
-  document.addEventListener("astro:page-load", sync);
-  sync();
+  let navigated = false;
+
+  document.addEventListener("astro:before-swap", () => {
+    navigated = true;
+  });
+
+  document.addEventListener("astro:page-load", () => {
+    // The first page-load fires alongside this script's own boot; only a real
+    // client-side navigation needs a fresh read of the shared counter.
+    if (!navigated) return;
+    navigated = false;
+    localChange += 1;
+    remoteLikes = null;
+    remotePromise = null;
+    paint();
+    void loadRemote();
+  });
+
+  paint();
+  void loadRemote();
 </script>
