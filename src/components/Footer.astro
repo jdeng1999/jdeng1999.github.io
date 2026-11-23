@@ -126,36 +126,32 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
               </a>
             </li>
           ))}
-        </ul>
-
-        <p class="footer-references">
-          <span class="footer-references-label">{t("footer.inspiredBy")}</span>
-          <span class="footer-references-links">
-            <a
-              href="https://devosfera.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Devosfera
-              <span class="footer-reference-arrow" aria-hidden="true">
-                ↗
-              </span>
-            </a>
-            <span class="footer-reference-sep" aria-hidden="true">
-              ·
+          <li class="footer-credit-row">
+            <span class="footer-credit-label">{t("footer.inspiredBy")}</span>
+            <span class="footer-reference-mark" aria-hidden="true">
+              ↗
             </span>
-            <a
-              href="https://darkminimal.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Dark Minimal
-              <span class="footer-reference-arrow" aria-hidden="true">
-                ↗
+            <span class="footer-reference-links">
+              <a
+                href="https://devosfera.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Devosfera
+              </a>
+              <span class="footer-reference-sep" aria-hidden="true">
+                ·
               </span>
-            </a>
-          </span>
-        </p>
+              <a
+                href="https://darkminimal.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Dark Minimal
+              </a>
+            </span>
+          </li>
+        </ul>
       </div>
 
       <!-- Music -->
@@ -237,7 +233,7 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
   }
 
   .footer-connect {
-    gap: 0.7rem;
+    gap: 1rem;
   }
 
   .footer-socials {
@@ -251,71 +247,46 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
     gap: 0.7rem;
   }
 
-  .footer-references {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.28rem;
-    width: 100%;
-    margin: 0;
-    padding-top: 0.6rem;
-    border-top: 1px solid
-      color-mix(in srgb, var(--color-foreground) 8%, transparent);
-    font-family: var(--font-firacode), ui-monospace, monospace;
-    line-height: 1.5;
-    letter-spacing: 0.03em;
-  }
-
-  .footer-references-label {
+  .footer-reference-mark {
+    grid-column: 2;
+    justify-self: center;
     color: color-mix(in srgb, var(--color-foreground) 40%, transparent);
-    font-size: 0.6rem;
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 0.78rem;
+    line-height: 1;
   }
 
-  .footer-references-links {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.38rem;
-    font-size: 0.64rem;
-  }
-
-  .footer-references-links a {
+  .footer-reference-links {
     display: inline-flex;
-    align-items: baseline;
-    gap: 0.16rem;
-    color: color-mix(in srgb, var(--color-foreground) 68%, transparent);
+    grid-column: 3;
+    align-items: center;
+    gap: 0.38rem;
+    color: color-mix(in srgb, var(--color-foreground) 74%, transparent);
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 0.66rem;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .footer-reference-links a {
+    color: inherit;
     text-decoration: none;
     transition: color 0.2s ease;
   }
 
-  .footer-references-links a:hover {
+  .footer-reference-links a:hover {
     color: var(--color-accent);
   }
 
-  .footer-references-links a:focus-visible {
+  .footer-reference-links a:focus-visible {
     border-radius: 0.2rem;
     outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
     outline-offset: 3px;
   }
 
-  .footer-reference-arrow {
-    font-size: 0.52rem;
-    opacity: 0.45;
-    transition:
-      opacity 0.2s ease,
-      transform 0.2s ease;
-  }
-
-  .footer-references-links a:hover .footer-reference-arrow,
-  .footer-references-links a:focus-visible .footer-reference-arrow {
-    opacity: 1;
-    transform: translate(0.08rem, -0.08rem);
-  }
-
   .footer-reference-sep {
     color: color-mix(in srgb, var(--color-foreground) 24%, transparent);
-    font-size: 0.58rem;
+    font-size: 0.6rem;
   }
 
   .footer-copyright {
@@ -348,7 +319,7 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
   .footer-identity {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.4rem;
   }
 
   @media (min-width: 1024px) {
@@ -383,7 +354,7 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
     }
   }
 
-  @media (min-width: 1024px) and (max-width: 1599px) {
+  @media (min-width: 1024px) and (max-width: 1799px) {
     .footer-grid {
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 21rem);
     }

@@ -249,6 +249,12 @@
 
   .astro-code {
     --code-line-height: 1.1375rem;
+    --code-gutter-width: 2.55rem;
+    --code-gutter-bg: color-mix(
+      in srgb,
+      var(--foreground) 4%,
+      var(--shiki-light-bg)
+    );
     @apply flex border bg-(--shiki-light-bg) text-(--shiki-light) outline-border [&_span]:text-(--shiki-light);
     border-color: color-mix(in srgb, var(--border) 45%, transparent);
     padding: 1.75rem 1rem 0.95rem;
@@ -258,12 +264,17 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .astro-code code {
-    line-height: 1.3;
-  }
-
   .astro-code.has-code-gutter {
     padding-left: 0;
+    background-image: linear-gradient(
+      to right,
+      var(--code-gutter-bg) 0 var(--code-gutter-width),
+      transparent var(--code-gutter-width) 100%
+    );
+  }
+
+  .astro-code code {
+    line-height: 1.3;
   }
 
   .astro-code.has-code-gutter code {
@@ -285,11 +296,11 @@
     flex: 0 0 auto;
     flex-direction: column;
     align-self: stretch;
-    width: calc(var(--ln-digits, 2) * 1ch + 1.15rem);
+    width: var(--code-gutter-width);
     overflow: hidden;
     border-right: 1px solid
       color-mix(in srgb, var(--foreground) 6%, transparent);
-    background: color-mix(in srgb, var(--foreground) 4%, var(--shiki-light-bg));
+    background: var(--code-gutter-bg);
     color: color-mix(in srgb, var(--foreground) 30%, transparent);
     font-size: 0.72rem;
     font-variant-numeric: tabular-nums;
@@ -313,11 +324,8 @@
   }
 
   html[data-theme="dark"] .astro-code {
+    --code-gutter-bg: color-mix(in srgb, #ffffff 4%, var(--shiki-dark-bg));
     @apply bg-(--shiki-dark-bg) text-(--shiki-dark) [&_span]:text-(--shiki-dark);
-  }
-
-  html[data-theme="dark"] .astro-code .code-line-gutter {
-    background: color-mix(in srgb, #ffffff 4%, var(--shiki-dark-bg));
   }
 
   /* Styles for Shiki transformers */

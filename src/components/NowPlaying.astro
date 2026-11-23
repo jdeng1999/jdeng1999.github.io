@@ -2532,6 +2532,7 @@ const totalLabel = formatTime(first.duration);
       } catch {
         root.dataset.npLoading = "false";
         root.dataset.npUnavailable = "true";
+        setPlaying(false);
         setPreviewHidden(false);
       } finally {
         connecting = false;
@@ -2563,6 +2564,7 @@ const totalLabel = formatTime(first.duration);
         setPreviewHidden(true);
 
         if (autoplay) {
+          setPlaying(true);
           void audio.play().catch(() => {
             localFailed = true;
             source = "spotify";
@@ -2587,6 +2589,7 @@ const totalLabel = formatTime(first.duration);
       } else {
         setPlaying(false);
       }
+      if (autoplay) setPlaying(true);
       emitState();
     };
 
@@ -3045,6 +3048,7 @@ const totalLabel = formatTime(first.duration);
       if (source === "local" && audio.getAttribute("src")) {
         if (audio.paused) {
           const track = tracks[playbackIndex];
+          setPlaying(true);
           void audio.play().catch(() => {
             localFailed = true;
             if (track) {
@@ -3060,6 +3064,7 @@ const totalLabel = formatTime(first.duration);
       }
 
       if (spotifyController) {
+        setPlaying(!isPlaying);
         spotifyController.togglePlay();
         return;
       }
@@ -3080,16 +3085,21 @@ const totalLabel = formatTime(first.duration);
       seekToSeconds(0);
       if (source === "local") {
         if (audio.getAttribute("src")) {
+          setPlaying(true);
           void audio.play().catch(() => {});
         } else {
           loadPlaybackTrack(targetIndex, true);
         }
       } else if (spotifyController) {
+        setPlaying(true);
         spotifyController.seek(0);
         spotifyController.play();
       } else {
         const track = tracks[playbackIndex];
-        if (track) void connectSpotify(track, true);
+        if (track) {
+          setPlaying(true);
+          void connectSpotify(track, true);
+        }
       }
     };
 
@@ -3908,6 +3918,13 @@ const totalLabel = formatTime(first.duration);
         "click",
         event => {
           if (performance.now() >= expandedSuppressClickUntil) return;
+          const target = event.target;
+          if (
+            target instanceof Element &&
+            target.closest("button, a, input, [role='slider'], .np-controls")
+          ) {
+            return;
+          }
           event.preventDefault();
           event.stopPropagation();
         },
@@ -4141,9 +4158,6 @@ const totalLabel = formatTime(first.duration);
       expandedRevealTimers.push(
         window.setTimeout(() => revealExpandedPair(4), 235)
       );
-      expandedRevealTimers.push(
-        window.setTimeout(() => finishExpandedReveal(), 600)
-      );
     };
 
     const shiftExpandedWheel = (delta: number) => {
@@ -4307,6 +4321,7 @@ const totalLabel = formatTime(first.duration);
         expandedFly = null;
         showExpandedCenter();
         expandedDialog?.classList.add("is-open");
+        finishExpandedReveal();
         expandedRevealTimers.push(
           window.setTimeout(() => revealExpandedRing(), 20)
         );

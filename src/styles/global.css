@@ -178,7 +178,7 @@ i {
 
 @utility app-layout {
   @apply mx-auto w-full px-4;
-  max-width: clamp(57rem, 61vw, 91rem);
+  max-width: clamp(54rem, 58vw, 87rem);
 }
 
 .active-nav {
