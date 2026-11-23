@@ -1134,7 +1134,7 @@ const totalLabel = formatTime(first.duration);
     );
     filter: blur(20px);
     content: "";
-    opacity: 0.32;
+    opacity: 0.28;
     pointer-events: none;
     animation: np-aura-breathe 7.6s ease-in-out infinite;
   }
@@ -1148,8 +1148,8 @@ const totalLabel = formatTime(first.duration);
     border-radius: 50%;
     background: currentColor;
     box-shadow:
-      0 0 4px currentColor,
-      0 0 10px 1px color-mix(in srgb, currentColor 36%, transparent);
+      0 0 3px currentColor,
+      0 0 8px 1px color-mix(in srgb, currentColor 30%, transparent);
     opacity: 0;
     animation: np-spark-rise var(--d, 8s) ease-in-out infinite;
     animation-delay: var(--delay, 0s);
@@ -1195,7 +1195,7 @@ const totalLabel = formatTime(first.duration);
 
   .np-aura i:nth-child(4n)::before,
   .np-aura i:nth-child(4n)::after {
-    opacity: 0.44;
+    opacity: 0.38;
   }
 
   .np-aura i:nth-child(1) {
@@ -1273,11 +1273,11 @@ const totalLabel = formatTime(first.duration);
   @keyframes np-aura-breathe {
     0%,
     100% {
-      opacity: 0.25;
+      opacity: 0.22;
       transform: scale(0.985);
     }
     50% {
-      opacity: 0.48;
+      opacity: 0.42;
       transform: scale(1.02);
     }
   }
@@ -1288,11 +1288,11 @@ const totalLabel = formatTime(first.duration);
       transform: translateY(0.5rem) scale(0.4);
     }
     10% {
-      opacity: 0.8;
+      opacity: 0.74;
       transform: translateY(0) scale(1);
     }
     70% {
-      opacity: 0.3;
+      opacity: 0.28;
       transform: translateY(-3.5rem) scale(0.65);
     }
     100% {
@@ -1906,6 +1906,10 @@ const totalLabel = formatTime(first.duration);
     started: boolean;
     listeners: AbortController | null;
     lifecycle: AbortController | null;
+    spotifyController: SpotifyEmbedController | null;
+    spotifyUri: string;
+    spotifyDuration: number;
+    spotifyUpdate: ((playback: SpotifyPlaybackData) => void) | null;
   };
 
   const getGlobalMusicPlayer = (): GlobalMusicPlayer => {
@@ -1926,9 +1930,28 @@ const totalLabel = formatTime(first.duration);
         started: false,
         listeners: null,
         lifecycle: null,
+        spotifyController: null,
+        spotifyUri: "",
+        spotifyDuration: 0,
+        spotifyUpdate: null,
       };
     }
     return holder.__devosferaMusicPlayer;
+  };
+
+  // The Spotify iframe lives outside <body> so ClientRouter swaps can never
+  // detach it. Moving or recreating the iframe would interrupt playback.
+  const getSpotifyEngine = (): HTMLElement => {
+    let engine = document.getElementById("devosfera-spotify-engine");
+    if (!engine) {
+      engine = document.createElement("div");
+      engine.id = "devosfera-spotify-engine";
+      engine.setAttribute("aria-hidden", "true");
+      engine.style.cssText =
+        "position:fixed;left:0;bottom:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;clip-path:inset(50%);";
+      document.documentElement.appendChild(engine);
+    }
+    return engine;
   };
 
   const readStoredMusicState = (): StoredMusicState | null => {
@@ -2169,8 +2192,9 @@ const totalLabel = formatTime(first.duration);
     let durationMs = tracks[initialTrackIndex]!.duration * 1000;
     let requestedPlay = false;
     let connecting = false;
-    let spotifyController: SpotifyEmbedController | null = null;
-    let spotifyUri = "";
+    let spotifyController: SpotifyEmbedController | null =
+      globalPlayer.spotifyController;
+    let spotifyUri = globalPlayer.spotifyUri;
     let localFailed = false;
     let endedHandled = false;
     let playMode: PlayMode = "order";
@@ -2193,6 +2217,9 @@ const totalLabel = formatTime(first.duration);
       } else {
         positionMs = globalPlayer.positionMs;
         isPlaying = globalPlayer.playing;
+        if (globalPlayer.spotifyDuration > 0) {
+          durationMs = globalPlayer.spotifyDuration;
+        }
       }
     } else if (storedState) {
       source = storedState.source;
@@ -2336,6 +2363,35 @@ const totalLabel = formatTime(first.duration);
       spotifyController?.pause();
     };
 
+    const handleSpotifyPlayback = (playback: SpotifyPlaybackData) => {
+      if (playback.duration > 0) {
+        durationMs = playback.duration;
+        paintDuration();
+      }
+
+      if (typeof playback.position === "number" && !isDragging) {
+        paintProgress(playback.position);
+      }
+
+      setPlaying(!playback.isPaused);
+      setPreviewHidden(false);
+      root.dataset.npSource = "spotify";
+
+      if (playback.duration > 0) {
+        if (playback.position >= playback.duration - 400) {
+          if (!endedHandled) {
+            endedHandled = true;
+            setPlaying(false);
+            advanceByMode();
+          }
+        } else if (playback.position < playback.duration - 1500) {
+          endedHandled = false;
+        }
+      }
+    };
+
+    globalPlayer.spotifyUpdate = handleSpotifyPlayback;
+
     const connectSpotify = async (
       track: MusicTrack,
       autoplay: boolean,
@@ -2351,12 +2407,17 @@ const totalLabel = formatTime(first.duration);
           spotifyController.pause();
           spotifyController.loadUri(track.spotifyUri);
           spotifyUri = track.spotifyUri;
+          globalPlayer.spotifyUri = spotifyUri;
+          globalPlayer.playing = false;
+          globalPlayer.spotifyDuration = track.duration * 1000;
           spotifyController.seek(startAtSeconds);
-        } else if (startAtSeconds > 0) {
+          globalPlayer.positionMs = startAtSeconds * 1000;
+        } else if (startAtSeconds > 0 && !globalPlayer.playing) {
           spotifyController.seek(startAtSeconds);
+          globalPlayer.positionMs = startAtSeconds * 1000;
         }
 
-        if (autoplay) {
+        if (autoplay && !globalPlayer.playing) {
           requestedPlay = true;
           spotifyController.play();
         }
@@ -2378,7 +2439,7 @@ const totalLabel = formatTime(first.duration);
           );
 
           const host = document.createElement("div");
-          embedHost.replaceChildren(host);
+          getSpotifyEngine().replaceChildren(host);
 
           api.createController(
             host,
@@ -2391,6 +2452,8 @@ const totalLabel = formatTime(first.duration);
               window.clearTimeout(guard);
               spotifyController = embed;
               spotifyUri = track.spotifyUri;
+              globalPlayer.spotifyController = embed;
+              globalPlayer.spotifyUri = spotifyUri;
               root.dataset.npLoading = "false";
               root.dataset.npUnavailable = "false";
               resolve();
@@ -2398,29 +2461,15 @@ const totalLabel = formatTime(first.duration);
               embed.addListener("playback_update", event => {
                 const playback = event.data;
                 if (playback.duration > 0) {
-                  durationMs = playback.duration;
-                  paintDuration();
+                  globalPlayer.spotifyDuration = playback.duration;
                 }
-
-                if (typeof playback.position === "number" && !isDragging) {
-                  paintProgress(playback.position);
+                if (typeof playback.position === "number") {
+                  globalPlayer.positionMs = playback.position;
                 }
-
-                setPlaying(!playback.isPaused);
-                setPreviewHidden(false);
-                root.dataset.npSource = "spotify";
-
-                if (playback.duration > 0) {
-                  if (playback.position >= playback.duration - 400) {
-                    if (!endedHandled) {
-                      endedHandled = true;
-                      setPlaying(false);
-                      advanceByMode();
-                    }
-                  } else if (playback.position < playback.duration - 1500) {
-                    endedHandled = false;
-                  }
-                }
+                globalPlayer.playing = !playback.isPaused;
+                globalPlayer.source = "spotify";
+                globalPlayer.started = true;
+                globalPlayer.spotifyUpdate?.(playback);
               });
 
               if (startAtSeconds > 0) {
