@@ -72,10 +72,6 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
             <SiteLogo class="text-[1.7rem] opacity-90 transition-opacity duration-300 group-hover:opacity-100" />
             <span class="sr-only">{SITE.title}</span>
           </a>
-
-          <p class="max-w-sm text-center font-firacode text-[11px] leading-relaxed tracking-wide text-foreground/55 sm:text-start">
-            {t("footer.desc")}
-          </p>
         </div>
 
         <!-- Connect: social links and the shared like counter -->
@@ -109,27 +105,58 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
         </div>
       </div>
 
-      <!-- Credits -->
-      <ul class="footer-credits" role="list">
-        {credits.map(credit => (
-          <li class="footer-credit-row">
-            <span class="footer-credit-label">{credit.label}</span>
-            <span
-              class="footer-credit-icon"
-              style={`--credit-icon: url('/svg/${credit.icon}.svg')`}
-              aria-hidden="true"
-            />
+      <!-- Credits and references -->
+      <div class="footer-meta">
+        <ul class="footer-credits" role="list">
+          {credits.map(credit => (
+            <li class="footer-credit-row">
+              <span class="footer-credit-label">{credit.label}</span>
+              <span
+                class="footer-credit-icon"
+                style={`--credit-icon: url('/svg/${credit.icon}.svg')`}
+                aria-hidden="true"
+              />
+              <a
+                class="footer-credit-name"
+                href={credit.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {credit.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        <p class="footer-references">
+          <span class="footer-references-label">{t("footer.inspiredBy")}</span>
+          <span class="footer-references-links">
             <a
-              class="footer-credit-name"
-              href={credit.href}
+              href="https://devosfera.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
             >
-              {credit.name}
+              Devosfera
+              <span class="footer-reference-arrow" aria-hidden="true">
+                ↗
+              </span>
             </a>
-          </li>
-        ))}
-      </ul>
+            <span class="footer-reference-sep" aria-hidden="true">
+              ·
+            </span>
+            <a
+              href="https://darkminimal.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Dark Minimal
+              <span class="footer-reference-arrow" aria-hidden="true">
+                ↗
+              </span>
+            </a>
+          </span>
+        </p>
+      </div>
 
       <!-- Music -->
       {SITE.spotify.enabled && (
@@ -217,6 +244,80 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
     gap: 0.3rem;
   }
 
+  .footer-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .footer-references {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.28rem;
+    width: 100%;
+    margin: 0;
+    padding-top: 0.6rem;
+    border-top: 1px solid
+      color-mix(in srgb, var(--color-foreground) 8%, transparent);
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    line-height: 1.5;
+    letter-spacing: 0.03em;
+  }
+
+  .footer-references-label {
+    color: color-mix(in srgb, var(--color-foreground) 40%, transparent);
+    font-size: 0.6rem;
+  }
+
+  .footer-references-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.38rem;
+    font-size: 0.64rem;
+  }
+
+  .footer-references-links a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.16rem;
+    color: color-mix(in srgb, var(--color-foreground) 68%, transparent);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .footer-references-links a:hover {
+    color: var(--color-accent);
+  }
+
+  .footer-references-links a:focus-visible {
+    border-radius: 0.2rem;
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    outline-offset: 3px;
+  }
+
+  .footer-reference-arrow {
+    font-size: 0.52rem;
+    opacity: 0.45;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .footer-references-links a:hover .footer-reference-arrow,
+  .footer-references-links a:focus-visible .footer-reference-arrow {
+    opacity: 1;
+    transform: translate(0.08rem, -0.08rem);
+  }
+
+  .footer-reference-sep {
+    color: color-mix(in srgb, var(--color-foreground) 24%, transparent);
+    font-size: 0.58rem;
+  }
+
   .footer-copyright {
     display: inline-flex;
     align-items: center;
@@ -255,7 +356,7 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       align-items: center;
-      gap: 1rem;
+      gap: 1rem 2rem;
     }
 
     .footer-identity {
@@ -268,20 +369,17 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
     }
 
     .footer-credits {
-      justify-self: center;
       margin: 0;
     }
 
+    .footer-meta {
+      justify-self: center;
+    }
+
     :global(.footer-music) {
-      width: min(25rem, 100%);
+      width: min(26rem, 100%);
       max-width: 100%;
       justify-self: end;
-    }
-  }
-
-  @media (min-width: 1024px) and (max-width: 1279px) {
-    .footer-grid {
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 25rem);
     }
   }
 
@@ -289,6 +387,10 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
     .footer-connect {
       align-self: flex-start;
     }
+  }
+
+  :global(.footer-music) {
+    container-type: inline-size;
   }
 
   .footer-social-btn {

@@ -256,18 +256,25 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .astro-code .line::before {
-    content: attr(data-line-number);
+  .astro-code .line {
+    display: block;
+  }
+
+  .astro-code .line-number {
+    position: sticky;
+    left: -1rem;
+    z-index: 2;
     display: inline-block;
     box-sizing: content-box;
     width: calc(var(--ln-digits, 2) * 1ch);
     margin-right: 0.55ch;
     padding-right: 0.8ch;
+    background: var(--shiki-light-bg);
     color: color-mix(in srgb, var(--foreground) 28%, transparent);
     font-variant-numeric: tabular-nums;
     text-align: right;
-    opacity: 0.72;
     user-select: none;
+    -webkit-user-select: none;
     pointer-events: none;
   }
 
@@ -277,6 +284,10 @@
 
   html[data-theme="dark"] .astro-code {
     @apply bg-(--shiki-dark-bg) text-(--shiki-dark) [&_span]:text-(--shiki-dark);
+  }
+
+  html[data-theme="dark"] .astro-code .line-number {
+    background: var(--shiki-dark-bg);
   }
 
   /* Styles for Shiki transformers */

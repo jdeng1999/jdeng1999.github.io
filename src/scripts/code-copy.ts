@@ -85,7 +85,7 @@ function attachDampedHorizontalScroll(codeBlock: HTMLPreElement) {
 
 /**
  * Adds a quiet, non-selectable line-number gutter to Shiki code blocks.
- * Numbers are CSS generated content, so copying the code never includes them.
+ * Numbers are stripped again when copying so code output stays clean.
  */
 function addLineNumbers(codeBlock: HTMLPreElement) {
   if (codeBlock.dataset.lineNumbers === "true") return;
@@ -100,7 +100,11 @@ function addLineNumbers(codeBlock: HTMLPreElement) {
   codeBlock.style.setProperty("--ln-digits", String(Math.max(2, digits)));
 
   lines.forEach((line, index) => {
-    line.dataset.lineNumber = String(index + 1);
+    const number = document.createElement("span");
+    number.className = "line-number";
+    number.textContent = String(index + 1);
+    number.setAttribute("aria-hidden", "true");
+    line.prepend(number);
   });
 }
 
@@ -163,7 +167,16 @@ export function attachCopyButtons() {
 
     copyButton.addEventListener("click", async () => {
       const code = codeBlock.querySelector("code");
-      const text = code?.innerText;
+      const lines = code?.querySelectorAll<HTMLElement>(":scope > .line");
+      const text = lines?.length
+        ? Array.from(lines)
+            .map(line => {
+              const clone = line.cloneNode(true) as HTMLElement;
+              clone.querySelector(".line-number")?.remove();
+              return clone.textContent ?? "";
+            })
+            .join("\n")
+        : code?.innerText;
 
       await navigator.clipboard.writeText(text ?? "");
 

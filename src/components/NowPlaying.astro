@@ -118,7 +118,7 @@ const totalLabel = formatTime(first.duration);
   data-np-playing="false"
 >
   <div class="np-aura" aria-hidden="true">
-    {Array.from({ length: 12 }).map(() => (
+    {Array.from({ length: 9 }).map(() => (
       <i />
     ))}
   </div>
@@ -1128,13 +1128,13 @@ const totalLabel = formatTime(first.duration);
     border-radius: 1.4rem;
     background: radial-gradient(
       ellipse at 58% 52%,
-      color-mix(in srgb, currentColor 26%, transparent),
-      color-mix(in srgb, currentColor 9%, transparent) 46%,
+      color-mix(in srgb, currentColor 16%, transparent),
+      color-mix(in srgb, currentColor 6%, transparent) 46%,
       transparent 72%
     );
-    filter: blur(18px);
+    filter: blur(20px);
     content: "";
-    opacity: 0.5;
+    opacity: 0.38;
     pointer-events: none;
     animation: np-aura-breathe 7.6s ease-in-out infinite;
   }
@@ -1148,8 +1148,8 @@ const totalLabel = formatTime(first.duration);
     border-radius: 50%;
     background: currentColor;
     box-shadow:
-      0 0 7px 1px currentColor,
-      0 0 18px 2px color-mix(in srgb, currentColor 58%, transparent);
+      0 0 5px currentColor,
+      0 0 12px 1px color-mix(in srgb, currentColor 42%, transparent);
     opacity: 0;
     animation: np-spark-rise var(--d, 8s) ease-in-out infinite;
     animation-delay: var(--delay, 0s);
@@ -1168,7 +1168,7 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-aura i::before {
-    width: 0.85rem;
+    width: 0.7rem;
     height: 1px;
     background: linear-gradient(
       90deg,
@@ -1182,7 +1182,7 @@ const totalLabel = formatTime(first.duration);
 
   .np-aura i::after {
     width: 1px;
-    height: 0.85rem;
+    height: 0.7rem;
     background: linear-gradient(
       180deg,
       transparent,
@@ -1193,9 +1193,9 @@ const totalLabel = formatTime(first.duration);
     );
   }
 
-  .np-aura i:nth-child(3n)::before,
-  .np-aura i:nth-child(3n)::after {
-    opacity: 0.78;
+  .np-aura i:nth-child(4n)::before,
+  .np-aura i:nth-child(4n)::after {
+    opacity: 0.52;
   }
 
   .np-aura i:nth-child(1) {
@@ -1270,39 +1270,15 @@ const totalLabel = formatTime(first.duration);
     --delay: -2.2s;
   }
 
-  .np-aura i:nth-child(10) {
-    --x: calc(100% + 0.9rem);
-    --y: 44%;
-    --s: 1.6px;
-    --d: 12s;
-    --delay: -8.8s;
-  }
-
-  .np-aura i:nth-child(11) {
-    --x: -0.9rem;
-    --y: 38%;
-    --s: 1.7px;
-    --d: 10.2s;
-    --delay: -1.6s;
-  }
-
-  .np-aura i:nth-child(12) {
-    --x: 28%;
-    --y: calc(100% + 0.8rem);
-    --s: 2.3px;
-    --d: 9.1s;
-    --delay: -6.5s;
-  }
-
   @keyframes np-aura-breathe {
     0%,
     100% {
-      opacity: 0.4;
-      transform: scale(0.98);
+      opacity: 0.3;
+      transform: scale(0.985);
     }
     50% {
-      opacity: 0.78;
-      transform: scale(1.04);
+      opacity: 0.56;
+      transform: scale(1.02);
     }
   }
 
@@ -1312,16 +1288,16 @@ const totalLabel = formatTime(first.duration);
       transform: translateY(0.5rem) scale(0.4);
     }
     10% {
-      opacity: 1;
+      opacity: 0.88;
       transform: translateY(0) scale(1);
     }
     70% {
-      opacity: 0.52;
-      transform: translateY(-4rem) scale(0.7);
+      opacity: 0.34;
+      transform: translateY(-3.5rem) scale(0.65);
     }
     100% {
       opacity: 0;
-      transform: translateY(-7rem) scale(0.35);
+      transform: translateY(-6rem) scale(0.3);
     }
   }
 
@@ -1696,6 +1672,12 @@ const totalLabel = formatTime(first.duration);
 
   @media (max-width: 860px) {
     .np-expand-wheel {
+      display: none;
+    }
+  }
+
+  @container (max-width: 400px) {
+    .np-preview {
       display: none;
     }
   }
@@ -3368,16 +3350,12 @@ const totalLabel = formatTime(first.duration);
     let expandedFly: HTMLElement | null = null;
     let expandedInteractionReady = false;
     let expandedRevealTimers: number[] = [];
-    let expandedFlingFrame = 0;
     let expandedSuppressClickUntil = 0;
     let expandedMobileDrag = false;
     let expandedMobileMoved = false;
+    let expandedMobileTriggered = false;
     let expandedMobileStartY = 0;
-    let expandedMobileLastY = 0;
-    let expandedMobileLastTime = 0;
-    let expandedMobileVelocity = 0;
     let expandedMobilePointer = -1;
-    let expandedMobileStartCenter = 0;
     let deckReturnFinals: Array<{
       card: HTMLElement;
       opacity: string;
@@ -3778,40 +3756,6 @@ const totalLabel = formatTime(first.duration);
       const isMobileExpanded = () =>
         window.matchMedia("(max-width: 860px)").matches;
 
-      const cancelExpandedFling = () => {
-        if (expandedFlingFrame) {
-          cancelAnimationFrame(expandedFlingFrame);
-          expandedFlingFrame = 0;
-        }
-      };
-
-      const flingExpanded = (velocity: number) => {
-        const stepPx = Math.max(44, expandedStep * 0.9);
-        const start = expandedCenter;
-        let virtual = start;
-        let speed = velocity / stepPx;
-        if (Math.abs(speed) < 0.002) return;
-
-        let last = performance.now();
-        expandedFlingFrame = requestAnimationFrame(function tick(now) {
-          if (!expandedOpen || expandedClosing || !expandedInteractionReady) {
-            expandedFlingFrame = 0;
-            return;
-          }
-          const dt = Math.min(40, now - last);
-          last = now;
-          virtual += speed * dt;
-          const next = Math.round(virtual);
-          if (next !== expandedCenter) selectExpanded(next);
-          speed *= Math.pow(0.9, dt / 16);
-          if (Math.abs(speed) > 0.0004) {
-            expandedFlingFrame = requestAnimationFrame(tick);
-          } else {
-            expandedFlingFrame = 0;
-          }
-        });
-      };
-
       dialog.addEventListener(
         "pointerdown",
         event => {
@@ -3828,15 +3772,11 @@ const totalLabel = formatTime(first.duration);
             return;
           }
 
-          cancelExpandedFling();
           expandedMobileDrag = true;
           expandedMobileMoved = false;
+          expandedMobileTriggered = false;
           expandedMobilePointer = event.pointerId;
           expandedMobileStartY = event.clientY;
-          expandedMobileLastY = event.clientY;
-          expandedMobileLastTime = performance.now();
-          expandedMobileVelocity = 0;
-          expandedMobileStartCenter = expandedCenter;
         },
         { passive: true }
       );
@@ -3850,15 +3790,10 @@ const totalLabel = formatTime(first.duration);
           const dy = event.clientY - expandedMobileStartY;
           if (Math.abs(dy) > 6) expandedMobileMoved = true;
 
-          const now = performance.now();
-          const dt = Math.max(8, now - expandedMobileLastTime);
-          expandedMobileVelocity = (expandedMobileLastY - event.clientY) / dt;
-          expandedMobileLastY = event.clientY;
-          expandedMobileLastTime = now;
-
-          const stepPx = Math.max(44, expandedStep * 0.9);
-          const next = expandedMobileStartCenter + Math.round(-dy / stepPx);
-          if (next !== expandedCenter) selectExpanded(next);
+          if (!expandedMobileTriggered && Math.abs(dy) > 30) {
+            expandedMobileTriggered = true;
+            selectExpanded(expandedCenter + (dy < 0 ? 1 : -1));
+          }
 
           if (expandedMobileMoved) event.preventDefault();
         },
@@ -3868,14 +3803,19 @@ const totalLabel = formatTime(first.duration);
       const endExpandedSwipe = (event: PointerEvent) => {
         if (!expandedMobileDrag || event.pointerId !== expandedMobilePointer)
           return;
+        const dy = event.clientY - expandedMobileStartY;
         const moved = expandedMobileMoved;
+        let suppressClick = moved;
+        if (!expandedMobileTriggered && Math.abs(dy) > 30) {
+          expandedMobileTriggered = true;
+          suppressClick = true;
+          selectExpanded(expandedCenter + (dy < 0 ? 1 : -1));
+        }
         expandedMobileDrag = false;
         expandedMobileMoved = false;
+        expandedMobileTriggered = false;
         expandedMobilePointer = -1;
-        if (moved) {
-          expandedSuppressClickUntil = performance.now() + 350;
-          flingExpanded(expandedMobileVelocity);
-        }
+        if (suppressClick) expandedSuppressClickUntil = performance.now() + 350;
       };
 
       dialog.addEventListener("pointerup", endExpandedSwipe);
@@ -4095,10 +4035,6 @@ const totalLabel = formatTime(first.duration);
       expandedRevealTimers = [];
       window.clearTimeout(expandedOpenTimer);
       window.clearTimeout(expandedCloseTimer);
-      if (expandedFlingFrame) {
-        cancelAnimationFrame(expandedFlingFrame);
-        expandedFlingFrame = 0;
-      }
     };
 
     const finishExpandedReveal = () => {
