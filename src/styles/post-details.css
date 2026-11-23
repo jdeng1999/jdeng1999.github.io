@@ -154,6 +154,33 @@ html[data-theme="dark"] .code-file-name-chip {
   -webkit-overflow-scrolling: touch;
 }
 
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .table-scroll table {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .table-scroll th,
+  .table-scroll td {
+    white-space: nowrap;
+    word-break: normal;
+    overflow-wrap: normal;
+    hyphens: none;
+  }
+}
+
 .post-tags-scroll::-webkit-scrollbar,
 .post-meta-scroll::-webkit-scrollbar {
   display: none;

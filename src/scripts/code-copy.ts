@@ -85,7 +85,8 @@ function attachDampedHorizontalScroll(codeBlock: HTMLPreElement) {
 
 /**
  * Adds a quiet, non-selectable line-number gutter to Shiki code blocks.
- * Numbers are stripped again when copying so code output stays clean.
+ * The gutter lives beside the code so it stays fixed during horizontal scroll,
+ * and numbers every physical line including blank ones.
  */
 function addLineNumbers(codeBlock: HTMLPreElement) {
   if (codeBlock.dataset.lineNumbers === "true") return;
@@ -99,13 +100,28 @@ function addLineNumbers(codeBlock: HTMLPreElement) {
   const digits = String(lines.length).length;
   codeBlock.style.setProperty("--ln-digits", String(Math.max(2, digits)));
 
-  lines.forEach((line, index) => {
+  // Newline text nodes between block-level `.line` elements would create extra
+  // anonymous line boxes, doubling the visible line spacing.
+  const code = codeBlock.querySelector("code");
+  if (code) {
+    Array.from(code.childNodes).forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE && !node.textContent?.trim()) {
+        node.remove();
+      }
+    });
+  }
+
+  const gutter = document.createElement("div");
+  gutter.className = "code-line-gutter";
+  gutter.setAttribute("aria-hidden", "true");
+  lines.forEach((_, index) => {
     const number = document.createElement("span");
-    number.className = "line-number";
     number.textContent = String(index + 1);
-    number.setAttribute("aria-hidden", "true");
-    line.prepend(number);
+    gutter.appendChild(number);
   });
+
+  codeBlock.classList.add("has-code-gutter");
+  codeBlock.prepend(gutter);
 }
 
 export function attachCopyButtons() {
@@ -170,11 +186,7 @@ export function attachCopyButtons() {
       const lines = code?.querySelectorAll<HTMLElement>(":scope > .line");
       const text = lines?.length
         ? Array.from(lines)
-            .map(line => {
-              const clone = line.cloneNode(true) as HTMLElement;
-              clone.querySelector(".line-number")?.remove();
-              return clone.textContent ?? "";
-            })
+            .map(line => line.textContent ?? "")
             .join("\n")
         : code?.innerText;
 

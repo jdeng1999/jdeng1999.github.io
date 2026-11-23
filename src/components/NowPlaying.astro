@@ -118,7 +118,7 @@ const totalLabel = formatTime(first.duration);
   data-np-playing="false"
 >
   <div class="np-aura" aria-hidden="true">
-    {Array.from({ length: 9 }).map(() => (
+    {Array.from({ length: 6 }).map(() => (
       <i />
     ))}
   </div>
@@ -800,7 +800,7 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-card[data-np-progress="empty"] .np-seek-rail {
-    background: transparent;
+    background: color-mix(in srgb, var(--color-foreground) 10%, transparent);
   }
 
   .np-card[data-np-progress="empty"] .np-seek-fill {
@@ -1128,13 +1128,13 @@ const totalLabel = formatTime(first.duration);
     border-radius: 1.4rem;
     background: radial-gradient(
       ellipse at 58% 52%,
-      color-mix(in srgb, currentColor 14%, transparent),
-      color-mix(in srgb, currentColor 5%, transparent) 46%,
+      color-mix(in srgb, currentColor 8%, transparent),
+      color-mix(in srgb, currentColor 3%, transparent) 46%,
       transparent 72%
     );
     filter: blur(20px);
     content: "";
-    opacity: 0.28;
+    opacity: 0.18;
     pointer-events: none;
     animation: np-aura-breathe 7.6s ease-in-out infinite;
   }
@@ -1148,8 +1148,8 @@ const totalLabel = formatTime(first.duration);
     border-radius: 50%;
     background: currentColor;
     box-shadow:
-      0 0 3px currentColor,
-      0 0 8px 1px color-mix(in srgb, currentColor 30%, transparent);
+      0 0 2px currentColor,
+      0 0 6px 1px color-mix(in srgb, currentColor 22%, transparent);
     opacity: 0;
     animation: np-spark-rise var(--d, 8s) ease-in-out infinite;
     animation-delay: var(--delay, 0s);
@@ -1168,7 +1168,7 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-aura i::before {
-    width: 0.7rem;
+    width: 0.5rem;
     height: 1px;
     background: linear-gradient(
       90deg,
@@ -1182,7 +1182,7 @@ const totalLabel = formatTime(first.duration);
 
   .np-aura i::after {
     width: 1px;
-    height: 0.7rem;
+    height: 0.5rem;
     background: linear-gradient(
       180deg,
       transparent,
@@ -1195,7 +1195,7 @@ const totalLabel = formatTime(first.duration);
 
   .np-aura i:nth-child(4n)::before,
   .np-aura i:nth-child(4n)::after {
-    opacity: 0.38;
+    opacity: 0.18;
   }
 
   .np-aura i:nth-child(1) {
@@ -1246,38 +1246,14 @@ const totalLabel = formatTime(first.duration);
     --delay: -3.5s;
   }
 
-  .np-aura i:nth-child(7) {
-    --x: calc(100% + 0.35rem);
-    --y: 10%;
-    --s: 1.8px;
-    --d: 7.9s;
-    --delay: -0.6s;
-  }
-
-  .np-aura i:nth-child(8) {
-    --x: -0.4rem;
-    --y: 82%;
-    --s: 2.2px;
-    --d: 9.5s;
-    --delay: -5.2s;
-  }
-
-  .np-aura i:nth-child(9) {
-    --x: 38%;
-    --y: calc(0% - 0.35rem);
-    --s: 2.1px;
-    --d: 8.2s;
-    --delay: -2.2s;
-  }
-
   @keyframes np-aura-breathe {
     0%,
     100% {
-      opacity: 0.22;
+      opacity: 0.14;
       transform: scale(0.985);
     }
     50% {
-      opacity: 0.42;
+      opacity: 0.26;
       transform: scale(1.02);
     }
   }
@@ -1288,11 +1264,11 @@ const totalLabel = formatTime(first.duration);
       transform: translateY(0.5rem) scale(0.4);
     }
     10% {
-      opacity: 0.74;
+      opacity: 0.55;
       transform: translateY(0) scale(1);
     }
     70% {
-      opacity: 0.28;
+      opacity: 0.18;
       transform: translateY(-3.5rem) scale(0.65);
     }
     100% {
