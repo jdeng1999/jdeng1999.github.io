@@ -6,14 +6,18 @@
 /* Code block copy button: quiet translucent surface behind the icon */
 .copy-code {
   z-index: 2;
-  display: grid;
-  place-items: center;
   padding: 0;
   border: 0;
   background: transparent;
   color: color-mix(in srgb, var(--foreground) 52%, transparent);
   line-height: 0;
   transition: color 0.2s ease;
+}
+
+/* Higher specificity than the utility class on the generated button. */
+button.copy-code {
+  display: grid;
+  place-items: center;
 }
 
 .copy-code::after {
@@ -114,16 +118,11 @@ html[data-theme="dark"] .code-file-name-chip {
 
 .copy-code svg {
   display: block;
-  width: 0.95rem;
-  height: 0.95rem;
-  margin: auto;
-  /* Both glyphs sit a hair above their geometric centre; this keeps the
-     visible ink centred inside the translucent button surface. */
-  transform: translate(-0.25px, -0.5px);
-}
-
-.copy-code[data-copied="true"] svg {
-  transform: translate(0, 0.5px);
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  /* The button is a grid with place-items:center; keeping the SVG free of
+     optical offsets guarantees the glyph is centered on both axes. */
 }
 
 /* Mobile GPUs can briefly ghost the blurred card contents on refresh.

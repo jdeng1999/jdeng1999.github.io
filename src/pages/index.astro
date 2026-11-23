@@ -1260,6 +1260,11 @@ const whatIcons = {
 
   .featured-rail {
     position: relative;
+    /* A 2px bleed on either side gives the outer card borders a hairline of
+       clip room at both scroll extremes, while the card edges still line up
+       with the article list below. */
+    padding-inline: 2px;
+    margin-inline: -2px;
   }
 
   .featured-track {
@@ -1270,6 +1275,15 @@ const whatIcons = {
        inline margins used to push the final card's edge out of alignment. */
     padding: 0.25rem 0;
     list-style: none;
+  }
+
+  /* Flex children overflow the track's right padding, so this transparent
+     tail keeps a 2px slice of the final card border inside the clip at max
+     scroll without shifting the card's visual alignment. */
+  .featured-track::after {
+    content: "";
+    flex: 0 0 2px;
+    margin-left: -1rem;
   }
 
   .featured-track > :global(li) {
@@ -1291,18 +1305,8 @@ const whatIcons = {
     scrollbar-width: none;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-    cursor: grab;
+    touch-action: pan-x pan-y;
     will-change: scroll-position;
-  }
-
-  .featured-rail.is-scrollable.is-dragging {
-    cursor: grabbing;
-    user-select: none;
-  }
-
-  .featured-rail.is-rubber {
-    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .featured-rail.is-scrollable::-webkit-scrollbar {
@@ -1323,6 +1327,10 @@ const whatIcons = {
     .featured-rail.is-scrollable .featured-track {
       flex-direction: row;
       gap: 0.75rem;
+    }
+
+    .featured-rail.is-scrollable .featured-track::after {
+      margin-left: -0.75rem;
     }
 
     .featured-rail.is-scrollable .featured-track > :global(li) {
@@ -1584,120 +1592,53 @@ const whatIcons = {
         window.addEventListener("resize", update);
         update();
 
-        // ── Drag to slide (mouse, pen and touch) with an edge rubber band ──
-        let dragStartX = 0;
-        let dragStartLeft = 0;
-        let dragTargetLeft = 0;
-        let dragPointer = -1;
-        let dragging = false;
-        let dragFrame = 0;
-        let suppressClick = false;
-        let rubber = 0;
+        // Desktop uses Shift + wheel for horizontal panning; touch devices
+        // keep the browser's native horizontal panning. No pointer capture
+        // or click suppression here, so every card area stays a normal link.
+        let wheelTarget = rail.scrollLeft;
+        let wheelFrame = 0;
 
-        rail.addEventListener("dragstart", event => event.preventDefault());
+        const wheelTick = () => {
+          const max = rail.scrollWidth - rail.clientWidth;
+          wheelTarget = Math.max(0, Math.min(max, wheelTarget));
+          const diff = wheelTarget - rail.scrollLeft;
 
-        const clearRubber = (animate: boolean) => {
-          if (!animate) {
-            rail.classList.remove("is-rubber");
-            rail.style.transform = "";
-            rubber = 0;
+          if (Math.abs(diff) < 0.5) {
+            rail.scrollLeft = wheelTarget;
+            wheelFrame = 0;
             return;
           }
-          rail.classList.add("is-rubber");
-          rail.style.transform = "translateX(0)";
-          window.setTimeout(() => {
-            rail.classList.remove("is-rubber");
-            rail.style.transform = "";
-          }, 320);
-          rubber = 0;
+
+          rail.scrollLeft += diff * 0.18;
+          wheelFrame = requestAnimationFrame(wheelTick);
         };
-
-        rail.addEventListener("pointerdown", event => {
-          if (event.button !== 0) return;
-          dragPointer = event.pointerId;
-          dragStartX = event.clientX;
-          dragStartLeft = rail.scrollLeft;
-          dragTargetLeft = dragStartLeft;
-          dragging = false;
-          suppressClick = false;
-          clearRubber(false);
-          try {
-            rail.setPointerCapture(event.pointerId);
-          } catch {
-            /* pointer may already be gone */
-          }
-        });
-
-        rail.addEventListener("pointermove", event => {
-          if (event.pointerId !== dragPointer) return;
-          const dx = event.clientX - dragStartX;
-          if (!dragging) {
-            if (Math.abs(dx) < 5) return;
-            dragging = true;
-            rail.classList.add("is-dragging");
-          }
-
-          const max = rail.scrollWidth - rail.clientWidth;
-          dragTargetLeft = dragStartLeft - dx;
-
-          if (dragTargetLeft < 0) {
-            rail.scrollLeft = 0;
-            rubber = Math.min(44, -dragTargetLeft * 0.38);
-          } else if (dragTargetLeft > max) {
-            rail.scrollLeft = max;
-            rubber = -Math.min(44, (dragTargetLeft - max) * 0.38);
-          } else {
-            rubber = 0;
-            if (dragFrame) return;
-            dragFrame = requestAnimationFrame(() => {
-              dragFrame = 0;
-              rail.scrollLeft = dragTargetLeft;
-            });
-          }
-
-          rail.style.transform = rubber ? `translateX(${rubber}px)` : "";
-        });
-
-        const endDrag = (event: PointerEvent) => {
-          if (event.pointerId !== dragPointer) return;
-          dragPointer = -1;
-          if (!dragging) return;
-          dragging = false;
-          cancelAnimationFrame(dragFrame);
-          dragFrame = 0;
-          if (!rubber) {
-            rail.scrollLeft = dragTargetLeft;
-          }
-          rail.classList.remove("is-dragging");
-          if (rubber) {
-            clearRubber(true);
-          } else {
-            rail.style.transform = "";
-          }
-          suppressClick = true;
-          requestAnimationFrame(() => {
-            suppressClick = false;
-          });
-          try {
-            if (rail.hasPointerCapture(event.pointerId)) {
-              rail.releasePointerCapture(event.pointerId);
-            }
-          } catch {
-            /* capture may have been released */
-          }
-        };
-
-        rail.addEventListener("pointerup", endDrag);
-        rail.addEventListener("pointercancel", endDrag);
 
         rail.addEventListener(
-          "click",
+          "wheel",
           event => {
-            if (!suppressClick) return;
+            if (!event.shiftKey) return;
+
+            const max = rail.scrollWidth - rail.clientWidth;
+            if (max <= 0) return;
+
             event.preventDefault();
-            event.stopPropagation();
+            if (!wheelFrame) wheelTarget = rail.scrollLeft;
+
+            const unit =
+              event.deltaMode === WheelEvent.DOM_DELTA_LINE
+                ? 16
+                : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+                  ? rail.clientWidth
+                  : 1;
+            const delta =
+              (Math.abs(event.deltaX) > Math.abs(event.deltaY)
+                ? event.deltaX
+                : event.deltaY) * unit;
+
+            wheelTarget += delta;
+            if (!wheelFrame) wheelFrame = requestAnimationFrame(wheelTick);
           },
-          true
+          { passive: false }
         );
       }
     }

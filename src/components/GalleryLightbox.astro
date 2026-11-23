@@ -173,7 +173,11 @@ const { id, label = "Image viewer" } = Astro.props;
         let displayOffset = 0;
         let dragTarget = 0;
         let dragging = false;
+        let queueSwipe = false;
+        let queueSwipeRaw = 0;
         let animating = false;
+        let animTarget = 0;
+        let queuedDelta = 0;
         let pointerId = -1;
         let startX = 0;
         let lastRaw = 0;
@@ -248,16 +252,14 @@ const { id, label = "Image viewer" } = Astro.props;
 
           displayOffset = 0;
           dragTarget = 0;
-          slider.dataset.atEnd = "false";
+          slider.dataset.atEnd = String(current === count - 1);
           track.style.transition = "none";
           track.style.transform = shiftFor(0);
         };
 
         const applyOffset = () => {
           track.style.transform = shiftFor(displayOffset);
-          slider.dataset.atEnd = String(
-            current === count - 1 && displayOffset > 0.2
-          );
+          slider.dataset.atEnd = String(current === count - 1);
         };
 
         const follow = () => {
@@ -280,12 +282,36 @@ const { id, label = "Image viewer" } = Astro.props;
           if (delta !== 0) {
             current = Math.max(0, Math.min(count - 1, current + delta));
           }
+          animTarget = current;
           renderSlides();
+
+          if (queuedDelta !== 0) {
+            const next = Math.sign(queuedDelta);
+            queuedDelta -= next;
+            window.requestAnimationFrame(() => {
+              if (!dialog.open) {
+                queuedDelta = 0;
+                return;
+              }
+              animateTo(next, 0);
+            });
+          }
         };
 
         const animateTo = (delta: number, releaseVelocity: number) => {
-          if (animating) return;
-          const target = Math.max(0, Math.min(count - 1, current + delta));
+          const step = Math.sign(delta);
+
+          if (animating) {
+            if (!step) return;
+            // Every gesture should count: queue it against the in-flight
+            // destination instead of dropping it while the slide animates.
+            const projected = animTarget + queuedDelta + step;
+            if (projected < 0 || projected > count - 1) return;
+            queuedDelta += step;
+            return;
+          }
+
+          const target = Math.max(0, Math.min(count - 1, current + step));
           const actualDelta = target - current;
           if (actualDelta === 0 && Math.abs(displayOffset) < 0.01) {
             renderSlides();
@@ -293,6 +319,7 @@ const { id, label = "Image viewer" } = Astro.props;
           }
 
           animating = true;
+          animTarget = target;
           const token = ++animationToken;
           const speed = Math.min(1, Math.abs(releaseVelocity) * 220);
           const duration = 300 + Math.round(speed * 150);
@@ -313,6 +340,9 @@ const { id, label = "Image viewer" } = Astro.props;
 
         function open(idx: number) {
           current = Math.max(0, Math.min(idx, count - 1));
+          animTarget = current;
+          queuedDelta = 0;
+          queueSwipe = false;
           renderSlides();
           if (!dialog.open) dialog.showModal();
           slider?.focus({ preventScroll: true });
@@ -322,7 +352,10 @@ const { id, label = "Image viewer" } = Astro.props;
         function close() {
           stopFollow();
           dragging = false;
+          queueSwipe = false;
           animating = false;
+          animTarget = current;
+          queuedDelta = 0;
           animationToken += 1;
           window.clearTimeout(finishTimer);
           track!.style.transition = "none";
@@ -356,24 +389,34 @@ const { id, label = "Image viewer" } = Astro.props;
         slider.addEventListener(
           "pointerdown",
           event => {
-            if (event.button !== 0 || animating) return;
+            if (event.button !== 0) return;
+
+            // A second swipe may start while the previous slide is still
+            // animating. Record it so it can be queued, but don't disturb the
+            // in-flight transform.
+            queueSwipe = animating;
             pointerId = event.pointerId;
             dragging = true;
             startX = event.clientX;
             lastRaw = 0;
             lastTime = performance.now();
             velocity = 0;
-            displayOffset = 0;
-            dragTarget = 0;
-            track.style.transition = "none";
-            applyOffset();
+            queueSwipeRaw = 0;
+
+            if (!queueSwipe) {
+              displayOffset = 0;
+              dragTarget = 0;
+              track.style.transition = "none";
+              applyOffset();
+              stopFollow();
+              followFrame = requestAnimationFrame(follow);
+            }
+
             try {
               slider.setPointerCapture(event.pointerId);
             } catch {
               /* pointer may already be gone */
             }
-            stopFollow();
-            followFrame = requestAnimationFrame(follow);
           },
           { signal }
         );
@@ -386,6 +429,15 @@ const { id, label = "Image viewer" } = Astro.props;
             if (!step) return;
 
             const raw = -(event.clientX - startX) / step;
+            const now = performance.now();
+            const dt = Math.max(8, now - lastTime);
+            velocity = (raw - lastRaw) / dt;
+            lastRaw = raw;
+            lastTime = now;
+            queueSwipeRaw = raw;
+
+            if (queueSwipe) return;
+
             const atStart = current === 0;
             const atEnd = current === count - 1;
             if ((atStart && raw < 0) || (atEnd && raw > 0)) {
@@ -394,18 +446,14 @@ const { id, label = "Image viewer" } = Astro.props;
             } else {
               dragTarget = Math.max(-1, Math.min(1, raw));
             }
-
-            const now = performance.now();
-            const dt = Math.max(8, now - lastTime);
-            velocity = (raw - lastRaw) / dt;
-            lastRaw = raw;
-            lastTime = now;
           },
           { signal }
         );
 
         const endSwipe = (event: PointerEvent) => {
           if (!dragging || event.pointerId !== pointerId) return;
+          const queued = queueSwipe;
+          queueSwipe = false;
           dragging = false;
           pointerId = -1;
           stopFollow();
@@ -418,7 +466,8 @@ const { id, label = "Image viewer" } = Astro.props;
           }
 
           if (performance.now() - lastTime > 90) velocity = 0;
-          const projected = dragTarget + velocity * 190;
+          const projected =
+            (queued ? queueSwipeRaw : dragTarget) + velocity * 190;
           let delta = 0;
           if (projected > 0.22 && current < count - 1) delta = 1;
           else if (projected < -0.22 && current > 0) delta = -1;
@@ -625,8 +674,10 @@ const { id, label = "Image viewer" } = Astro.props;
     width: auto;
     height: auto;
     object-fit: contain;
-    border-radius: 0.85rem;
-    box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.85);
+    border-radius: 0.75rem;
+    box-shadow:
+      0 18px 40px -30px rgba(0, 0, 0, 0.45),
+      0 2px 10px -8px rgba(0, 0, 0, 0.25);
     -webkit-user-drag: none;
     user-select: none;
   }
@@ -705,18 +756,12 @@ const { id, label = "Image viewer" } = Astro.props;
     .lightbox-image {
       max-width: 100%;
       max-height: calc(100dvh - 11rem);
-      border-radius: 0;
-      box-shadow: none;
     }
 
-    /* Phone viewer: counter + close + photo + bottom arrows + backdrop only. */
-    .lightbox-caption,
-    .lightbox-end-note {
-      display: none;
-    }
-
+    /* Phone viewer: counter + close + photo + bottom arrows + backdrop only.
+       Keep the end hint; only the optional caption stays out of the way. */
     .lightbox-caption {
-      font-size: 0.84rem;
+      display: none;
     }
 
     .lightbox-nav {
