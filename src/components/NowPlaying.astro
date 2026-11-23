@@ -118,7 +118,7 @@ const totalLabel = formatTime(first.duration);
   data-np-playing="false"
 >
   <div class="np-aura" aria-hidden="true">
-    {Array.from({ length: 6 }).map(() => (
+    {Array.from({ length: 12 }).map(() => (
       <i />
     ))}
   </div>
@@ -1119,6 +1119,26 @@ const totalLabel = formatTime(first.duration);
     pointer-events: none;
   }
 
+  .np-aura::before {
+    position: absolute;
+    left: 9%;
+    right: -4%;
+    bottom: 4%;
+    height: 62%;
+    border-radius: 1.4rem;
+    background: radial-gradient(
+      ellipse at 58% 52%,
+      color-mix(in srgb, currentColor 26%, transparent),
+      color-mix(in srgb, currentColor 9%, transparent) 46%,
+      transparent 72%
+    );
+    filter: blur(18px);
+    content: "";
+    opacity: 0.5;
+    pointer-events: none;
+    animation: np-aura-breathe 7.6s ease-in-out infinite;
+  }
+
   .np-aura i {
     position: absolute;
     left: var(--x, 50%);
@@ -1127,11 +1147,55 @@ const totalLabel = formatTime(first.duration);
     height: var(--s, 2px);
     border-radius: 50%;
     background: currentColor;
-    box-shadow: 0 0 9px currentColor;
+    box-shadow:
+      0 0 7px 1px currentColor,
+      0 0 18px 2px color-mix(in srgb, currentColor 58%, transparent);
     opacity: 0;
     animation: np-spark-rise var(--d, 8s) ease-in-out infinite;
     animation-delay: var(--delay, 0s);
     will-change: transform, opacity;
+  }
+
+  .np-aura i::before,
+  .np-aura i::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 999px;
+    content: "";
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
+
+  .np-aura i::before {
+    width: 0.85rem;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      currentColor 38%,
+      #ffffff 50%,
+      currentColor 62%,
+      transparent
+    );
+  }
+
+  .np-aura i::after {
+    width: 1px;
+    height: 0.85rem;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      currentColor 38%,
+      #ffffff 50%,
+      currentColor 62%,
+      transparent
+    );
+  }
+
+  .np-aura i:nth-child(3n)::before,
+  .np-aura i:nth-child(3n)::after {
+    opacity: 0.78;
   }
 
   .np-aura i:nth-child(1) {
@@ -1182,20 +1246,82 @@ const totalLabel = formatTime(first.duration);
     --delay: -3.5s;
   }
 
+  .np-aura i:nth-child(7) {
+    --x: calc(100% + 0.35rem);
+    --y: 10%;
+    --s: 1.8px;
+    --d: 7.9s;
+    --delay: -0.6s;
+  }
+
+  .np-aura i:nth-child(8) {
+    --x: -0.4rem;
+    --y: 82%;
+    --s: 2.2px;
+    --d: 9.5s;
+    --delay: -5.2s;
+  }
+
+  .np-aura i:nth-child(9) {
+    --x: 38%;
+    --y: calc(0% - 0.35rem);
+    --s: 2.1px;
+    --d: 8.2s;
+    --delay: -2.2s;
+  }
+
+  .np-aura i:nth-child(10) {
+    --x: calc(100% + 0.9rem);
+    --y: 44%;
+    --s: 1.6px;
+    --d: 12s;
+    --delay: -8.8s;
+  }
+
+  .np-aura i:nth-child(11) {
+    --x: -0.9rem;
+    --y: 38%;
+    --s: 1.7px;
+    --d: 10.2s;
+    --delay: -1.6s;
+  }
+
+  .np-aura i:nth-child(12) {
+    --x: 28%;
+    --y: calc(100% + 0.8rem);
+    --s: 2.3px;
+    --d: 9.1s;
+    --delay: -6.5s;
+  }
+
+  @keyframes np-aura-breathe {
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(0.98);
+    }
+    50% {
+      opacity: 0.78;
+      transform: scale(1.04);
+    }
+  }
+
   @keyframes np-spark-rise {
     0% {
       opacity: 0;
-      transform: translateY(0.6rem) scale(0.4);
+      transform: translateY(0.5rem) scale(0.4);
     }
-    12% {
-      opacity: 0.96;
+    10% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
     70% {
-      opacity: 0.42;
+      opacity: 0.52;
+      transform: translateY(-4rem) scale(0.7);
     }
     100% {
       opacity: 0;
-      transform: translateY(-6.5rem) scale(0.15);
+      transform: translateY(-7rem) scale(0.35);
     }
   }
 
@@ -1584,6 +1710,11 @@ const totalLabel = formatTime(first.duration);
 
     .np-expand[data-ready="true"] .np-expand-card {
       transition: none !important;
+    }
+
+    .np-aura::before {
+      animation: none;
+      opacity: 0.5;
     }
 
     .np-aura i {
