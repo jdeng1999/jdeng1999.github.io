@@ -183,8 +183,8 @@ const recommendedPost = rawRecommendedPost
         <!-- Metadata row -->
         <div class="post-meta-scroll mt-6 text-sm">
           <div class="post-meta-track">
-            <!-- Author chip -->
-            <div class="inline-flex items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1">
+            <!-- Author -->
+            <div class="post-meta-item inline-flex items-center gap-1.5">
               <svg
                 class="size-3.5 text-accent/70"
                 viewBox="0 0 24 24"
@@ -200,8 +200,8 @@ const recommendedPost = rawRecommendedPost
               <span class="opacity-70">{author}</span>
             </div>
 
-            <!-- Date chip -->
-            <div class="inline-flex items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1">
+            <!-- Date -->
+            <div class="post-meta-item inline-flex items-center gap-1.5">
               <svg
                 class="size-3.5 text-accent/70"
                 viewBox="0 0 24 24"
@@ -224,9 +224,9 @@ const recommendedPost = rawRecommendedPost
               />
             </div>
 
-            <!-- Reading time chip -->
+            <!-- Reading time -->
             {readingTime && (
-              <div class="inline-flex items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1">
+              <div class="post-meta-item inline-flex items-center gap-1.5">
                 <svg
                   class="size-3.5 text-accent/70"
                   viewBox="0 0 24 24"
@@ -247,7 +247,7 @@ const recommendedPost = rawRecommendedPost
             <!-- Read Mode Button -->
             <button
               id="read-mode-btn"
-              class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1 opacity-70 transition-all duration-200 hover:border-accent/30 hover:opacity-100"
+              class="post-meta-item post-meta-action inline-flex cursor-pointer items-center gap-1.5 opacity-70 transition-colors duration-150 hover:opacity-100"
               title={
                 locale === "es"
                   ? "Alternar Modo Lectura (Atajo: r)"

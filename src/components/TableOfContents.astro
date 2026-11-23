@@ -32,7 +32,7 @@ if (tocHeadings.length === 0) {
       <li class={`toc-item depth-${heading.depth}`}>
         <a
           href={`#${heading.slug}`}
-          class="toc-link block font-firacode text-[12.5px] text-foreground/60 no-underline transition-all duration-200 hover:text-accent"
+          class="toc-link block font-firacode text-[12.5px] text-foreground/60 no-underline hover:text-accent"
           data-toc-link
         >
           {heading.text}
@@ -160,83 +160,6 @@ if (tocHeadings.length === 0) {
   });
 </script>
 
-<script>
-  let tocPreviewCleanup: AbortController | null = null;
-
-  function initTocPreview() {
-    tocPreviewCleanup?.abort();
-    const controller = new AbortController();
-    tocPreviewCleanup = controller;
-    const { signal } = controller;
-
-    let preview = document.getElementById("toc-hover-preview");
-    if (!preview) {
-      preview = document.createElement("div");
-      preview.id = "toc-hover-preview";
-      preview.className = "toc-hover-preview";
-      preview.setAttribute("aria-hidden", "true");
-      document.body.appendChild(preview);
-    }
-
-    const hide = () => {
-      preview?.classList.remove("is-open");
-      document
-        .querySelectorAll<HTMLElement>(".toc-link.is-previewing")
-        .forEach(link => link.classList.remove("is-previewing"));
-    };
-
-    const show = (link: HTMLAnchorElement) => {
-      if (!preview) return;
-      if (link.scrollWidth <= link.clientWidth + 2) {
-        hide();
-        return;
-      }
-
-      const rect = link.getBoundingClientRect();
-      preview.textContent = link.textContent?.trim() ?? "";
-      preview.style.left = `${Math.round(rect.left - 7)}px`;
-      preview.style.top = `${Math.round(rect.top - 3)}px`;
-      preview.classList.add("is-open");
-
-      document
-        .querySelectorAll<HTMLElement>(".toc-link.is-previewing")
-        .forEach(item => {
-          if (item !== link) item.classList.remove("is-previewing");
-        });
-      link.classList.add("is-previewing");
-    };
-
-    document
-      .querySelectorAll<HTMLAnchorElement>(".toc-link[data-toc-link]")
-      .forEach(link => {
-        link.addEventListener("pointerenter", () => show(link), { signal });
-        link.addEventListener("pointerleave", hide, { signal });
-        link.addEventListener("focus", () => show(link), { signal });
-        link.addEventListener("blur", hide, { signal });
-      });
-
-    window.addEventListener("scroll", hide, {
-      passive: true,
-      capture: true,
-      signal,
-    });
-    window.addEventListener("resize", hide, { signal });
-
-    document.addEventListener(
-      "astro:before-swap",
-      () => {
-        hide();
-        controller.abort();
-        tocPreviewCleanup = null;
-      },
-      { once: true, signal }
-    );
-  }
-
-  initTocPreview();
-  document.addEventListener("astro:page-load", initTocPreview);
-</script>
-
 <style>
   .toc-navigation {
     position: relative;
@@ -282,39 +205,9 @@ if (tocHeadings.length === 0) {
     );
   }
 
-  .toc-link.is-previewing {
-    color: transparent !important;
-    text-shadow: none !important;
-  }
-
   .toc-link.active {
     color: var(--accent) !important;
     font-weight: 500;
     text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 25%, transparent);
-  }
-
-  :global(.toc-hover-preview) {
-    position: fixed;
-    z-index: 220;
-    max-width: none;
-    padding: 0.2rem 0.45rem;
-    border-radius: 0.4rem;
-    background: color-mix(in srgb, var(--background) 97%, transparent);
-    box-shadow: 0 0 18px 8px
-      color-mix(in srgb, var(--background) 82%, transparent);
-    color: var(--accent);
-    font-family: var(--font-firacode), ui-monospace, monospace;
-    font-size: 12.5px;
-    line-height: 1.5;
-    white-space: nowrap;
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
-    user-select: none;
-  }
-
-  :global(.toc-hover-preview.is-open) {
-    visibility: visible;
-    opacity: 1;
   }
 </style>

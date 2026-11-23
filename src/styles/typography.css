@@ -76,7 +76,7 @@
       th,
       td {
         @apply border p-2;
-        border-color: color-mix(in srgb, var(--border) 30%, transparent);
+        border-color: color-mix(in srgb, var(--border) 45%, transparent);
         word-wrap: break-word;
         word-break: break-word;
         hyphens: auto;
@@ -249,6 +249,7 @@
 
   .astro-code {
     @apply flex border bg-(--shiki-light-bg) text-(--shiki-light) outline-border [&_span]:text-(--shiki-light);
+    border-color: color-mix(in srgb, var(--border) 45%, transparent);
     -ms-overflow-style: none;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
