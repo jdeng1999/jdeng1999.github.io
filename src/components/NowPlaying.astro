@@ -116,84 +116,32 @@ const totalLabel = formatTime(first.duration);
   data-np-playing="false"
 >
   <div class="np-stack" data-np-stack>
-    {tracks.length > 2 && (
-      <button
-        type="button"
-        class="np-peek np-peek--back"
-        data-np-peek="2"
-        aria-label={`${tracks[2]!.title} — ${nextLabel}`}
-      >
-        <img
-          class="np-peek-cover"
-          data-np-peek-cover="2"
-          src={tracks[2]!.cover}
-          alt=""
-          width="40"
-          height="40"
-          loading="lazy"
-          decoding="async"
-        />
-        <span class="np-peek-title" data-np-peek-title="2">
-          {tracks[2]!.title}
-        </span>
-        <span class="np-peek-arrow" aria-hidden="true">
-          ↗
-        </span>
-      </button>
-    )}
-    {tracks.length > 1 && (
-      <button
-        type="button"
-        class="np-peek"
-        data-np-peek="1"
-        aria-label={`${tracks[1]!.title} — ${nextLabel}`}
-      >
-        <img
-          class="np-peek-cover"
-          data-np-peek-cover="1"
-          src={tracks[1]!.cover}
-          alt=""
-          width="40"
-          height="40"
-          loading="lazy"
-          decoding="async"
-        />
-        <span class="np-peek-title" data-np-peek-title="1">
-          {tracks[1]!.title}
-        </span>
-        <span class="np-peek-arrow" aria-hidden="true">
-          ↗
-        </span>
-      </button>
-    )}
-
-    {tracks.length > 3 && (
-      <div
-        class="np-peek np-peek--ghost"
-        data-np-peek-ghost="3"
-        aria-hidden="true"
-      >
-        <img
-          class="np-peek-cover"
-          data-np-peek-cover-ghost
-          src={tracks[3]!.cover}
-          alt=""
-          width="40"
-          height="40"
-          loading="lazy"
-          decoding="async"
-        />
-        <span class="np-peek-title" data-np-peek-title-ghost>
-          {tracks[3]!.title}
-        </span>
-        <span class="np-peek-arrow" aria-hidden="true">
-          ↗
-        </span>
-      </div>
-    )}
-
     <div class="np-stage" data-np-stage>
-      <div class="np-card" data-np-card>
+      <div class="np-card" data-np-card data-np-track-index="0">
+        <button
+          type="button"
+          class="np-peek-face"
+          data-np-peek-face
+          aria-label={`${first.title} — ${nextLabel}`}
+        >
+          <img
+            class="np-peek-cover"
+            data-np-peek-cover
+            src={first.cover}
+            alt=""
+            width="40"
+            height="40"
+            loading="lazy"
+            decoding="async"
+          />
+          <span class="np-peek-title" data-np-peek-title>
+            {first.title}
+          </span>
+          <span class="np-peek-arrow" aria-hidden="true">
+            ↗
+          </span>
+        </button>
+
         <div class="np-art">
           <img
             data-np-cover
@@ -207,7 +155,7 @@ const totalLabel = formatTime(first.duration);
           <span class="np-art-sheen" aria-hidden="true"></span>
         </div>
 
-        <div class="np-body">
+        <div class="np-body" data-np-body>
           <div class="np-head">
             <p class="np-eyebrow">
               <span class="np-eq" aria-hidden="true">
@@ -420,6 +368,8 @@ const totalLabel = formatTime(first.duration);
     min-width: 0;
     user-select: none;
     -webkit-user-select: none;
+    touch-action: none;
+    overscroll-behavior: contain;
   }
 
   .now-playing img {
@@ -430,29 +380,25 @@ const totalLabel = formatTime(first.duration);
   .np-stack {
     position: relative;
     isolation: isolate;
-    padding-top: 2.9rem;
+    /* Reserve room for the deepest card and keep transformed cards from
+       extending the document's scrollable height. */
+    padding-top: 3.5rem;
+    contain: paint;
+    touch-action: none;
   }
 
   .np-stage {
-    --np-deck-gap: 0.9rem;
-
     position: relative;
     overflow: visible;
-    clip-path: inset(0);
+    clip-path: inset(-3.8rem 0 0 0);
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
   }
 
-  /* Pulling the next card down from the stack should reveal its top edge,
-     while the opposite gesture keeps the outgoing card clipped cleanly. */
-  .np-stage[data-deck-direction="next"] {
-    clip-path: inset(-3.6rem 0 0 0);
-  }
-
-  .np-reel {
-    display: flex;
-    flex-direction: column;
+  .now-playing[data-np-moving="true"] .np-body,
+  .now-playing[data-np-moving="true"] .np-peek-face {
+    pointer-events: none;
   }
 
   .np-card.np-clone {
@@ -460,33 +406,16 @@ const totalLabel = formatTime(first.duration);
     top: 0;
     right: 0;
     left: 0;
-    z-index: 1;
-    overflow: hidden;
     border-radius: 1.05rem;
-    pointer-events: none;
-    will-change: transform, opacity;
+    will-change: transform, opacity, filter;
   }
 
-  .np-card.np-clone {
+  .np-peek-face {
     position: absolute;
+    z-index: 3;
     top: 0;
     right: 0;
     left: 0;
-    z-index: 1;
-    overflow: hidden;
-    border-radius: 1.05rem;
-    pointer-events: none;
-    will-change: transform, opacity;
-  }
-
-  .np-peek {
-    --peek-tilt: -1.4deg;
-
-    position: absolute;
-    z-index: 0;
-    top: 1.1rem;
-    right: 0.55rem;
-    left: 0.55rem;
     display: flex;
     align-items: flex-start;
     gap: 0.4rem;
@@ -495,77 +424,35 @@ const totalLabel = formatTime(first.duration);
     overflow: hidden;
     border: 1px solid
       color-mix(in srgb, var(--color-foreground) 10%, transparent);
-    border-radius: 1.1rem;
+    border-radius: 1.05rem;
     background: color-mix(
       in srgb,
-      var(--color-foreground) 6%,
+      var(--color-foreground) 7%,
       var(--color-background)
     );
     color: color-mix(in srgb, var(--color-foreground) 48%, transparent);
     font-family: inherit;
     text-align: left;
-    transform: rotate(var(--peek-tilt));
-    transform-origin: 50% 100%;
-    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
     transition:
-      transform 0.25s ease,
       border-color 0.2s ease,
       color 0.2s ease,
-      background-color 0.2s ease,
-      opacity 0.18s ease;
+      background-color 0.2s ease;
   }
 
-  .np-stack.is-dealing [data-np-peek="1"] {
-    opacity: 0;
+  .np-peek-face[data-interactive="true"] {
+    cursor: pointer;
+    pointer-events: auto;
   }
 
-  .np-stack.is-dealing .np-peek--back {
-    opacity: 0.5;
-    transform: rotate(var(--peek-tilt)) translateY(-2px) scale(0.985);
-  }
-
-  .np-stack.is-dealing .np-peek--ghost {
-    opacity: 0.22;
-    transform: rotate(calc(var(--peek-tilt) * 1.5)) translateY(-2px)
-      scale(0.965);
-  }
-
-  .np-peek--back {
-    z-index: -1;
-    top: 0;
-    right: 1.05rem;
-    left: 1.05rem;
-    opacity: 0.72;
-  }
-
-  /* The fourth card is only a hint: visible enough to promise more tracks,
-     but not interactive until it rotates into the second peek slot. */
-  .np-peek--ghost {
-    z-index: -2;
-    top: -0.6rem;
-    right: 1.5rem;
-    left: 1.5rem;
-    border-color: color-mix(in srgb, var(--color-foreground) 6%, transparent);
-    background: color-mix(
-      in srgb,
-      var(--color-foreground) 3%,
-      var(--color-background)
-    );
-    opacity: 0.34;
-    filter: blur(0.25px);
-    transform: rotate(calc(var(--peek-tilt) * 1.5)) scale(0.98);
-    pointer-events: none;
-    cursor: default;
-  }
-
-  .np-peek:hover {
+  .np-peek-face[data-interactive="true"]:hover {
     border-color: color-mix(in srgb, var(--color-accent) 34%, transparent);
     background: color-mix(in srgb, var(--color-accent) 7%, transparent);
     color: var(--color-accent);
-    transform: rotate(var(--peek-tilt)) translateY(-3px);
   }
 
-  .np-peek:focus-visible {
+  .np-peek-face:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
     outline-offset: 2px;
   }
@@ -600,15 +487,14 @@ const totalLabel = formatTime(first.duration);
 
   .np-card {
     position: relative;
-    z-index: 2;
+    z-index: 1;
     isolation: isolate;
     display: grid;
-    transform-origin: 50% 0%;
-    will-change: transform;
     grid-template-columns: 6.75rem minmax(0, 1fr);
     gap: 0.95rem;
     min-height: 10.25rem;
     padding: 0.82rem;
+    overflow: hidden;
     border: 0;
     border-radius: 1.05rem;
     background:
@@ -622,13 +508,11 @@ const totalLabel = formatTime(first.duration);
       0 8px 20px -20px
         color-mix(in srgb, var(--color-foreground) 38%, transparent),
       inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 6%, transparent);
+    transform-origin: 50% 0%;
+    will-change: transform, opacity, filter;
     transition: box-shadow 0.25s ease;
   }
 
-  .np-card--ghost {
-    pointer-events: none;
-    will-change: transform, opacity;
-  }
   .np-card:hover {
     box-shadow:
       0 16px 34px -26px
@@ -673,9 +557,16 @@ const totalLabel = formatTime(first.duration);
   }
 
   .np-body {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     min-width: 0;
+    pointer-events: auto;
+  }
+
+  .np-body[inert] {
+    pointer-events: none;
   }
 
   .np-head {
@@ -1440,66 +1331,105 @@ const totalLabel = formatTime(first.duration);
 
     const labels = data.labels;
     const tracks = data.tracks;
+    const visibleCount = Math.min(tracks.length, 4);
 
-    const cover = root.querySelector<HTMLImageElement>("[data-np-cover]");
-    const stage = root.querySelector<HTMLElement>("[data-np-stage]");
-    const card = root.querySelector<HTMLElement>("[data-np-card]");
-    const peeks = Array.from(
-      root.querySelectorAll<HTMLButtonElement>("[data-np-peek]")
-    );
-    const ghostPeek = root.querySelector<HTMLElement>("[data-np-peek-ghost]");
-    const ghostCover = root.querySelector<HTMLImageElement>(
-      "[data-np-peek-cover-ghost]"
-    );
-    const ghostTitle = root.querySelector<HTMLElement>(
-      "[data-np-peek-title-ghost]"
-    );
     const stack = root.querySelector<HTMLElement>("[data-np-stack]");
-    const modeButton = root.querySelector<HTMLButtonElement>("[data-np-mode]");
-    const titleEl = root.querySelector<HTMLElement>("[data-np-title]");
-    const artistEl = root.querySelector<HTMLElement>("[data-np-artist]");
-    const albumEl = root.querySelector<HTMLElement>("[data-np-album]");
-    const countEl = root.querySelector<HTMLElement>("[data-np-count]");
-    const linkEl = root.querySelector<HTMLAnchorElement>("[data-np-link]");
-    const toggle = root.querySelector<HTMLButtonElement>("[data-np-toggle]");
-    const prevButton = root.querySelector<HTMLButtonElement>("[data-np-prev]");
-    const nextButton = root.querySelector<HTMLButtonElement>("[data-np-next]");
-    const restartButton =
-      root.querySelector<HTMLButtonElement>("[data-np-restart]");
-    const previewLink =
-      root.querySelector<HTMLAnchorElement>("[data-np-preview]");
-    const seek = root.querySelector<HTMLElement>("[data-np-seek]");
-    const fill = root.querySelector<HTMLElement>("[data-np-fill]");
-    const currentText = root.querySelector<HTMLElement>("[data-np-current]");
-    const totalText = root.querySelector<HTMLElement>("[data-np-total]");
+    const stage = root.querySelector<HTMLElement>("[data-np-stage]");
+    const serverCard = root.querySelector<HTMLElement>("[data-np-card]");
     const embedHost = root.querySelector<HTMLElement>("[data-np-embed]");
     const audio = root.querySelector<HTMLAudioElement>("[data-np-audio]");
 
-    if (
-      !cover ||
-      !stage ||
-      !card ||
-      !titleEl ||
-      !artistEl ||
-      !albumEl ||
-      !countEl ||
-      !linkEl ||
-      !toggle ||
-      !prevButton ||
-      !nextButton ||
-      !restartButton ||
-      !previewLink ||
-      !seek ||
-      !fill ||
-      !currentText ||
-      !totalText ||
-      !embedHost ||
-      !audio
-    ) {
-      return;
+    if (!stack || !stage || !serverCard || !embedHost || !audio) return;
+
+    // One full card per track. Cloning the server card keeps the complete
+    // markup in a single place while giving the deck four independent layers.
+    const deckCards: HTMLElement[] = [serverCard];
+    for (let i = 1; i < visibleCount; i++) {
+      const clone = serverCard.cloneNode(true) as HTMLElement;
+      clone.classList.add("np-clone");
+      clone.removeAttribute("data-np-card");
+      clone
+        .querySelectorAll("[id]")
+        .forEach(node => node.removeAttribute("id"));
+      stage.appendChild(clone);
+      deckCards.push(clone);
     }
 
+    let activeCard = deckCards[0]!;
     let index = 0;
+
+    const getBody = (card: HTMLElement) =>
+      card.querySelector<HTMLElement>("[data-np-body]");
+    const activeEl = <T extends Element>(selector: string) =>
+      activeCard.querySelector<T>(selector);
+
+    const setText = (card: HTMLElement, selector: string, value: string) => {
+      const node = card.querySelector<HTMLElement>(selector);
+      if (node) node.textContent = value;
+    };
+
+    const applyCardContent = (
+      card: HTMLElement,
+      track: MusicTrack,
+      trackIndex: number
+    ) => {
+      card.dataset.npTrackIndex = String(trackIndex);
+
+      const coverEl = card.querySelector<HTMLImageElement>("[data-np-cover]");
+      if (coverEl) coverEl.src = track.cover;
+      setText(card, "[data-np-title]", track.title);
+      setText(card, "[data-np-artist]", track.artist);
+      setText(card, "[data-np-album]", track.album);
+      setText(
+        card,
+        "[data-np-count]",
+        `${String(trackIndex + 1).padStart(2, "0")} / ${String(
+          tracks.length
+        ).padStart(2, "0")}`
+      );
+      setText(card, "[data-np-total]", formatTime(track.duration * 1000));
+
+      const link = card.querySelector<HTMLAnchorElement>("[data-np-link]");
+      if (link) link.href = track.url;
+
+      const preview =
+        card.querySelector<HTMLAnchorElement>("[data-np-preview]");
+      if (preview) {
+        preview.href = track.url;
+        preview.hidden = track.isLocal;
+      }
+
+      const peekFace = card.querySelector<HTMLButtonElement>(
+        "[data-np-peek-face]"
+      );
+      if (peekFace) {
+        peekFace.setAttribute("aria-label", `${track.title} — ${labels.next}`);
+      }
+      const peekCover = card.querySelector<HTMLImageElement>(
+        "[data-np-peek-cover]"
+      );
+      if (peekCover) peekCover.src = track.cover;
+      setText(card, "[data-np-peek-title]", track.title);
+    };
+
+    deckCards.forEach((card, trackIndex) => {
+      applyCardContent(card, tracks[trackIndex]!, trackIndex);
+    });
+
+    const setActiveCard = (card: HTMLElement) => {
+      activeCard = card;
+      index = Number(card.dataset.npTrackIndex) || 0;
+
+      deckCards.forEach(other => {
+        const body = getBody(other);
+        if (!body) return;
+        const isActive = other === activeCard;
+        body.toggleAttribute("inert", !isActive);
+        if (isActive) body.removeAttribute("aria-hidden");
+        else body.setAttribute("aria-hidden", "true");
+      });
+    };
+
     let source: "local" | "spotify" = "local";
     let isPlaying = false;
     let isDragging = false;
@@ -1524,17 +1454,36 @@ const totalLabel = formatTime(first.duration);
     const setPlaying = (playing: boolean) => {
       isPlaying = playing;
       root.dataset.npPlaying = String(playing);
-      toggle.setAttribute("aria-pressed", String(playing));
-      toggle.setAttribute("aria-label", playing ? labels.pause : labels.play);
+      root
+        .querySelectorAll<HTMLButtonElement>("[data-np-toggle]")
+        .forEach(toggle => {
+          toggle.setAttribute("aria-pressed", String(playing));
+          toggle.setAttribute(
+            "aria-label",
+            playing ? labels.pause : labels.play
+          );
+        });
       emitState();
     };
 
     const paintDuration = () => {
-      totalText.textContent = formatTime(durationMs);
-      seek.setAttribute("aria-valuemax", String(Math.round(durationMs / 1000)));
+      const totalText = activeEl<HTMLElement>("[data-np-total]");
+      const seek = activeEl<HTMLElement>("[data-np-seek]");
+      if (totalText) totalText.textContent = formatTime(durationMs);
+      if (seek) {
+        seek.setAttribute(
+          "aria-valuemax",
+          String(Math.round(durationMs / 1000))
+        );
+      }
     };
 
     const paintProgress = (ms: number) => {
+      const seek = activeEl<HTMLElement>("[data-np-seek]");
+      const fill = activeEl<HTMLElement>("[data-np-fill]");
+      const currentText = activeEl<HTMLElement>("[data-np-current]");
+      if (!seek || !fill || !currentText) return;
+
       positionMs = clamp(ms, 0, Math.max(durationMs, 0));
       const ratio = durationMs > 0 ? positionMs / durationMs : 0;
       seek.style.setProperty("--np-p", `${ratio * 100}%`);
@@ -1543,28 +1492,10 @@ const totalLabel = formatTime(first.duration);
       currentText.textContent = formatTime(positionMs);
     };
 
-    const updateTrackUi = (track: MusicTrack) => {
-      cover.src = track.cover;
-      cover.alt = "";
-      titleEl.textContent = track.title;
-      artistEl.textContent = track.artist;
-      albumEl.textContent = track.album;
-      linkEl.href = track.url;
-      previewLink.href = track.url;
-      countEl.textContent = `${String(index + 1).padStart(2, "0")} / ${String(
-        tracks.length
-      ).padStart(2, "0")}`;
-
-      syncClones();
-      syncPeeks();
-
-      endedHandled = false;
-      durationMs = track.duration * 1000;
-      positionMs = 0;
-      paintDuration();
-      paintProgress(0);
-      previewLink.hidden = track.isLocal;
-      root.dataset.npSource = track.isLocal ? "local" : "spotify";
+    const previewEl = () => activeEl<HTMLAnchorElement>("[data-np-preview]");
+    const setPreviewHidden = (hidden: boolean) => {
+      const preview = previewEl();
+      if (preview) preview.hidden = hidden;
     };
 
     const stopLocalAudio = () => {
@@ -1645,7 +1576,7 @@ const totalLabel = formatTime(first.duration);
                 }
 
                 setPlaying(!playback.isPaused);
-                previewLink.hidden = false;
+                setPreviewHidden(false);
                 root.dataset.npSource = "spotify";
 
                 if (playback.duration > 0) {
@@ -1671,7 +1602,7 @@ const totalLabel = formatTime(first.duration);
       } catch {
         root.dataset.npLoading = "false";
         root.dataset.npUnavailable = "true";
-        previewLink.hidden = false;
+        setPreviewHidden(false);
       } finally {
         connecting = false;
       }
@@ -1683,7 +1614,11 @@ const totalLabel = formatTime(first.duration);
       const track = tracks[index];
       if (!track) return;
 
-      updateTrackUi(track);
+      endedHandled = false;
+      durationMs = track.duration * 1000;
+      positionMs = 0;
+      paintDuration();
+      paintProgress(0);
 
       if (track.isLocal && !localFailed) {
         source = "local";
@@ -1693,7 +1628,7 @@ const totalLabel = formatTime(first.duration);
         audio.currentTime = 0;
         audio.load();
         root.dataset.npSource = "local";
-        previewLink.hidden = true;
+        setPreviewHidden(true);
 
         if (autoplay) {
           void audio.play().catch(() => {
@@ -1702,17 +1637,19 @@ const totalLabel = formatTime(first.duration);
             void connectSpotify(track, true);
           });
         }
+        emitState();
         return;
       }
 
       source = "spotify";
       stopLocalAudio();
-      previewLink.hidden = false;
+      setPreviewHidden(false);
       root.dataset.npSource = "spotify";
       if (autoplay) {
         requestedPlay = true;
         void connectSpotify(track, true);
       }
+      emitState();
     };
 
     const pauseCurrent = () => {
@@ -1720,107 +1657,133 @@ const totalLabel = formatTime(first.duration);
       else spotifyController?.pause();
     };
 
-    const applyCardContent = (
-      el: HTMLElement,
-      track: MusicTrack,
-      trackIndex: number
-    ) => {
-      const setText = (selector: string, value: string) => {
-        const node = el.querySelector<HTMLElement>(selector);
-        if (node) node.textContent = value;
-      };
-      const image = el.querySelector<HTMLImageElement>("[data-np-cover]");
-      if (image) image.src = track.cover;
-
-      setText("[data-np-title]", track.title);
-      setText("[data-np-artist]", track.artist);
-      setText("[data-np-album]", track.album);
-      setText(
-        "[data-np-count]",
-        `${String(trackIndex + 1).padStart(2, "0")} / ${String(
-          tracks.length
-        ).padStart(2, "0")}`
-      );
-      setText("[data-np-total]", formatTime(track.duration * 1000));
-
-      const link = el.querySelector<HTMLAnchorElement>("[data-np-link]");
-      if (link) link.href = track.url;
-    };
-
-    const getCardHeight = () => card?.offsetHeight || 0;
-    const PEEK = 0;
+    const getCardHeight = () => serverCard.offsetHeight || 0;
 
     const syncStageHeight = () => {
-      if (!stage) return;
       const height = getCardHeight();
-      if (height > 0) stage.style.height = `${height + PEEK * 2}px`;
+      if (height > 0) stage.style.height = `${height}px`;
     };
 
-    // ── Vertical deck ────────────────────────────────────────────
-    // The stage is a window over a three-card reel; each wheel burst or
-    // touch swipe advances exactly one card.
-    const prevClone = card.cloneNode(true) as HTMLElement;
-    const nextClone = card.cloneNode(true) as HTMLElement;
+    const unitRem = () =>
+      Number.parseFloat(getComputedStyle(document.documentElement).fontSize) ||
+      16;
 
-    [prevClone, nextClone].forEach(clone => {
-      clone.classList.add("np-card", "np-clone");
-      clone.classList.remove("np-card--clone");
-      clone.removeAttribute("data-np-card");
-      clone.setAttribute("aria-hidden", "true");
-      clone
-        .querySelectorAll("[id]")
-        .forEach(node => node.removeAttribute("id"));
-      stage.appendChild(clone);
-    });
+    // Natural deck slots. Role 0 is the front; the other roles are the three
+    // cards peeking above it, from nearest to deepest.
+    let remSize = 16;
+    const slotYRem = [0, -1.8, -2.9, -3.5];
+    const slotScale = [1, 0.97, 0.94, 0.91];
+    const slotOpacity = [1, 0.92, 0.74, 0.52];
+    const slotBlur = [0, 0.12, 0.32, 0.6];
+    const slotRotate = [0, -0.5, -1.05, -1.55];
+    const slotZ = [4, 3, 2, 1];
+    const lastRole = visibleCount - 1;
 
-    const syncClones = () => {
-      const count = tracks.length;
-      if (count < 2) {
-        prevClone.style.display = "none";
-        nextClone.style.display = "none";
-        return;
-      }
-
-      // Infinite deck: the previous and next cards always exist by wrapping.
-      prevClone.style.display = "";
-      nextClone.style.display = "";
-      const prevIndex = (index - 1 + count) % count;
-      const nextIndex = (index + 1) % count;
-      applyCardContent(prevClone, tracks[prevIndex]!, prevIndex);
-      applyCardContent(nextClone, tracks[nextIndex]!, nextIndex);
+    const measureDeck = () => {
+      remSize = unitRem();
+      syncStageHeight();
     };
 
-    const syncPeeks = () => {
-      peeks.forEach(button => {
-        const offset = Number(button.dataset.npPeek ?? "1");
-        const peekTrack = tracks[(index + offset) % tracks.length];
-        const peekCover = button.querySelector<HTMLImageElement>(
-          "[data-np-peek-cover]"
-        );
-        const peekTitle = button.querySelector<HTMLElement>(
-          "[data-np-peek-title]"
-        );
+    const slotAt = (role: number) => {
+      const i = Math.min(Math.max(role, 0), 3);
+      return {
+        y: slotYRem[i]! * remSize,
+        scale: slotScale[i]!,
+        opacity: slotOpacity[i]!,
+        blur: slotBlur[i]!,
+        rotate: slotRotate[i]!,
+        z: slotZ[i]!,
+      };
+    };
 
-        if (!peekTrack || offset >= tracks.length) {
-          button.hidden = true;
-          return;
+    const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    const smoothstep = (edge0: number, edge1: number, value: number) => {
+      const t = clamp01((value - edge0) / (edge1 - edge0));
+      return t * t * (3 - 2 * t);
+    };
+
+    const renderDeck = () => {
+      const phase = deckOffset;
+      const settled =
+        !draggingDeck &&
+        !springing &&
+        Math.abs(deckTarget - deckOffset) < 0.001;
+
+      deckCards.forEach((card, role) => {
+        const from = role;
+        let to = role;
+        let t = 0;
+
+        if (phase > 0.001) {
+          t = clamp01(phase);
+          to = role === 0 ? lastRole : role - 1;
+        } else if (phase < -0.001) {
+          t = clamp01(-phase);
+          to = role === lastRole ? 0 : role + 1;
         }
 
-        button.hidden = false;
-        if (peekCover) peekCover.src = peekTrack.cover;
-        if (peekTitle) peekTitle.textContent = peekTrack.title;
-        button.setAttribute("aria-label", peekTrack.title);
+        const a = slotAt(from);
+        const b = slotAt(to);
+
+        let y = lerp(a.y, b.y, t);
+        // The outgoing front card first follows the finger down, then tucks
+        // up into the back of the stack while it fades.
+        if (phase > 0.001 && role === 0) {
+          y += 2.4 * remSize * Math.sin(Math.PI * t);
+        }
+
+        const scale = lerp(a.scale, b.scale, t);
+        const opacity = lerp(a.opacity, b.opacity, t);
+        const blur = lerp(a.blur, b.blur, t);
+        const rotate = lerp(a.rotate, b.rotate, t);
+
+        // Keep the card that owns the gesture on top while it shrinks; only
+        // hand the front z-index to the incoming card near the end. This
+        // prevents the next card from flashing over it mid-gesture.
+        let z: number;
+        if (phase > 0.001) {
+          if (role === 0) {
+            z = 4 - 3 * smoothstep(0.55, 0.95, t);
+          } else if (role === 1) {
+            z = 3 + smoothstep(0.45, 0.9, t);
+          } else {
+            z = lerp(a.z, b.z, t);
+          }
+        } else if (phase < -0.001) {
+          if (role === 0) {
+            z = 4 - smoothstep(0.5, 0.9, t);
+          } else if (role === lastRole) {
+            z = 1 + 3 * smoothstep(0.4, 0.9, t);
+          } else {
+            z = lerp(a.z, b.z, t);
+          }
+        } else {
+          z = a.z;
+        }
+
+        card.style.transform = `translate3d(0, ${y}px, 0) scale(${scale}) rotate(${rotate}deg)`;
+        card.style.opacity = String(opacity);
+        card.style.filter = blur > 0.01 ? `blur(${blur}px)` : "none";
+        card.style.zIndex = String(Math.round(z));
+
+        const face = card.querySelector<HTMLButtonElement>(
+          "[data-np-peek-face]"
+        );
+        if (face) {
+          // The peek face belongs to the back of the card. It is only
+          // removed as that card actually reaches the front layer, so tiny
+          // drags, snap-backs and direction changes never flash content.
+          const faceOpacity = 1 - smoothstep(3.15, 3.9, z);
+          face.style.opacity = String(clamp01(faceOpacity));
+          const interactive = settled && (role === 1 || role === 2);
+          face.dataset.interactive = String(interactive);
+          face.toggleAttribute("inert", !interactive);
+          face.tabIndex = interactive ? 0 : -1;
+        }
       });
 
-      const ghostTrack =
-        tracks.length >= 4 ? tracks[(index + 3) % tracks.length] : undefined;
-      if (ghostPeek) {
-        ghostPeek.hidden = !ghostTrack;
-        if (ghostTrack) {
-          if (ghostCover) ghostCover.src = ghostTrack.cover;
-          if (ghostTitle) ghostTitle.textContent = ghostTrack.title;
-        }
-      }
+      root.dataset.npMoving = String(!settled);
     };
 
     let deckOffset = 0;
@@ -1829,8 +1792,6 @@ const totalLabel = formatTime(first.duration);
     let deckVelocity = 0;
     let springing = false;
     let resumeAfterCommit = false;
-    let deckGapPx = 14;
-    let deckRestScale = 0.95;
 
     let draggingDeck = false;
     let dragPointerId = -1;
@@ -1845,79 +1806,42 @@ const totalLabel = formatTime(first.duration);
     let wheelLocked = false;
     let wheelUnlockTimer = 0;
 
-    const clampDrag = (value: number) => Math.max(-0.98, Math.min(0.98, value));
+    const pendingMoves: Array<{
+      direction: 1 | -1;
+      autoplay: boolean;
+    }> = [];
 
-    const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+    const clampDrag = (value: number) => Math.max(-1, Math.min(1, value));
 
-    const measureDeck = () => {
-      if (!stage || !card) return;
-      const raw =
-        Number.parseFloat(
-          getComputedStyle(stage).getPropertyValue("--np-deck-gap")
-        ) || 0.9;
-      const rootSize =
-        Number.parseFloat(
-          getComputedStyle(document.documentElement).fontSize
-        ) || 16;
-      deckGapPx = raw * rootSize;
-
-      const nextPeek =
-        peeks.find(button => button.dataset.npPeek === "1") ?? peeks[0];
-      const peekWidth = nextPeek?.offsetWidth ?? 0;
-      const cardWidth = card.offsetWidth || 1;
-      // The outgoing card settles at the width of the card peeking out just
-      // behind the deck in its natural resting state.
-      deckRestScale = peekWidth
-        ? Math.max(0.9, Math.min(0.985, peekWidth / cardWidth))
-        : 0.95;
-    };
-
-    const renderDeck = () => {
-      const height = getCardHeight();
-      if (!height || !card) return;
-
-      // Cards travel a full card height plus a breathing gap, so the deck
-      // reads as a stack of separate cards rather than one continuous strip.
-      const step = height + deckGapPx;
-      const progress = clamp01(Math.abs(deckOffset));
-      const currentScale = 1 - (1 - deckRestScale) * progress;
-      const nextScale = 1 - (1 - deckRestScale) * (1 - clamp01(deckOffset));
-      const prevScale = 1 - (1 - deckRestScale) * (1 - clamp01(-deckOffset));
-
-      // The peeks sit above the stage, so "next" comes down from that stack
-      // and "previous" rises from below. The outgoing card shrinks toward
-      // the size of the naturally displayed second card while the incoming
-      // card grows back to the full front-card size.
-      card.style.transform = `translate3d(0, ${
-        PEEK + deckOffset * step
-      }px, 0) scale(${currentScale})`;
-
-      nextClone.style.transform = `translate3d(0, ${
-        PEEK + (deckOffset - 1) * step
-      }px, 0) scale(${nextScale})`;
-
-      prevClone.style.transform = `translate3d(0, ${
-        PEEK + (deckOffset + 1) * step
-      }px, 0) scale(${prevScale})`;
+    const startDeck = () => {
+      if (!deckFrame) deckFrame = requestAnimationFrame(deckTick);
     };
 
     const commitIfNeeded = () => {
       let moved = 0;
+
       while (deckOffset >= 1) {
-        index = (index + 1) % tracks.length;
+        deckCards.push(deckCards.shift()!);
         deckOffset -= 1;
         deckTarget -= 1;
         moved += 1;
       }
+
       while (deckOffset <= -1) {
-        index = (index - 1 + tracks.length) % tracks.length;
+        deckCards.unshift(deckCards.pop()!);
         deckOffset += 1;
         deckTarget += 1;
         moved -= 1;
       }
 
-      if (moved === 0) return false;
+      if (!moved) return false;
 
+      deckOffset = 0;
+      deckTarget = 0;
+      deckVelocity = 0;
+      springing = false;
+
+      setActiveCard(deckCards[0]!);
       const autoplay = resumeAfterCommit;
       resumeAfterCommit = false;
       if (!autoplay) pauseCurrent();
@@ -1929,13 +1853,10 @@ const totalLabel = formatTime(first.duration);
 
     const deckTick = () => {
       if (draggingDeck) {
-        // Weighted follow: the card trails the finger a little instead of
-        // sticking to it 1:1.
         const diff = deckTarget - deckOffset;
         deckOffset += diff * 0.3;
         if (Math.abs(diff) < 0.001) deckOffset = deckTarget;
       } else if (springing) {
-        // Released fling: carry the finger velocity, then settle on the card.
         deckVelocity = (deckVelocity + (deckTarget - deckOffset) * 0.16) * 0.78;
         deckOffset += deckVelocity;
 
@@ -1946,10 +1867,6 @@ const totalLabel = formatTime(first.duration);
           ) {
             deckOffset = deckTarget;
             commitIfNeeded();
-            deckOffset = 0;
-            deckTarget = 0;
-            deckVelocity = 0;
-            springing = false;
           }
         } else if (
           Math.abs(deckOffset) < 0.004 &&
@@ -1963,46 +1880,75 @@ const totalLabel = formatTime(first.duration);
         const diff = deckTarget - deckOffset;
         deckOffset += diff * 0.26;
         if (Math.abs(diff) < 0.001) deckOffset = deckTarget;
-        commitIfNeeded();
+        if (deckOffset >= 1 || deckOffset <= -1) commitIfNeeded();
       }
 
       renderDeck();
 
       const moving =
         draggingDeck || springing || Math.abs(deckTarget - deckOffset) > 0.0005;
+
       if (moving) {
         deckFrame = requestAnimationFrame(deckTick);
       } else {
         deckFrame = 0;
-        stack?.classList.remove("is-dealing");
-        if (stage) stage.dataset.deckDirection = "";
+        if (pendingMoves.length) {
+          const next = pendingMoves.shift()!;
+          slideToTrack(next.direction, next.autoplay);
+        }
       }
     };
 
-    const startDeck = () => {
-      const next = deckTarget > deckOffset + 0.01;
-      const prev = deckTarget < deckOffset - 0.01;
-
-      // While advancing forward, hide the immediate next peek: that card is
-      // the one sliding down into the front, so showing it twice feels chaotic.
-      stack?.classList.toggle("is-dealing", next);
-      if (stage)
-        stage.dataset.deckDirection = next ? "next" : prev ? "prev" : "";
-      if (!deckFrame) deckFrame = requestAnimationFrame(deckTick);
-    };
-
     const slideToTrack = (direction: 1 | -1, autoplay = false) => {
+      if (visibleCount < 2) return;
       resumeAfterCommit = autoplay;
       if (!autoplay) pauseCurrent();
       springing = false;
       deckVelocity = 0;
       const base = Math.round(deckOffset);
-      deckTarget = base + direction;
+      deckTarget = clampDrag(base + direction);
       startDeck();
     };
 
+    const requestMove = (direction: 1 | -1, autoplay = false) => {
+      const busy =
+        draggingDeck || springing || Math.abs(deckTarget - deckOffset) > 0.0005;
+
+      if (busy) {
+        if (pendingMoves.length < 6) {
+          pendingMoves.push({ direction, autoplay });
+        }
+        return;
+      }
+
+      slideToTrack(direction, autoplay);
+    };
+
+    const jumpToTrack = (targetIndex: number, autoplay: boolean) => {
+      const target = deckCards.find(
+        card => Number(card.dataset.npTrackIndex) === targetIndex
+      );
+      if (!target) return;
+
+      const position = deckCards.indexOf(target);
+      if (position > 0) {
+        deckCards.push(...deckCards.splice(0, position));
+      }
+
+      deckOffset = 0;
+      deckTarget = 0;
+      deckVelocity = 0;
+      springing = false;
+      draggingDeck = false;
+      dragPointerId = -1;
+      pendingMoves.length = 0;
+      setActiveCard(deckCards[0]!);
+      renderDeck();
+      activateTrack(autoplay);
+    };
+
     const nextTrack = (forceAutoplay?: boolean) => {
-      slideToTrack(1, forceAutoplay ?? isPlaying);
+      requestMove(1, forceAutoplay ?? isPlaying);
     };
 
     const previousTrack = () => {
@@ -2011,7 +1957,7 @@ const totalLabel = formatTime(first.duration);
         seekToSeconds(0);
         return;
       }
-      slideToTrack(-1, isPlaying);
+      requestMove(-1, isPlaying);
     };
 
     const advanceByMode = () => {
@@ -2031,30 +1977,27 @@ const totalLabel = formatTime(first.duration);
         while (target === index) {
           target = Math.floor(Math.random() * tracks.length);
         }
-        index = target;
-        deckOffset = 0;
-        deckTarget = 0;
-        localFailed = false;
-        activateTrack(true);
-        syncStageHeight();
-        renderDeck();
+        jumpToTrack(target, true);
         return;
       }
 
-      slideToTrack(1, true);
+      requestMove(1, true);
     };
 
     const setMode = (mode: "order" | "repeat" | "shuffle") => {
       playMode = mode;
-      if (!modeButton) return;
-      modeButton.dataset.mode = mode;
-      const label =
-        mode === "repeat"
-          ? labels.repeat
-          : mode === "shuffle"
-            ? labels.shuffle
-            : labels.order;
-      modeButton.setAttribute("aria-label", `${labels.mode}: ${label}`);
+      root
+        .querySelectorAll<HTMLButtonElement>("[data-np-mode]")
+        .forEach(button => {
+          button.dataset.mode = mode;
+          const label =
+            mode === "repeat"
+              ? labels.repeat
+              : mode === "shuffle"
+                ? labels.shuffle
+                : labels.order;
+          button.setAttribute("aria-label", `${labels.mode}: ${label}`);
+        });
     };
 
     const togglePlayback = () => {
@@ -2065,7 +2008,7 @@ const totalLabel = formatTime(first.duration);
             const track = tracks[index];
             if (track) {
               source = "spotify";
-              previewLink.hidden = false;
+              setPreviewHidden(false);
               void connectSpotify(track, true);
             }
           });
@@ -2105,7 +2048,7 @@ const totalLabel = formatTime(first.duration);
       seekToSeconds((ratio * durationMs) / 1000);
     };
 
-    const ratioFromPointer = (event: PointerEvent) => {
+    const ratioFromPointer = (event: PointerEvent, seek: HTMLElement) => {
       const rect = seek.getBoundingClientRect();
       if (!rect.width) return 0;
       return clamp((event.clientX - rect.left) / rect.width, 0, 1);
@@ -2149,80 +2092,24 @@ const totalLabel = formatTime(first.duration);
       if (source !== "local") return;
       localFailed = true;
       source = "spotify";
-      previewLink.hidden = false;
+      setPreviewHidden(false);
       const track = tracks[index];
       if (track) void connectSpotify(track, isPlaying);
     });
-
-    // ── Controls ──────────────────────────────────────────────────
-    toggle.addEventListener("click", togglePlayback);
-    prevButton.addEventListener("click", previousTrack);
-    nextButton.addEventListener("click", () => nextTrack());
-
-    peeks.forEach(button => {
-      button.addEventListener("click", () => {
-        const offset = Number(button.dataset.npPeek ?? "1");
-        if (!offset) return;
-        resumeAfterCommit = false;
-        pauseCurrent();
-        springing = false;
-        deckVelocity = 0;
-        deckTarget = Math.round(deckOffset) + offset;
-        startDeck();
-      });
-    });
-
-    modeButton?.addEventListener("click", () => {
-      const order = ["order", "repeat", "shuffle"] as const;
-      const next = order[(order.indexOf(playMode) + 1) % order.length]!;
-      setMode(next);
-    });
-    setMode("order");
-
-    // One gesture = one card. A wheel burst is debounced, and a touch swipe
-    // only commits when the finger has travelled far enough.
-    stage.addEventListener(
-      "wheel",
-      event => {
-        event.preventDefault();
-        if (tracks.length < 2) return;
-
-        if (wheelLocked) {
-          // Keep the lock alive while a trackpad's inertia events arrive.
-          window.clearTimeout(wheelUnlockTimer);
-          wheelUnlockTimer = window.setTimeout(() => {
-            wheelLocked = false;
-            wheelAccum = 0;
-          }, 220);
-          return;
-        }
-
-        wheelAccum += event.deltaY;
-        window.clearTimeout(wheelTimer);
-        wheelTimer = window.setTimeout(() => {
-          if (Math.abs(wheelAccum) >= 24) {
-            slideToTrack(wheelAccum > 0 ? -1 : 1);
-          }
-          wheelAccum = 0;
-          wheelLocked = true;
-          wheelUnlockTimer = window.setTimeout(() => {
-            wheelLocked = false;
-          }, 220);
-        }, 90);
-      },
-      { passive: false }
-    );
 
     const canStartDeckDrag = (target: EventTarget | null) =>
       !(target instanceof Element) ||
       !target.closest("button, a, input, [role='slider'], [role='button']");
 
-    stage.addEventListener("pointerdown", event => {
+    stack.addEventListener("pointerdown", event => {
       if (event.button !== 0 || !canStartDeckDrag(event.target)) return;
+      if (visibleCount < 2) return;
 
+      event.preventDefault();
       draggingDeck = true;
       springing = false;
       deckVelocity = 0;
+      pendingMoves.length = 0;
       dragPointerId = event.pointerId;
       dragStartY = event.clientY;
       dragStartOffset = deckOffset;
@@ -2232,14 +2119,14 @@ const totalLabel = formatTime(first.duration);
       deckTarget = deckOffset;
 
       try {
-        stage.setPointerCapture?.(event.pointerId);
+        stack.setPointerCapture?.(event.pointerId);
       } catch {
         /* pointer may already be gone on very fast taps */
       }
       startDeck();
     });
 
-    stage.addEventListener("pointermove", event => {
+    stack.addEventListener("pointermove", event => {
       if (!draggingDeck || event.pointerId !== dragPointerId) return;
 
       const height = getCardHeight();
@@ -2247,8 +2134,7 @@ const totalLabel = formatTime(first.duration);
 
       const now = performance.now();
       const dt = Math.max(8, now - dragLastTime);
-      const step = height + deckGapPx;
-      const raw = dragStartOffset + (event.clientY - dragStartY) / step;
+      const raw = dragStartOffset + (event.clientY - dragStartY) / height;
 
       dragVelocity = (raw - dragLastRaw) / dt;
       dragLastRaw = raw;
@@ -2264,15 +2150,13 @@ const totalLabel = formatTime(first.duration);
       dragPointerId = -1;
 
       try {
-        if (stage.hasPointerCapture?.(event.pointerId)) {
-          stage.releasePointerCapture(event.pointerId);
+        if (stack.hasPointerCapture?.(event.pointerId)) {
+          stack.releasePointerCapture(event.pointerId);
         }
       } catch {
         /* capture may have been released by the browser */
       }
 
-      // Project the release velocity a little, then settle with a spring.
-      // Ignore stale velocity if the finger rested before lifting.
       if (performance.now() - dragLastTime > 90) dragVelocity = 0;
       const projected = deckOffset + dragVelocity * 200;
       let target = 0;
@@ -2286,17 +2170,139 @@ const totalLabel = formatTime(first.duration);
       startDeck();
     };
 
-    stage.addEventListener("pointerup", endDeckDrag);
-    stage.addEventListener("pointercancel", endDeckDrag);
+    stack.addEventListener("pointerup", endDeckDrag);
+    stack.addEventListener("pointercancel", endDeckDrag);
 
-    restartButton.addEventListener("click", () => {
-      seekToSeconds(0);
-      if (source === "local") {
-        void audio.play().catch(() => {});
-      } else {
-        spotifyController?.play();
+    root.addEventListener(
+      "wheel",
+      event => {
+        event.preventDefault();
+        if (visibleCount < 2) return;
+
+        if (wheelLocked) {
+          window.clearTimeout(wheelUnlockTimer);
+          wheelUnlockTimer = window.setTimeout(() => {
+            wheelLocked = false;
+            wheelAccum = 0;
+          }, 220);
+          return;
+        }
+
+        wheelAccum += event.deltaY;
+        window.clearTimeout(wheelTimer);
+        wheelTimer = window.setTimeout(() => {
+          if (Math.abs(wheelAccum) >= 24) {
+            requestMove(wheelAccum > 0 ? 1 : -1, false);
+          }
+          wheelAccum = 0;
+          wheelLocked = true;
+          wheelUnlockTimer = window.setTimeout(() => {
+            wheelLocked = false;
+          }, 220);
+        }, 90);
+      },
+      { passive: false }
+    );
+
+    // ── Per-card controls ─────────────────────────────────────────
+    const wireCard = (card: HTMLElement) => {
+      const body = getBody(card);
+      if (!body) return;
+
+      const toggle = body.querySelector<HTMLButtonElement>("[data-np-toggle]");
+      const prevButton =
+        body.querySelector<HTMLButtonElement>("[data-np-prev]");
+      const nextButton =
+        body.querySelector<HTMLButtonElement>("[data-np-next]");
+      const restartButton =
+        body.querySelector<HTMLButtonElement>("[data-np-restart]");
+      const modeButton =
+        body.querySelector<HTMLButtonElement>("[data-np-mode]");
+      const seek = body.querySelector<HTMLElement>("[data-np-seek]");
+      const face = card.querySelector<HTMLButtonElement>("[data-np-peek-face]");
+
+      toggle?.addEventListener("click", () => {
+        if (card !== activeCard) return;
+        togglePlayback();
+      });
+      prevButton?.addEventListener("click", () => {
+        if (card !== activeCard) return;
+        previousTrack();
+      });
+      nextButton?.addEventListener("click", () => {
+        if (card !== activeCard) return;
+        nextTrack();
+      });
+      restartButton?.addEventListener("click", () => {
+        if (card !== activeCard) return;
+        seekToSeconds(0);
+        if (source === "local") {
+          void audio.play().catch(() => {});
+        } else {
+          spotifyController?.play();
+        }
+      });
+      modeButton?.addEventListener("click", () => {
+        if (card !== activeCard) return;
+        const order = ["order", "repeat", "shuffle"] as const;
+        const next = order[(order.indexOf(playMode) + 1) % order.length]!;
+        setMode(next);
+      });
+
+      if (seek) {
+        seek.addEventListener("pointerdown", event => {
+          if (card !== activeCard) return;
+          isDragging = true;
+          seek.dataset.dragging = "true";
+          seek.setPointerCapture?.(event.pointerId);
+          paintProgress(ratioFromPointer(event, seek) * durationMs);
+        });
+
+        seek.addEventListener("pointermove", event => {
+          if (card !== activeCard || !isDragging) return;
+          paintProgress(ratioFromPointer(event, seek) * durationMs);
+        });
+
+        const endSeek = (event: PointerEvent) => {
+          if (card !== activeCard || !isDragging) return;
+          isDragging = false;
+          delete seek.dataset.dragging;
+          seekToRatio(ratioFromPointer(event, seek));
+
+          if (seek.hasPointerCapture?.(event.pointerId)) {
+            seek.releasePointerCapture(event.pointerId);
+          }
+        };
+
+        seek.addEventListener("pointerup", endSeek);
+        seek.addEventListener("pointercancel", endSeek);
+        seek.addEventListener("keydown", event => {
+          if (card !== activeCard) return;
+          let next = positionMs / 1000;
+          if (event.key === "ArrowRight") next += 5;
+          else if (event.key === "ArrowLeft") next -= 5;
+          else if (event.key === "Home") next = 0;
+          else if (event.key === "End") next = durationMs / 1000;
+          else return;
+
+          event.preventDefault();
+          seekToSeconds(next);
+        });
       }
-    });
+
+      face?.addEventListener("click", () => {
+        if (card === activeCard || !face.dataset.interactive) return;
+        const role = deckCards.indexOf(card);
+        if (role === 1) {
+          requestMove(1, false);
+        } else if (role === 2) {
+          requestMove(1, false);
+          requestMove(1, false);
+        }
+      });
+    };
+
+    deckCards.forEach(wireCard);
 
     // ── Media keyboard shortcuts ──────────────────────────────────
     if (mediaKeysCleanup) mediaKeysCleanup.abort();
@@ -2346,60 +2352,22 @@ const totalLabel = formatTime(first.duration);
       { signal: mediaKeysCleanup.signal }
     );
 
-    seek.addEventListener("pointerdown", event => {
-      isDragging = true;
-      seek.dataset.dragging = "true";
-      seek.setPointerCapture?.(event.pointerId);
-      paintProgress(ratioFromPointer(event) * durationMs);
-    });
-
-    seek.addEventListener("pointermove", event => {
-      if (!isDragging) return;
-      paintProgress(ratioFromPointer(event) * durationMs);
-    });
-
-    const endDrag = (event: PointerEvent) => {
-      if (!isDragging) return;
-      isDragging = false;
-      delete seek.dataset.dragging;
-      seekToRatio(ratioFromPointer(event));
-
-      if (seek.hasPointerCapture?.(event.pointerId)) {
-        seek.releasePointerCapture(event.pointerId);
-      }
-    };
-
-    seek.addEventListener("pointerup", endDrag);
-    seek.addEventListener("pointercancel", endDrag);
-
-    seek.addEventListener("keydown", event => {
-      let next = positionMs / 1000;
-      if (event.key === "ArrowRight") next += 5;
-      else if (event.key === "ArrowLeft") next -= 5;
-      else if (event.key === "Home") next = 0;
-      else if (event.key === "End") next = durationMs / 1000;
-      else return;
-
-      event.preventDefault();
-      seekToSeconds(next);
-    });
-
-    // ── Initial track ─────────────────────────────────────────────
+    // ── Initialise ────────────────────────────────────────────────
+    setActiveCard(deckCards[0]!);
+    setMode("order");
     activateTrack(false);
     paintDuration();
     paintProgress(0);
-    syncClones();
     syncStageHeight();
     measureDeck();
     renderDeck();
 
-    if ("ResizeObserver" in window && card) {
+    if ("ResizeObserver" in window) {
       const stageObserver = new ResizeObserver(() => {
-        syncStageHeight();
         measureDeck();
         renderDeck();
       });
-      stageObserver.observe(card);
+      stageObserver.observe(serverCard);
     }
 
     // Warm up Spotify only when the card enters the viewport.
@@ -2430,13 +2398,7 @@ const totalLabel = formatTime(first.duration);
       play: (nextIndex?: number) => {
         if (typeof nextIndex === "number" && tracks[nextIndex]) {
           const wasPlaying = isPlaying;
-          index = nextIndex;
-          deckOffset = 0;
-          deckTarget = 0;
-          localFailed = false;
-          activateTrack(wasPlaying);
-          syncClones();
-          renderDeck();
+          jumpToTrack(nextIndex, wasPlaying);
           if (!wasPlaying) togglePlayback();
           return;
         }
