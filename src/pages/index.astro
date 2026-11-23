@@ -1223,10 +1223,10 @@ const whatIcons = {
     height: 1.7rem;
     place-items: center;
     border: 1px solid
-      color-mix(in srgb, var(--color-foreground) 10%, transparent);
+      color-mix(in srgb, var(--color-foreground) 16%, transparent);
     border-radius: 999px;
-    background: transparent;
-    color: color-mix(in srgb, var(--color-foreground) 42%, transparent);
+    background: color-mix(in srgb, var(--color-foreground) 4%, transparent);
+    color: color-mix(in srgb, var(--color-foreground) 58%, transparent);
     cursor: pointer;
     transition:
       color 0.2s ease,
@@ -1235,16 +1235,15 @@ const whatIcons = {
       transform 0.2s ease;
   }
 
-  .featured-arrow:hover {
+  .featured-arrow:not(.is-disabled):hover {
     border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     background: color-mix(in srgb, var(--color-accent) 8%, transparent);
     color: var(--color-accent);
     transform: translateY(-1px);
   }
 
-  .featured-arrow:disabled {
+  .featured-arrow.is-disabled {
     opacity: 0.3;
-    cursor: default;
     transform: none;
   }
 
@@ -1313,6 +1312,36 @@ const whatIcons = {
     display: none;
   }
 
+  @keyframes featured-bump-right {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    38%,
+    58% {
+      transform: translateX(10px);
+    }
+  }
+
+  @keyframes featured-bump-left {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    38%,
+    58% {
+      transform: translateX(-10px);
+    }
+  }
+
+  .featured-track.is-bump-right {
+    animation: featured-bump-right 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .featured-track.is-bump-left {
+    animation: featured-bump-left 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
   @media (max-width: 640px) {
     .featured-track {
       flex-direction: column;
@@ -1374,6 +1403,11 @@ const whatIcons = {
     }
 
     .what-items {
+      animation: none;
+    }
+
+    .featured-track.is-bump-right,
+    .featured-track.is-bump-left {
       animation: none;
     }
   }
@@ -1527,120 +1561,216 @@ const whatIcons = {
       mobileQuery.addEventListener?.("change", syncCue);
       syncCue();
     }
-
-    // ── Featured rail: arrows, counter, progress ──
-    const rail = document.querySelector<HTMLElement>("[data-featured-rail]");
-    if (rail && rail.dataset.carouselReady !== "true") {
-      rail.dataset.carouselReady = "true";
-
-      const track = rail.querySelector<HTMLElement>(".featured-track");
-      const cards = track
-        ? Array.from(track.children).filter(
-            child => child instanceof HTMLElement
-          )
-        : [];
-      const prev = document.querySelector<HTMLButtonElement>(
-        "[data-featured-prev]"
-      );
-      const next = document.querySelector<HTMLButtonElement>(
-        "[data-featured-next]"
-      );
-      const counter = document.querySelector<HTMLElement>(
-        "[data-featured-counter]"
-      );
-
-      if (cards.length && rail.classList.contains("is-scrollable")) {
-        const pad = (value: number) => String(value).padStart(2, "0");
-        const gap = 16;
-
-        const update = () => {
-          const max = rail.scrollWidth - rail.clientWidth;
-          const cardWidth =
-            cards[0] instanceof HTMLElement
-              ? cards[0].getBoundingClientRect().width
-              : rail.clientWidth / 2;
-          const active = Math.min(
-            cards.length,
-            Math.max(1, Math.round(rail.scrollLeft / (cardWidth + gap)) + 1)
-          );
-
-          if (counter) {
-            counter.textContent = `${pad(active)} / ${pad(cards.length)}`;
-          }
-
-          if (prev) prev.disabled = rail.scrollLeft <= 8;
-          if (next) next.disabled = rail.scrollLeft >= max - 8;
-        };
-
-        const step = () => {
-          const cardWidth =
-            cards[0] instanceof HTMLElement
-              ? cards[0].getBoundingClientRect().width
-              : rail.clientWidth / 2;
-          return cardWidth + gap;
-        };
-
-        prev?.addEventListener("click", () =>
-          rail.scrollBy({ left: -step(), behavior: "smooth" })
-        );
-        next?.addEventListener("click", () =>
-          rail.scrollBy({ left: step(), behavior: "smooth" })
-        );
-        rail.addEventListener("scroll", () => requestAnimationFrame(update), {
-          passive: true,
-        });
-        window.addEventListener("resize", update);
-        update();
-
-        // Desktop uses Shift + wheel for horizontal panning; touch devices
-        // keep the browser's native horizontal panning. No pointer capture
-        // or click suppression here, so every card area stays a normal link.
-        let wheelTarget = rail.scrollLeft;
-        let wheelFrame = 0;
-
-        const wheelTick = () => {
-          const max = rail.scrollWidth - rail.clientWidth;
-          wheelTarget = Math.max(0, Math.min(max, wheelTarget));
-          const diff = wheelTarget - rail.scrollLeft;
-
-          if (Math.abs(diff) < 0.5) {
-            rail.scrollLeft = wheelTarget;
-            wheelFrame = 0;
-            return;
-          }
-
-          rail.scrollLeft += diff * 0.18;
-          wheelFrame = requestAnimationFrame(wheelTick);
-        };
-
-        rail.addEventListener(
-          "wheel",
-          event => {
-            if (!event.shiftKey) return;
-
-            const max = rail.scrollWidth - rail.clientWidth;
-            if (max <= 0) return;
-
-            event.preventDefault();
-            if (!wheelFrame) wheelTarget = rail.scrollLeft;
-
-            const unit =
-              event.deltaMode === WheelEvent.DOM_DELTA_LINE
-                ? 16
-                : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
-                  ? rail.clientWidth
-                  : 1;
-            const delta =
-              (Math.abs(event.deltaX) > Math.abs(event.deltaY)
-                ? event.deltaX
-                : event.deltaY) * unit;
-
-            wheelTarget += delta;
-            if (!wheelFrame) wheelFrame = requestAnimationFrame(wheelTick);
-          },
-          { passive: false }
-        );
-      }
-    }
   });
+</script>
+
+<script>
+  function initFeaturedRail() {
+    const rail = document.querySelector<HTMLElement>("[data-featured-rail]");
+    if (!rail || rail.dataset.carouselReady === "true") return;
+    rail.dataset.carouselReady = "true";
+
+    const track = rail.querySelector<HTMLElement>(".featured-track");
+    const cards = track
+      ? Array.from(track.children).filter(child => child instanceof HTMLElement)
+      : [];
+    const prev = document.querySelector<HTMLButtonElement>(
+      "[data-featured-prev]"
+    );
+    const next = document.querySelector<HTMLButtonElement>(
+      "[data-featured-next]"
+    );
+    const counter = document.querySelector<HTMLElement>(
+      "[data-featured-counter]"
+    );
+
+    if (!track || cards.length === 0) return;
+
+    const pad = (value: number) => String(value).padStart(2, "0");
+    const gap = 16;
+    let scrollFrame = 0;
+    let scrollTarget = rail.scrollLeft;
+    let updateFrame = 0;
+    let bumpToken = 0;
+    let wheelTarget = rail.scrollLeft;
+    let wheelFrame = 0;
+
+    const maxScroll = () => Math.max(0, rail.scrollWidth - rail.clientWidth);
+
+    const cardWidth = () => {
+      const width = cards[0]?.getBoundingClientRect().width ?? 0;
+      return width > 0 ? width : rail.clientWidth / 2;
+    };
+
+    const stepWidth = () => cardWidth() + gap;
+
+    const update = () => {
+      updateFrame = 0;
+      const max = maxScroll();
+      const active = Math.min(
+        cards.length,
+        Math.max(1, Math.round(rail.scrollLeft / (cardWidth() + gap)) + 1)
+      );
+
+      if (counter) {
+        counter.textContent = `${pad(active)} / ${pad(cards.length)}`;
+      }
+
+      const atStart = rail.scrollLeft <= 8;
+      const atEnd = max <= 8 || rail.scrollLeft >= max - 8;
+      if (prev) {
+        prev.classList.toggle("is-disabled", atStart);
+        prev.setAttribute("aria-disabled", String(atStart));
+      }
+      if (next) {
+        next.classList.toggle("is-disabled", atEnd);
+        next.setAttribute("aria-disabled", String(atEnd));
+      }
+    };
+
+    const scheduleUpdate = () => {
+      if (updateFrame) return;
+      updateFrame = requestAnimationFrame(update);
+    };
+
+    const bump = (direction: number) => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const cls = direction < 0 ? "is-bump-right" : "is-bump-left";
+      track.classList.remove("is-bump-right", "is-bump-left");
+      // Restart the keyframe when the same edge is clicked repeatedly.
+      void track.offsetWidth;
+      track.classList.add(cls);
+      const token = ++bumpToken;
+      track.addEventListener(
+        "animationend",
+        () => {
+          if (token !== bumpToken) return;
+          track.classList.remove(cls);
+        },
+        { once: true }
+      );
+    };
+
+    const stopScroll = () => {
+      window.cancelAnimationFrame(scrollFrame);
+      scrollFrame = 0;
+      window.cancelAnimationFrame(wheelFrame);
+      wheelFrame = 0;
+    };
+
+    const animateTo = (target: number) => {
+      scrollTarget = Math.max(0, Math.min(maxScroll(), target));
+      if (scrollFrame) return;
+
+      const tick = () => {
+        const diff = scrollTarget - rail.scrollLeft;
+        if (Math.abs(diff) < 0.5) {
+          rail.scrollLeft = scrollTarget;
+          scrollFrame = 0;
+          update();
+          return;
+        }
+        rail.scrollLeft += diff * 0.22;
+        scheduleUpdate();
+        scrollFrame = requestAnimationFrame(tick);
+      };
+
+      scrollFrame = requestAnimationFrame(tick);
+    };
+
+    const move = (direction: number) => {
+      window.cancelAnimationFrame(wheelFrame);
+      wheelFrame = 0;
+      const atStart = rail.scrollLeft <= 8;
+      const atEnd = rail.scrollLeft >= maxScroll() - 8;
+      if ((direction < 0 && atStart) || (direction > 0 && atEnd)) {
+        bump(direction);
+        return;
+      }
+
+      const base = scrollFrame ? scrollTarget : rail.scrollLeft;
+      animateTo(base + direction * stepWidth());
+    };
+
+    prev?.addEventListener("click", () => move(-1));
+    next?.addEventListener("click", () => move(1));
+
+    rail.addEventListener(
+      "scroll",
+      () => {
+        if (!scrollFrame) scrollTarget = rail.scrollLeft;
+        scheduleUpdate();
+      },
+      { passive: true }
+    );
+
+    // A real hand gesture always wins over the arrow animation.
+    rail.addEventListener("pointerdown", stopScroll, { passive: true });
+
+    // Desktop uses Shift + wheel for horizontal panning; plain wheel keeps
+    // scrolling the page. Touch devices keep native horizontal panning.
+    const wheelTick = () => {
+      const max = maxScroll();
+      wheelTarget = Math.max(0, Math.min(max, wheelTarget));
+      const diff = wheelTarget - rail.scrollLeft;
+
+      if (Math.abs(diff) < 0.5) {
+        rail.scrollLeft = wheelTarget;
+        wheelFrame = 0;
+        update();
+        return;
+      }
+
+      rail.scrollLeft += diff * 0.18;
+      scheduleUpdate();
+      wheelFrame = requestAnimationFrame(wheelTick);
+    };
+
+    rail.addEventListener(
+      "wheel",
+      event => {
+        if (!event.shiftKey) {
+          stopScroll();
+          return;
+        }
+
+        const max = maxScroll();
+        if (max <= 0) return;
+
+        event.preventDefault();
+        stopScroll();
+        wheelTarget = rail.scrollLeft;
+
+        const unit =
+          event.deltaMode === WheelEvent.DOM_DELTA_LINE
+            ? 16
+            : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+              ? rail.clientWidth
+              : 1;
+        const delta =
+          (Math.abs(event.deltaX) > Math.abs(event.deltaY)
+            ? event.deltaX
+            : event.deltaY) * unit;
+
+        wheelTarget += delta;
+        wheelFrame = requestAnimationFrame(wheelTick);
+      },
+      { passive: false }
+    );
+
+    window.addEventListener("resize", () => {
+      stopScroll();
+      scrollTarget = rail.scrollLeft;
+      wheelTarget = rail.scrollLeft;
+      update();
+    });
+
+    update();
+  }
+
+  // Run immediately as well as on Astro's page-load event: a page swapped in
+  // through the client router can finish loading before this module executes,
+  // which used to leave the arrows without handlers.
+  initFeaturedRail();
+  document.addEventListener("astro:page-load", initFeaturedRail);
 </script>

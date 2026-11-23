@@ -11,7 +11,7 @@
  *   showLink  — show "View full gallery" link (default: true)
  *   cols      — grid columns: 2 | 3 | 4 (default: 3)
  */
-import { Image } from "astro:assets";
+import { Image, getImage } from "astro:assets";
 import { getCollection } from "astro:content";
 import { getGalleryImages, type GalleryImage } from "@/utils/gallery";
 import { getLocalizedTitle } from "@/utils/localizedTitle";
@@ -63,8 +63,23 @@ const folderImages: GalleryImage[] = getGalleryImages(
 const visibleImages = limit > 0 ? folderImages.slice(0, limit) : folderImages;
 const remaining = folderImages.length - visibleImages.length;
 
-// Unique ID for the lightbox (allows multiple embeds on the same page)
-const lbId = `ge-lb-${slug}`;
+// The grid only renders ~600px thumbnails. Give the lightbox its own 1600px
+// variant so paging never waits for the multi-megapixel original.
+const lightboxSrcs = await Promise.all(
+  visibleImages.map(async img => {
+    const optimized = await getImage({
+      src: img.src,
+      width: 1600,
+      format: "avif",
+      quality: 72,
+    });
+    return optimized.src;
+  })
+);
+
+// Unique ID for the lightbox. A post may embed the same gallery more than
+// once, so the slug alone is not enough to keep the dialogs independent.
+const lbId = `ge-lb-${slug}-${Math.random().toString(36).slice(2, 8)}`;
 
 // CSS grid class according to requested columns
 const gridClass = {
@@ -128,6 +143,7 @@ const gridClass = {
             <button
               class="ge-item group"
               data-lb={lbId}
+              data-lb-src={lightboxSrcs[idx]}
               data-index={idx}
               aria-label={`View image: ${img.alt}`}
               type="button"
@@ -226,9 +242,9 @@ const gridClass = {
   /* ── Grid ── */
   .ge-grid {
     display: grid;
-    gap: 2px;
+    gap: 0.4rem;
     list-style: none;
-    padding: 0;
+    padding: 0.8rem;
     margin: 0;
   }
   .ge-grid-2 {
@@ -255,15 +271,18 @@ const gridClass = {
     width: 100%;
     aspect-ratio: 1 / 1;
     overflow: hidden;
+    border-radius: 0.6rem;
     cursor: zoom-in;
     background: color-mix(in srgb, var(--foreground) 5%, transparent);
     padding: 0;
     border: none;
   }
-  .ge-img {
+  .gallery-embed .ge-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: inherit;
+    box-shadow: none;
     transition: transform 0.35s ease;
     display: block;
   }

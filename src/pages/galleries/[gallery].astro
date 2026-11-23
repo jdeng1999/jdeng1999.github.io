@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Image, getImage } from "astro:assets";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
@@ -33,6 +33,21 @@ const title = getLocalizedTitle(entry.id, rawTitle, locale);
 const contentLocale = locale === "zh" ? "en" : locale;
 
 const images: GalleryImage[] = getGalleryImages(slug, contentLocale, title);
+
+// Generate a dedicated 1600px variant for the viewer. The grid image's own
+// `src` falls back to the original file (often 3–6k px), which is exactly what
+// made fast next/previous paging wait for a huge download before painting.
+const lightboxSrcs = await Promise.all(
+  images.map(async img => {
+    const optimized = await getImage({
+      src: img.src,
+      width: 1600,
+      format: "avif",
+      quality: 72,
+    });
+    return optimized.src;
+  })
+);
 
 // If the frontmatter has coverImage, include it at the beginning if it is not already in the list
 const hasCoverInFolder = coverImage
@@ -174,6 +189,7 @@ const gallerySchema = {
             <button
               class="gallery-item group"
               data-lb="lightbox"
+              data-lb-src={lightboxSrcs[idx]}
               data-index={idx}
               aria-label={`View image: ${img.alt}`}
               type="button"

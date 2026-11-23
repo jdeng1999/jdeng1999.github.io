@@ -75,7 +75,8 @@
 
       th,
       td {
-        @apply border border-border p-2;
+        @apply border p-2;
+        border-color: color-mix(in srgb, var(--border) 30%, transparent);
         word-wrap: break-word;
         word-break: break-word;
         hyphens: auto;

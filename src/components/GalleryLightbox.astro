@@ -137,6 +137,7 @@ const { id, label = "Image viewer" } = Astro.props;
     lightboxController?.abort();
     lightboxController = new AbortController();
     const { signal } = lightboxController;
+    const dialogCleanups: Array<() => void> = [];
 
     document
       .querySelectorAll<HTMLDialogElement>("[data-gallery-lightbox]")
@@ -185,28 +186,98 @@ const { id, label = "Image viewer" } = Astro.props;
         let velocity = 0;
         let followFrame = 0;
         let finishTimer = 0;
+        let bounceTimer = 0;
+        let bounceToken = 0;
         let animationToken = 0;
         let lastCaption = "";
 
         const imageAt = (idx: number) =>
           items[(idx + count) % count]?.querySelector("img");
 
+        // srcset carries the real viewer-sized variants. `img.src` on an
+        // Astro <Image> is the original multi-megapixel file, so never use it
+        // for the viewer.
+        const largestSrcset = (img: HTMLImageElement | null) => {
+          const srcset = img?.getAttribute("srcset");
+          if (srcset) {
+            let best = "";
+            let bestWidth = -1;
+            for (const candidate of srcset.split(",")) {
+              const [url, descriptor = ""] = candidate.trim().split(/\s+/);
+              const width = Number.parseFloat(descriptor) || 0;
+              if (url && width > bestWidth) {
+                bestWidth = width;
+                best = url;
+              }
+            }
+            if (best) return best;
+          }
+          return img?.currentSrc || img?.src || "";
+        };
+
+        const lightboxSrc = (idx: number) => {
+          const button = items[(idx + count) % count];
+          if (!button) return "";
+          return (
+            button.dataset.lbSrc || largestSrcset(button.querySelector("img"))
+          );
+        };
+
+        const preloaded = new Map<string, HTMLImageElement>();
+        const warm = (idx: number) => {
+          const src = lightboxSrc(idx);
+          if (!src || preloaded.has(src)) return;
+          const cache = new Image();
+          cache.decoding = "async";
+          cache.src = src;
+          preloaded.set(src, cache);
+        };
+        const warmAround = (idx: number, radius: number) => {
+          for (let offset = -radius; offset <= radius; offset += 1) {
+            const target = idx + offset;
+            if (target >= 0 && target < count) warm(target);
+          }
+        };
+
+        let warmTimer = 0;
+        const stopWarm = () => {
+          window.clearTimeout(warmTimer);
+          warmTimer = 0;
+        };
+        const warmRest = () => {
+          stopWarm();
+          let next = 0;
+          const step = () => {
+            warmTimer = 0;
+            if (!dialog.open) return;
+            let batch = 0;
+            while (next < count && batch < 2) {
+              warm(next);
+              next += 1;
+              batch += 1;
+            }
+            if (next < count) warmTimer = window.setTimeout(step, 120);
+          };
+          step();
+        };
+
         const setSlideImage = (
           element: HTMLImageElement,
           idx: number,
           empty: boolean
         ) => {
+          const slide = element.parentElement;
           if (empty) {
-            element.removeAttribute("src");
-            element.alt = "";
-          } else {
-            const img = imageAt(idx);
-            if (img) {
-              element.src = img.src;
-              element.alt = img.alt;
-            }
+            slide?.setAttribute("data-empty", "true");
+            return;
           }
-          element.parentElement?.setAttribute("data-empty", String(empty));
+          const img = imageAt(idx);
+          const src = lightboxSrc(idx);
+          if (src && element.getAttribute("src") !== src) {
+            element.src = src;
+          }
+          element.alt = img?.alt ?? "";
+          slide?.setAttribute("data-empty", "false");
         };
 
         const shiftFor = (offset: number) =>
@@ -233,30 +304,6 @@ const { id, label = "Image viewer" } = Astro.props;
           lbCaption.hidden = !hasCaption;
         };
 
-        const renderSlides = () => {
-          setSlideImage(lbPrevImg, current - 1, current === 0);
-          setSlideImage(lbImg, current, false);
-          setSlideImage(lbNextImg, current + 1, current === count - 1);
-
-          if (lbCounter) {
-            lbCounter.textContent = `${current + 1} / ${count}`;
-          }
-          updateCaption();
-          if (prevBtn) {
-            prevBtn.style.visibility = current === 0 ? "hidden" : "visible";
-          }
-          if (nextBtn) {
-            nextBtn.style.visibility =
-              current === count - 1 ? "hidden" : "visible";
-          }
-
-          displayOffset = 0;
-          dragTarget = 0;
-          slider.dataset.atEnd = String(current === count - 1);
-          track.style.transition = "none";
-          track.style.transform = shiftFor(0);
-        };
-
         const applyOffset = () => {
           track.style.transform = shiftFor(displayOffset);
           slider.dataset.atEnd = String(current === count - 1);
@@ -274,6 +321,63 @@ const { id, label = "Image viewer" } = Astro.props;
           followFrame = 0;
         };
 
+        const stopBounce = () => {
+          bounceToken += 1;
+          window.clearTimeout(bounceTimer);
+          bounceTimer = 0;
+        };
+
+        // A short, damped pull towards the missing side. The button stays
+        // clickable at the endpoints so the limit is something you can feel,
+        // not a dead control that silently swallows the click.
+        const bounceEdge = (direction: number) => {
+          if (dragging || !dialog.open) return;
+          stopBounce();
+          const token = bounceToken;
+          const peak = direction < 0 ? -0.055 : 0.055;
+          track.style.transition =
+            "transform 130ms cubic-bezier(0.22, 0.7, 0.3, 1)";
+          track.style.transform = shiftFor(peak);
+          bounceTimer = window.setTimeout(() => {
+            if (token !== bounceToken) return;
+            track.style.transition =
+              "transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1)";
+            track.style.transform = shiftFor(0);
+            bounceTimer = window.setTimeout(() => {
+              if (token !== bounceToken) return;
+              track.style.transition = "none";
+            }, 430);
+          }, 130);
+        };
+
+        const renderSlides = () => {
+          stopBounce();
+          setSlideImage(lbPrevImg, current - 1, current === 0);
+          setSlideImage(lbImg, current, false);
+          setSlideImage(lbNextImg, current + 1, current === count - 1);
+
+          if (lbCounter) {
+            lbCounter.textContent = `${current + 1} / ${count}`;
+          }
+          updateCaption();
+          if (prevBtn) {
+            const atStart = current === 0;
+            prevBtn.classList.toggle("is-disabled", atStart);
+            prevBtn.setAttribute("aria-disabled", String(atStart));
+          }
+          if (nextBtn) {
+            const atEnd = current === count - 1;
+            nextBtn.classList.toggle("is-disabled", atEnd);
+            nextBtn.setAttribute("aria-disabled", String(atEnd));
+          }
+
+          displayOffset = 0;
+          dragTarget = 0;
+          slider.dataset.atEnd = String(current === count - 1);
+          track.style.transition = "none";
+          track.style.transform = shiftFor(0);
+          warmAround(current, 2);
+        };
         const finishAnimation = (delta: number) => {
           window.clearTimeout(finishTimer);
           if (!animating) return;
@@ -313,11 +417,39 @@ const { id, label = "Image viewer" } = Astro.props;
 
           const target = Math.max(0, Math.min(count - 1, current + step));
           const actualDelta = target - current;
-          if (actualDelta === 0 && Math.abs(displayOffset) < 0.01) {
-            renderSlides();
+
+          if (actualDelta === 0) {
+            if (step !== 0) {
+              bounceEdge(step);
+              return;
+            }
+            if (Math.abs(displayOffset) < 0.01) {
+              renderSlides();
+              return;
+            }
+            // A short drag that did not reach the commit threshold settles
+            // back under the finger instead of snapping.
+            stopBounce();
+            animating = true;
+            animTarget = current;
+            const settleToken = ++animationToken;
+            track.style.transition =
+              "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)";
+            requestAnimationFrame(() => {
+              if (settleToken !== animationToken) return;
+              track.style.transform = shiftFor(0);
+            });
+            const settle = () => {
+              if (settleToken !== animationToken) return;
+              animating = false;
+              renderSlides();
+            };
+            track.addEventListener("transitionend", settle, { once: true });
+            finishTimer = window.setTimeout(settle, 360);
             return;
           }
 
+          stopBounce();
           animating = true;
           animTarget = target;
           const token = ++animationToken;
@@ -338,19 +470,42 @@ const { id, label = "Image viewer" } = Astro.props;
           finishTimer = window.setTimeout(finish, duration + 40);
         };
 
+        const go = (direction: number) => {
+          if (!dialog.open) return;
+          if (!animating) {
+            if (direction < 0 && current === 0) {
+              bounceEdge(-1);
+              return;
+            }
+            if (direction > 0 && current === count - 1) {
+              bounceEdge(1);
+              return;
+            }
+          }
+          animateTo(direction, 0);
+        };
+
         function open(idx: number) {
           current = Math.max(0, Math.min(idx, count - 1));
           animTarget = current;
           queuedDelta = 0;
           queueSwipe = false;
+          stopBounce();
+          stopWarm();
           renderSlides();
           if (!dialog.open) dialog.showModal();
           slider?.focus({ preventScroll: true });
           document.body.style.overflow = "hidden";
+          // The clicked image is already in the grid cache; this warms the
+          // neighbours immediately and the rest of the set while it is open.
+          warmAround(current, 3);
+          warmRest();
         }
 
         function close() {
           stopFollow();
+          stopWarm();
+          stopBounce();
           dragging = false;
           queueSwipe = false;
           animating = false;
@@ -360,21 +515,32 @@ const { id, label = "Image viewer" } = Astro.props;
           window.clearTimeout(finishTimer);
           track!.style.transition = "none";
           track!.style.transform = shiftFor(0);
-          dialog.close();
+          if (dialog.open) dialog.close();
           document.body.style.overflow = "";
         }
 
         items.forEach((btn, idx) => {
           btn.addEventListener("click", () => open(idx), { signal });
+          btn.addEventListener("pointerenter", () => warmAround(idx, 1), {
+            signal,
+          });
+          btn.addEventListener("focus", () => warmAround(idx, 1), { signal });
         });
 
         closeBtn?.addEventListener("click", close, { signal });
-        prevBtn?.addEventListener("click", () => animateTo(-1, 0), {
-          signal,
-        });
-        nextBtn?.addEventListener("click", () => animateTo(1, 0), {
-          signal,
-        });
+        prevBtn?.addEventListener("click", () => go(-1), { signal });
+        nextBtn?.addEventListener("click", () => go(1), { signal });
+
+        // Escape must run the same close path as the X button; the native
+        // dialog cancel would otherwise skip the track reset.
+        dialog.addEventListener(
+          "cancel",
+          event => {
+            event.preventDefault();
+            close();
+          },
+          { signal }
+        );
 
         window.addEventListener(
           "resize",
@@ -404,6 +570,7 @@ const { id, label = "Image viewer" } = Astro.props;
             queueSwipeRaw = 0;
 
             if (!queueSwipe) {
+              stopBounce();
               displayOffset = 0;
               dragTarget = 0;
               track.style.transition = "none";
@@ -479,21 +646,6 @@ const { id, label = "Image viewer" } = Astro.props;
         slider.addEventListener("pointercancel", endSwipe, { signal });
 
         dialog.addEventListener(
-          "click",
-          e => {
-            const target = e.target as HTMLElement;
-            if (
-              !target.closest(
-                "img, button, .lightbox-caption, .lightbox-counter, .lightbox-slider"
-              )
-            ) {
-              close();
-            }
-          },
-          { signal }
-        );
-
-        dialog.addEventListener(
           "close",
           () => {
             document.body.style.overflow = "";
@@ -505,18 +657,31 @@ const { id, label = "Image viewer" } = Astro.props;
           "keydown",
           e => {
             if (!dialog.open) return;
-            if (e.key === "Escape") close();
-            if (e.key === "ArrowLeft") animateTo(-1, 0);
-            if (e.key === "ArrowRight") animateTo(1, 0);
+            if (e.key === "Escape") {
+              e.preventDefault();
+              close();
+            } else if (e.key === "ArrowLeft") {
+              e.preventDefault();
+              go(-1);
+            } else if (e.key === "ArrowRight") {
+              e.preventDefault();
+              go(1);
+            }
           },
           { signal }
         );
+
+        dialogCleanups.push(() => {
+          stopWarm();
+          stopBounce();
+        });
       });
 
     document.addEventListener(
       "astro:before-swap",
       () => {
         document.body.style.overflow = "";
+        dialogCleanups.forEach(cleanup => cleanup());
         lightboxController?.abort();
       },
       { once: true, signal }
@@ -712,6 +877,12 @@ const { id, label = "Image viewer" } = Astro.props;
   .lightbox-btn:hover {
     color: var(--accent);
     transform: translateY(-1px);
+  }
+
+  .lightbox-nav.is-disabled,
+  .lightbox-nav.is-disabled:hover {
+    color: color-mix(in srgb, var(--foreground) 20%, transparent);
+    transform: none;
   }
 
   .lightbox-btn:focus-visible {
