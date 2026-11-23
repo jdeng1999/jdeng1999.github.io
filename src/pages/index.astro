@@ -830,6 +830,29 @@ const whatIcons = {
       padding-top: 1.5rem;
       padding-bottom: 3rem;
     }
+
+    /* Let the code rain use nearly the full phone width instead of
+       disappearing into wide edge fades. */
+    .what-grid .what-visual-rain {
+      -webkit-mask-image:
+        linear-gradient(
+          to right,
+          transparent 0%,
+          #000 7%,
+          #000 93%,
+          transparent 100%
+        ),
+        linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+      mask-image:
+        linear-gradient(
+          to right,
+          transparent 0%,
+          #000 7%,
+          #000 93%,
+          transparent 100%
+        ),
+        linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+    }
   }
 
   @media (max-width: 767px) {
@@ -1447,7 +1470,9 @@ const whatIcons = {
 
       const smoothToStage = (stage: number) => {
         measure();
-        const target = stageTops[Math.max(0, Math.min(2, stage))];
+        const next = Math.max(0, Math.min(2, stage));
+        // Leave the header a little breathing room when jumping into a stage.
+        const target = next === 0 ? 0 : Math.max(0, stageTops[next] - 24);
         const reduce = window.matchMedia(
           "(prefers-reduced-motion: reduce)"
         ).matches;
@@ -1488,65 +1513,8 @@ const whatIcons = {
         });
       });
 
-      // A single deliberate vertical swipe pages the first two mobile
-      // screens; after the article list starts, normal scrolling takes over.
-      let touchStartX = 0;
-      let touchStartY = 0;
-      let touchStage = -1;
-      let touchMoved = false;
-
-      const menuIsOpen = () =>
-        document.querySelector("#mobile-menu.is-open") !== null;
-
-      const onTouchStart = (event: TouchEvent) => {
-        if (!isMobile() || menuIsOpen()) return;
-        const stage = currentStage();
-        if (stage < 0 || stage > 1) return;
-        const point = event.touches[0];
-        if (!point) return;
-        touchStage = stage;
-        touchStartX = point.clientX;
-        touchStartY = point.clientY;
-        touchMoved = false;
-      };
-
-      const onTouchMove = (event: TouchEvent) => {
-        if (touchStage < 0) return;
-        const point = event.touches[0];
-        if (!point) return;
-        const dx = point.clientX - touchStartX;
-        const dy = point.clientY - touchStartY;
-        if (Math.abs(dy) > 7 && Math.abs(dy) > Math.abs(dx) * 1.1) {
-          touchMoved = true;
-        }
-      };
-
-      const onTouchEnd = (event: TouchEvent) => {
-        if (touchStage < 0) return;
-        const point = event.changedTouches[0];
-        const stage = touchStage;
-        const moved = touchMoved;
-        touchStage = -1;
-        touchMoved = false;
-
-        if (!point || !moved) return;
-        const dx = point.clientX - touchStartX;
-        const dy = touchStartY - point.clientY;
-
-        if (Math.abs(dy) < 8 || Math.abs(dy) < Math.abs(dx) * 1.1) return;
-        if (dy > 0) smoothToStage(stage + 1);
-        else if (stage > 0) smoothToStage(stage - 1);
-      };
-
-      document.addEventListener("touchstart", onTouchStart, {
-        passive: true,
-      });
-      document.addEventListener("touchmove", onTouchMove, {
-        passive: true,
-      });
-      document.addEventListener("touchend", onTouchEnd, {
-        passive: true,
-      });
+      // Finger swipes stay native: only the cue button performs the
+      // deliberate stage-to-stage jump.
 
       window.addEventListener("scroll", syncCue, { passive: true });
       window.addEventListener("resize", syncCue, { passive: true });

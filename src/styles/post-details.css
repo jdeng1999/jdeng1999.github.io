@@ -3,7 +3,7 @@
    Extracted from PostDetails.astro for modularity and caching.
    ═══════════════════════════════════════════════════════════════ */
 
-/* Code block copy button: quiet, icon-only, slightly lifted from the code surface */
+/* Code block copy button: quiet translucent surface behind the icon */
 .copy-code {
   z-index: 2;
   border: 0;
@@ -12,56 +12,102 @@
   transition: color 0.2s ease;
 }
 
-/* Erase only the top border line behind the icon, leaving no button box. */
+.copy-code::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  content: "";
+  pointer-events: none;
+  transition: background-color 0.2s ease;
+}
+
+/* Cut a narrow gap in the code frame, just beyond the button surface. */
 .copy-code::before {
   position: absolute;
   top: calc(-1 * var(--file-name-offset, -0.75rem) - 1px);
-  right: -8px;
-  left: -8px;
+  right: -4px;
+  left: -4px;
+  z-index: -2;
   height: 2px;
   background: var(--background);
   content: "";
   pointer-events: none;
-  z-index: -1;
 }
 
 .code-file-name {
+  z-index: 1;
   border: 0;
   background: transparent;
   color: color-mix(in srgb, var(--foreground) 48%, transparent);
 }
 
-.code-file-name::after {
+/* Same narrow frame gap around the whole filename chip. */
+.code-file-name::before {
   position: absolute;
   top: 50%;
-  right: -6px;
-  left: -6px;
+  right: -4px;
+  left: -4px;
+  z-index: -1;
   height: 2px;
   background: var(--background);
   content: "";
   pointer-events: none;
   transform: translateY(-50%);
-  z-index: -1;
 }
 
-.code-file-name::before {
+.code-file-name-chip {
+  position: relative;
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+}
+
+.code-file-name-chip::before {
+  position: absolute;
+  top: 45%;
+  left: 0.5rem;
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--color-green-500, #22c55e);
+  content: "";
   opacity: 0.55;
+}
+
+.code-file-name-chip--plain::before {
+  display: none;
 }
 
 .copy-code:hover,
 .copy-code:focus-visible {
   color: var(--accent);
-  background: transparent;
+}
+
+.copy-code:hover::after,
+.copy-code:focus-visible::after {
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
 }
 
 .copy-code[data-copied="true"] {
   color: var(--accent);
-  background: transparent;
+}
+
+.copy-code[data-copied="true"]::after {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .copy-code svg {
   width: 0.9rem;
   height: 0.9rem;
+}
+
+/* Mobile GPUs can briefly ghost the blurred card contents on refresh.
+   The card is already translucent, so the blur is not needed on phones. */
+@media (max-width: 767px) {
+  .post-header > div:not(.post-hero-bg) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 /* Mobile article tags / meta: one relaxed, scrollable row */

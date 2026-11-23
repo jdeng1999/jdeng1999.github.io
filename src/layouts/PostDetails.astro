@@ -156,7 +156,7 @@ const recommendedPost = rawRecommendedPost
     <!-- Post header section -->
     <header class="post-header relative mb-10 text-center">
       <div class="post-hero-bg"></div>
-      <div class="relative z-10 rounded-3xl border border-border/20 bg-muted/5 px-6 py-8 backdrop-blur-md sm:px-10 sm:py-12">
+      <div class="relative z-10 isolate overflow-hidden rounded-3xl border border-border/20 bg-muted/5 px-6 py-8 backdrop-blur-md sm:px-10 sm:py-12">
         <!-- Title -->
         <h1
           transition:name={slugifyStr(title.replaceAll(".", "-"))}
@@ -184,7 +184,7 @@ const recommendedPost = rawRecommendedPost
         <div class="post-meta-scroll mt-6 text-sm">
           <div class="post-meta-track">
             <!-- Author chip -->
-            <div class="inline-flex items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1 backdrop-blur-sm">
+            <div class="inline-flex items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1">
               <svg
                 class="size-3.5 text-accent/70"
                 viewBox="0 0 24 24"
@@ -201,7 +201,7 @@ const recommendedPost = rawRecommendedPost
             </div>
 
             <!-- Date chip -->
-            <div class="inline-flex items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1 backdrop-blur-sm">
+            <div class="inline-flex items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1">
               <svg
                 class="size-3.5 text-accent/70"
                 viewBox="0 0 24 24"
@@ -226,7 +226,7 @@ const recommendedPost = rawRecommendedPost
 
             <!-- Reading time chip -->
             {readingTime && (
-              <div class="inline-flex items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1 backdrop-blur-sm">
+              <div class="inline-flex items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1">
                 <svg
                   class="size-3.5 text-accent/70"
                   viewBox="0 0 24 24"
@@ -247,7 +247,7 @@ const recommendedPost = rawRecommendedPost
             <!-- Read Mode Button -->
             <button
               id="read-mode-btn"
-              class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1 opacity-70 backdrop-blur-sm transition-all duration-200 hover:border-accent/30 hover:opacity-100"
+              class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border/25 bg-muted/10 px-2.5 py-1 opacity-70 transition-all duration-200 hover:border-accent/30 hover:opacity-100"
               title={
                 locale === "es"
                   ? "Alternar Modo Lectura (Atajo: r)"
