@@ -21,7 +21,7 @@
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  background: color-mix(in srgb, var(--foreground) 7%, var(--background));
   content: "";
   pointer-events: none;
   transition: background-color 0.2s ease;
@@ -63,7 +63,19 @@
 
 .code-file-name-chip {
   position: relative;
-  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--foreground) 7%,
+    var(--shiki-light-bg, var(--background))
+  );
+}
+
+html[data-theme="dark"] .code-file-name-chip {
+  background: color-mix(
+    in srgb,
+    var(--foreground) 7%,
+    var(--shiki-dark-bg, var(--background))
+  );
 }
 
 .code-file-name-chip::before {
@@ -89,7 +101,7 @@
 
 .copy-code:hover::after,
 .copy-code:focus-visible::after {
-  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: color-mix(in srgb, var(--foreground) 10%, var(--background));
 }
 
 .copy-code[data-copied="true"] {
@@ -97,7 +109,7 @@
 }
 
 .copy-code[data-copied="true"]::after {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--background));
 }
 
 .copy-code svg {

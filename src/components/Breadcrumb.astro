@@ -124,11 +124,7 @@ const breadcrumbSchema = {
               {item.label}
             </a>
           ) : (
-            <span
-              class="breadcrumb-current"
-              aria-current="page"
-              title={item.label}
-            >
+            <span class="breadcrumb-current" aria-current="page">
               {item.label}
             </span>
           )}
@@ -250,6 +246,10 @@ const breadcrumbSchema = {
     border: 0;
   }
 
+  .breadcrumb-current.is-marquee {
+    text-overflow: clip;
+  }
+
   .visually-hidden {
     position: absolute;
     width: 1px;
@@ -345,3 +345,119 @@ const breadcrumbSchema = {
   document.addEventListener("astro:page-load", updateGoBackUrl);
   updateGoBackUrl();
 </script>}
+
+<script>
+  let breadcrumbMarqueeCleanup: AbortController | null = null;
+
+  function initBreadcrumbMarquee() {
+    breadcrumbMarqueeCleanup?.abort();
+    const controller = new AbortController();
+    breadcrumbMarqueeCleanup = controller;
+    const { signal } = controller;
+
+    document
+      .querySelectorAll<HTMLElement>(".breadcrumb-current")
+      .forEach(el => {
+        let frame = 0;
+        let active = false;
+        let paused = false;
+        let max = 0;
+        let phase: "forward" | "hold-end" | "back" | "hold-start" = "forward";
+        let phaseStarted = 0;
+        let lastTime = 0;
+
+        const stop = () => {
+          active = false;
+          paused = false;
+          window.cancelAnimationFrame(frame);
+          frame = 0;
+          lastTime = 0;
+          el.classList.remove("is-marquee");
+          el.scrollLeft = 0;
+        };
+
+        const tick = (now: number) => {
+          if (!active) return;
+
+          if (!lastTime) lastTime = now;
+          const dt = Math.min(64, now - lastTime);
+          lastTime = now;
+
+          if (!paused) {
+            if (phase === "forward") {
+              el.scrollLeft = Math.min(max, el.scrollLeft + 0.05 * dt);
+              if (el.scrollLeft >= max - 0.5) {
+                el.scrollLeft = max;
+                phase = "hold-end";
+                phaseStarted = now;
+              }
+            } else if (phase === "hold-end") {
+              if (now - phaseStarted >= 950) {
+                phase = "back";
+                phaseStarted = now;
+              }
+            } else if (phase === "back") {
+              const progress = Math.min(1, (now - phaseStarted) / 620);
+              const eased = 1 - Math.pow(1 - progress, 3);
+              el.scrollLeft = max * (1 - eased);
+              if (progress >= 1) {
+                el.scrollLeft = 0;
+                phase = "hold-start";
+                phaseStarted = now;
+              }
+            } else if (now - phaseStarted >= 550) {
+              phase = "forward";
+              phaseStarted = now;
+            }
+          }
+
+          frame = window.requestAnimationFrame(tick);
+        };
+
+        el.addEventListener(
+          "pointerenter",
+          event => {
+            if (event.pointerType === "touch") return;
+
+            max = Math.max(0, el.scrollWidth - el.clientWidth);
+            if (max < 6) return;
+
+            active = true;
+            paused = false;
+            phase = "forward";
+            phaseStarted = performance.now();
+            lastTime = 0;
+            el.classList.add("is-marquee");
+            el.scrollLeft = 0;
+
+            if (!frame) frame = window.requestAnimationFrame(tick);
+          },
+          { signal }
+        );
+
+        el.addEventListener("pointerleave", stop, { signal });
+        el.addEventListener(
+          "pointerdown",
+          () => {
+            if (!active) return;
+            paused = true;
+            window.cancelAnimationFrame(frame);
+            frame = 0;
+          },
+          { signal }
+        );
+      });
+
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        breadcrumbMarqueeCleanup?.abort();
+        breadcrumbMarqueeCleanup = null;
+      },
+      { once: true, signal }
+    );
+  }
+
+  initBreadcrumbMarquee();
+  document.addEventListener("astro:page-load", initBreadcrumbMarquee);
+</script>

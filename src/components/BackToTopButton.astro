@@ -2,9 +2,9 @@
   id="btt-btn-container"
   aria-hidden="true"
   class:list={[
-    "pointer-events-none fixed end-4 bottom-8 z-50",
-    "md:end-8 md:bottom-10",
-    "translate-y-8 opacity-0",
+    "pointer-events-none fixed end-4 bottom-6 z-40",
+    "md:end-6 md:bottom-8",
+    "translate-y-6 opacity-0",
     "transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
   ]}
 >
@@ -13,50 +13,51 @@
     type="button"
     tabindex="-1"
     aria-label="Go back to top"
-    title="Go back to top"
     data-button="back-to-top"
     class:list={[
-      "group relative flex flex-col items-center justify-center gap-0.5",
-      "size-14 rounded-full",
-      "md:size-16",
-      "border border-accent/15 bg-background/75 backdrop-blur-md",
-      "shadow-[0_4px_20px_rgba(0,0,0,0.20)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.60)]",
-      "hover:shadow-[0_6px_28px_rgba(0,0,0,0.30)] dark:hover:shadow-[0_6px_28px_rgba(0,0,0,0.75)]",
-      "hover:scale-105 active:scale-95 motion-reduce:hover:scale-100 motion-reduce:active:scale-100",
-      "transition-all duration-200 ease-out motion-reduce:transition-none",
+      "group relative grid size-10 place-items-center",
+      "md:size-11",
+      "rounded-full border border-foreground/10 bg-background/60 text-foreground/45",
+      "shadow-[0_2px_12px_rgba(0,0,0,0.10)] backdrop-blur-md",
+      "hover:border-accent/30 hover:bg-background/80 hover:text-accent",
+      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+      "transition-[color,background-color,border-color,box-shadow] duration-200 motion-reduce:transition-none",
       "pointer-events-auto",
     ]}
   >
-    <!-- 1: Progress Ring (conic-gradient) -->
+    <!-- Thin reading-progress arc; the inner disc keeps it to one hairline. -->
     <span
       aria-hidden="true"
       id="progress-indicator"
-      class="absolute inset-0 z-0 block rounded-full bg-transparent"
+      class="absolute inset-0 rounded-full bg-transparent"
     ></span>
-    <!-- 2: Button Background, leaves 3px of the ring visible -->
     <span
       aria-hidden="true"
-      class="absolute inset-[3px] z-10 rounded-full bg-background/95"
+      class="absolute inset-px rounded-full bg-background/90"
     ></span>
-    <!-- 3: Content (chevron + label) -->
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      stroke-width="1.7"
+      stroke-width="1.6"
       stroke-linecap="round"
       stroke-linejoin="round"
       aria-hidden="true"
-      class="relative z-20 size-5 text-accent transition-transform duration-200 group-hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0 md:size-6"
+      class="relative z-20 size-4 transition-transform duration-200 group-hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0 md:size-[1.1rem]"
     >
       <path d="m18 15-6-6-6 6" />
     </svg>
-    <span class="relative z-20 text-[9px] font-bold tracking-widest text-accent/70 uppercase">
-      top
-    </span>
     <span class="sr-only">Go back to top</span>
   </button>
 </div>
+<style>
+  #progress-indicator {
+    background: conic-gradient(
+      color-mix(in srgb, var(--accent) 42%, transparent) var(--btt-progress, 0%),
+      transparent 0
+    );
+  }
+</style>
 <script>
   let backToTopCleanup: AbortController | null = null;
 
@@ -100,10 +101,7 @@
       const { ratio, progress } = getScrollMetrics();
 
       if (progress !== lastProgress) {
-        progressEl.style.setProperty(
-          "background-image",
-          `conic-gradient(var(--accent) ${progress}%, transparent ${progress}%)`
-        );
+        progressEl.style.setProperty("--btt-progress", `${progress}%`);
         lastProgress = progress;
       }
 
@@ -113,7 +111,7 @@
         containerEl.classList.toggle("opacity-100", isVisible);
         containerEl.classList.toggle("translate-y-0", isVisible);
         containerEl.classList.toggle("opacity-0", !isVisible);
-        containerEl.classList.toggle("translate-y-8", !isVisible);
+        containerEl.classList.toggle("translate-y-6", !isVisible);
         containerEl.classList.toggle("pointer-events-none", !isVisible);
         containerEl.setAttribute("aria-hidden", String(!isVisible));
         buttonEl.tabIndex = isVisible ? 0 : -1;
