@@ -9,7 +9,9 @@
  *      iFrame API (which streams a 30s preview to anonymous visitors).
  *
  * The card shows the current track, controls, and a short "enjoy" line; the
- * deck itself is a three-card stack that switches one card per gesture.
+ * footer deck is a four-layer stack that advances one track per gesture.
+ * Tapping a non-control area of the front card lifts the whole deck into a
+ * centered 3D carousel of every track in the playlist.
  */
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -118,30 +120,6 @@ const totalLabel = formatTime(first.duration);
   <div class="np-stack" data-np-stack>
     <div class="np-stage" data-np-stage>
       <div class="np-card" data-np-card data-np-track-index="0">
-        <button
-          type="button"
-          class="np-peek-face"
-          data-np-peek-face
-          aria-label={`${first.title} — ${nextLabel}`}
-        >
-          <img
-            class="np-peek-cover"
-            data-np-peek-cover
-            src={first.cover}
-            alt=""
-            width="40"
-            height="40"
-            loading="lazy"
-            decoding="async"
-          />
-          <span class="np-peek-title" data-np-peek-title>
-            {first.title}
-          </span>
-          <span class="np-peek-arrow" aria-hidden="true">
-            ↗
-          </span>
-        </button>
-
         <div class="np-art">
           <img
             data-np-cover
@@ -380,9 +358,10 @@ const totalLabel = formatTime(first.duration);
   .np-stack {
     position: relative;
     isolation: isolate;
-    /* Reserve room for the deepest card and keep transformed cards from
-       extending the document's scrollable height. */
-    padding-top: 3.5rem;
+    /* The extra top room is cancelled by the negative margin, so the front
+       card keeps its place while the tilted back cards get space to breathe. */
+    padding-top: 5.45rem;
+    margin-top: -2rem;
     contain: paint;
     touch-action: none;
   }
@@ -390,14 +369,12 @@ const totalLabel = formatTime(first.duration);
   .np-stage {
     position: relative;
     overflow: visible;
-    clip-path: inset(-3.8rem 0 0 0);
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
   }
 
-  .now-playing[data-np-moving="true"] .np-body,
-  .now-playing[data-np-moving="true"] .np-peek-face {
+  .now-playing[data-np-moving="true"] .np-body {
     pointer-events: none;
   }
 
@@ -408,81 +385,6 @@ const totalLabel = formatTime(first.duration);
     left: 0;
     border-radius: 1.05rem;
     will-change: transform, opacity, filter;
-  }
-
-  .np-peek-face {
-    position: absolute;
-    z-index: 3;
-    top: 0;
-    right: 0;
-    left: 0;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.4rem;
-    height: 3.1rem;
-    padding: 0.3rem 0.85rem 0;
-    overflow: hidden;
-    border: 1px solid
-      color-mix(in srgb, var(--color-foreground) 10%, transparent);
-    border-radius: 1.05rem;
-    background: color-mix(
-      in srgb,
-      var(--color-foreground) 7%,
-      var(--color-background)
-    );
-    color: color-mix(in srgb, var(--color-foreground) 48%, transparent);
-    font-family: inherit;
-    text-align: left;
-    opacity: 0;
-    pointer-events: none;
-    transition:
-      border-color 0.2s ease,
-      color 0.2s ease,
-      background-color 0.2s ease;
-  }
-
-  .np-peek-face[data-interactive="true"] {
-    cursor: pointer;
-    pointer-events: auto;
-  }
-
-  .np-peek-face[data-interactive="true"]:hover {
-    border-color: color-mix(in srgb, var(--color-accent) 34%, transparent);
-    background: color-mix(in srgb, var(--color-accent) 7%, transparent);
-    color: var(--color-accent);
-  }
-
-  .np-peek-face:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-    outline-offset: 2px;
-  }
-
-  .np-peek-cover {
-    display: block;
-    flex: none;
-    width: 1.05rem;
-    height: 1.05rem;
-    border-radius: 0.26rem;
-    object-fit: cover;
-    object-position: 50% 30%;
-  }
-
-  .np-peek-title {
-    min-width: 0;
-    overflow: hidden;
-    font-size: 0.63rem;
-    letter-spacing: 0.04em;
-    line-height: 1.15;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .np-peek-arrow {
-    flex: none;
-    margin-left: auto;
-    font-size: 0.55rem;
-    line-height: 1.2;
-    opacity: 0.5;
   }
 
   .np-card {
@@ -507,6 +409,8 @@ const totalLabel = formatTime(first.duration);
     box-shadow:
       0 8px 20px -20px
         color-mix(in srgb, var(--color-foreground) 38%, transparent),
+      inset 0 0 0 1px
+        color-mix(in srgb, var(--color-foreground) 5%, transparent),
       inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 6%, transparent);
     transform-origin: 50% 0%;
     will-change: transform, opacity, filter;
@@ -517,6 +421,8 @@ const totalLabel = formatTime(first.duration);
     box-shadow:
       0 16px 34px -26px
         color-mix(in srgb, var(--color-foreground) 42%, transparent),
+      inset 0 0 0 1px
+        color-mix(in srgb, var(--color-foreground) 7%, transparent),
       inset 0 1px 0 color-mix(in srgb, var(--color-foreground) 9%, transparent);
   }
 
@@ -1079,6 +985,250 @@ const totalLabel = formatTime(first.duration);
     pointer-events: none;
   }
 
+  /* ── Expanded nine-card carousel ─────────────────────────────── */
+  .np-expand {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+  }
+
+  .np-expand[open] {
+    display: block;
+  }
+
+  .np-expand::backdrop {
+    background: transparent;
+  }
+
+  .np-expand-glass {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(
+        58% 58% at 50% 46%,
+        color-mix(in srgb, var(--color-background) 30%, transparent),
+        transparent 72%
+      ),
+      color-mix(in srgb, var(--color-background) 44%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(1.2);
+    backdrop-filter: blur(22px) saturate(1.2);
+    opacity: 0;
+    transition: opacity 0.45s ease;
+  }
+
+  .np-expand.is-open .np-expand-glass {
+    opacity: 1;
+  }
+
+  .np-expand.is-closing .np-expand-glass {
+    opacity: 0;
+  }
+
+  .np-expand-stage {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: min(96vw, 74rem);
+    height: 100%;
+    margin: 0 auto;
+    pointer-events: none;
+    perspective: 1100px;
+    perspective-origin: 50% 50%;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .np-expand.is-open .np-expand-stage {
+    opacity: 1;
+  }
+
+  .np-expand.is-closing .np-expand-stage {
+    opacity: 0;
+  }
+
+  .np-expand-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--np-expand-w, 32rem);
+    margin: 0;
+    border-radius: 1.05rem;
+    box-shadow:
+      0 34px 80px -38px rgba(0, 0, 0, 0.7),
+      0 0 0 1px color-mix(in srgb, var(--color-foreground) 8%, transparent);
+    pointer-events: auto;
+    transform-origin: 50% 50%;
+    will-change: transform, opacity, filter;
+    backface-visibility: hidden;
+    transition: none;
+  }
+
+  .np-expand[data-ready="true"] .np-expand-card {
+    transition:
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.45s ease,
+      filter 0.45s ease;
+  }
+
+  .np-expand-card[data-clickable="true"] {
+    cursor: pointer;
+  }
+
+  .np-expand-card[data-center="true"] {
+    cursor: default;
+  }
+
+  .np-expand-card .np-body {
+    pointer-events: none;
+  }
+
+  .np-expand-card:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
+    outline-offset: 6px;
+  }
+
+  .np-expand-close {
+    position: absolute;
+    z-index: 60;
+    top: clamp(1rem, 3vh, 2rem);
+    right: clamp(1rem, 3vw, 2rem);
+    display: grid;
+    width: 2.6rem;
+    height: 2.6rem;
+    place-items: center;
+    padding: 0;
+    border: 1px solid
+      color-mix(in srgb, var(--color-foreground) 12%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-background) 55%, transparent);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    color: color-mix(in srgb, var(--color-foreground) 62%, transparent);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .np-expand-close:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    color: var(--color-accent);
+    transform: translateY(-1px);
+  }
+
+  .np-expand-close:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    outline-offset: 3px;
+  }
+
+  .np-expand-close svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .np-expand-hint {
+    position: absolute;
+    bottom: clamp(1rem, 3vh, 2rem);
+    left: 50%;
+    z-index: 55;
+    transform: translateX(-50%);
+    font-family: var(--font-firacode), ui-monospace, monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-foreground) 32%, transparent);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.45s ease 0.2s;
+  }
+
+  .np-expand.is-open .np-expand-hint {
+    opacity: 1;
+  }
+
+  .np-expand.is-closing .np-expand-hint {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+
+  .np-expand.is-playing .np-icon-play {
+    display: none;
+  }
+
+  .np-expand.is-playing .np-icon-pause {
+    display: block;
+  }
+
+  .np-expand.is-playing .np-eq i {
+    animation: np-eq 1.05s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.17s);
+  }
+
+  .np-fly-card {
+    position: absolute;
+    z-index: 50;
+    margin: 0;
+    border-radius: 1.05rem;
+    box-shadow:
+      0 40px 90px -38px rgba(0, 0, 0, 0.72),
+      0 0 0 1px color-mix(in srgb, var(--color-foreground) 9%, transparent);
+    pointer-events: none;
+    transform-origin: top left;
+    will-change: transform;
+    transition: transform 0.68s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .np-fly-card .np-body {
+    pointer-events: none;
+  }
+
+  @media (max-width: 640px) {
+    .np-expand-stage {
+      width: 100%;
+    }
+
+    .np-expand-card {
+      border-radius: 0.9rem;
+    }
+
+    .np-expand-close {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+
+    .np-expand-hint {
+      font-size: 0.52rem;
+      letter-spacing: 0.12em;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .np-expand-glass,
+    .np-expand-stage,
+    .np-expand-hint,
+    .np-fly-card {
+      transition: none !important;
+    }
+
+    .np-expand[data-ready="true"] .np-expand-card {
+      transition: none !important;
+    }
+  }
+
   .now-playing[data-np-loading="true"] .np-toggle {
     animation: np-pulse 1.4s ease-in-out infinite;
   }
@@ -1332,6 +1482,11 @@ const totalLabel = formatTime(first.duration);
     const labels = data.labels;
     const tracks = data.tracks;
     const visibleCount = Math.min(tracks.length, 4);
+    let expandedDialog: HTMLDialogElement | null = null;
+    // Front, next, next-next, previous. Keeping the previous card on the
+    // deepest layer makes both drag directions advance one track through the
+    // whole playlist, even when it is longer than the four visible cards.
+    const deckSlotOffsets = [0, 1, 2, -1];
 
     const stack = root.querySelector<HTMLElement>("[data-np-stack]");
     const stage = root.querySelector<HTMLElement>("[data-np-stage]");
@@ -1398,21 +1553,12 @@ const totalLabel = formatTime(first.duration);
         preview.href = track.url;
         preview.hidden = track.isLocal;
       }
-
-      const peekFace = card.querySelector<HTMLButtonElement>(
-        "[data-np-peek-face]"
-      );
-      if (peekFace) {
-        peekFace.setAttribute("aria-label", `${track.title} — ${labels.next}`);
-      }
-      const peekCover = card.querySelector<HTMLImageElement>(
-        "[data-np-peek-cover]"
-      );
-      if (peekCover) peekCover.src = track.cover;
-      setText(card, "[data-np-peek-title]", track.title);
     };
 
-    deckCards.forEach((card, trackIndex) => {
+    deckCards.forEach((card, slot) => {
+      const offset = deckSlotOffsets[slot] ?? 0;
+      const trackIndex =
+        ((offset % tracks.length) + tracks.length) % tracks.length;
       applyCardContent(card, tracks[trackIndex]!, trackIndex);
     });
 
@@ -1454,6 +1600,7 @@ const totalLabel = formatTime(first.duration);
     const setPlaying = (playing: boolean) => {
       isPlaying = playing;
       root.dataset.npPlaying = String(playing);
+      expandedDialog?.classList.toggle("is-playing", playing);
       root
         .querySelectorAll<HTMLButtonElement>("[data-np-toggle]")
         .forEach(toggle => {
@@ -1664,18 +1811,31 @@ const totalLabel = formatTime(first.duration);
       if (height > 0) stage.style.height = `${height}px`;
     };
 
+    const applyDeckWindow = () => {
+      const count = tracks.length;
+      if (!count) return;
+
+      deckCards.forEach((card, slot) => {
+        const offset = deckSlotOffsets[slot] ?? 0;
+        const trackIndex = (((index + offset) % count) + count) % count;
+        if (Number(card.dataset.npTrackIndex) === trackIndex) return;
+        applyCardContent(card, tracks[trackIndex]!, trackIndex);
+      });
+      syncStageHeight();
+    };
+
     const unitRem = () =>
       Number.parseFloat(getComputedStyle(document.documentElement).fontSize) ||
       16;
 
     // Natural deck slots. Role 0 is the front; the other roles are the three
-    // cards peeking above it, from nearest to deepest.
+    // complete cards stacked above it, from nearest to deepest.
     let remSize = 16;
-    const slotYRem = [0, -1.8, -2.9, -3.5];
-    const slotScale = [1, 0.97, 0.94, 0.91];
-    const slotOpacity = [1, 0.92, 0.74, 0.52];
-    const slotBlur = [0, 0.12, 0.32, 0.6];
-    const slotRotate = [0, -0.5, -1.05, -1.55];
+    const slotYRem = [0, -1.5, -2.55, -3.45];
+    const slotScale = [1, 0.975, 0.95, 0.925];
+    const slotOpacity = [1, 0.95, 0.84, 0.72];
+    const slotBlur = [0, 0.18, 0.55, 1];
+    const slotRotate = [0, -1.15, -2.15, -3.05];
     const slotZ = [4, 3, 2, 1];
     const lastRole = visibleCount - 1;
 
@@ -1766,21 +1926,6 @@ const totalLabel = formatTime(first.duration);
         card.style.opacity = String(opacity);
         card.style.filter = blur > 0.01 ? `blur(${blur}px)` : "none";
         card.style.zIndex = String(Math.round(z));
-
-        const face = card.querySelector<HTMLButtonElement>(
-          "[data-np-peek-face]"
-        );
-        if (face) {
-          // The peek face belongs to the back of the card. It is only
-          // removed as that card actually reaches the front layer, so tiny
-          // drags, snap-backs and direction changes never flash content.
-          const faceOpacity = 1 - smoothstep(3.15, 3.9, z);
-          face.style.opacity = String(clamp01(faceOpacity));
-          const interactive = settled && (role === 1 || role === 2);
-          face.dataset.interactive = String(interactive);
-          face.toggleAttribute("inert", !interactive);
-          face.tabIndex = interactive ? 0 : -1;
-        }
       });
 
       root.dataset.npMoving = String(!settled);
@@ -1800,6 +1945,10 @@ const totalLabel = formatTime(first.duration);
     let dragLastRaw = 0;
     let dragLastTime = 0;
     let dragVelocity = 0;
+    let deckDownTarget: EventTarget | null = null;
+    let deckDownTime = 0;
+    let deckTapCandidate = false;
+    let deckMoved = false;
 
     let wheelAccum = 0;
     let wheelTimer = 0;
@@ -1842,6 +1991,7 @@ const totalLabel = formatTime(first.duration);
       springing = false;
 
       setActiveCard(deckCards[0]!);
+      applyDeckWindow();
       const autoplay = resumeAfterCommit;
       resumeAfterCommit = false;
       if (!autoplay) pauseCurrent();
@@ -1925,15 +2075,23 @@ const totalLabel = formatTime(first.duration);
     };
 
     const jumpToTrack = (targetIndex: number, autoplay: boolean) => {
-      const target = deckCards.find(
-        card => Number(card.dataset.npTrackIndex) === targetIndex
-      );
-      if (!target) return;
+      setDeckWindow(targetIndex, autoplay);
+    };
 
-      const position = deckCards.indexOf(target);
-      if (position > 0) {
-        deckCards.push(...deckCards.splice(0, position));
-      }
+    // Re-seat the four-card footer deck on any track in the full collection.
+    // Slot order is current / next / next-next / previous, so both gesture
+    // directions continue through the whole playlist instead of a four-song
+    // loop.
+    function setDeckWindow(centerIndex: number, autoplay: boolean) {
+      const count = tracks.length;
+      if (!count) return;
+
+      index = ((centerIndex % count) + count) % count;
+      deckCards.forEach((card, slot) => {
+        const offset = deckSlotOffsets[slot] ?? 0;
+        const trackIndex = (((index + offset) % count) + count) % count;
+        applyCardContent(card, tracks[trackIndex]!, trackIndex);
+      });
 
       deckOffset = 0;
       deckTarget = 0;
@@ -1942,10 +2100,15 @@ const totalLabel = formatTime(first.duration);
       draggingDeck = false;
       dragPointerId = -1;
       pendingMoves.length = 0;
+      wheelAccum = 0;
       setActiveCard(deckCards[0]!);
+      applyDeckWindow();
       renderDeck();
+      localFailed = false;
+      if (!autoplay) pauseCurrent();
       activateTrack(autoplay);
-    };
+      syncStageHeight();
+    }
 
     const nextTrack = (forceAutoplay?: boolean) => {
       requestMove(1, forceAutoplay ?? isPlaying);
@@ -2117,6 +2280,12 @@ const totalLabel = formatTime(first.duration);
       dragLastTime = performance.now();
       dragVelocity = 0;
       deckTarget = deckOffset;
+      deckDownTarget = event.target;
+      deckDownTime = performance.now();
+      deckTapCandidate =
+        event.target instanceof Element &&
+        Boolean(event.target.closest("[data-np-card], .np-clone"));
+      deckMoved = false;
 
       try {
         stack.setPointerCapture?.(event.pointerId);
@@ -2140,6 +2309,8 @@ const totalLabel = formatTime(first.duration);
       dragLastRaw = raw;
       dragLastTime = now;
 
+      if (Math.abs(event.clientY - dragStartY) > 6) deckMoved = true;
+
       deckTarget = clampDrag(raw);
       startDeck();
     });
@@ -2157,6 +2328,16 @@ const totalLabel = formatTime(first.duration);
         /* capture may have been released by the browser */
       }
 
+      const wasTap =
+        event.type === "pointerup" &&
+        deckTapCandidate &&
+        !deckMoved &&
+        performance.now() - deckDownTime < 500;
+      const tapTarget =
+        deckDownTarget instanceof Element ? deckDownTarget : null;
+      deckTapCandidate = false;
+      deckDownTarget = null;
+
       if (performance.now() - dragLastTime > 90) dragVelocity = 0;
       const projected = deckOffset + dragVelocity * 200;
       let target = 0;
@@ -2168,6 +2349,23 @@ const totalLabel = formatTime(first.duration);
       deckVelocity = Math.max(-0.16, Math.min(0.16, dragVelocity * 18));
       springing = true;
       startDeck();
+
+      if (!wasTap || !tapTarget) return;
+
+      const pressedCard = tapTarget.closest<HTMLElement>(
+        "[data-np-card], .np-clone"
+      );
+      const pressedRole = pressedCard ? deckCards.indexOf(pressedCard) : -1;
+
+      if (pressedRole === 0) {
+        openExpanded();
+      } else if (pressedRole === 3 && visibleCount > 3) {
+        requestMove(-1, false);
+      } else if (pressedRole > 0) {
+        for (let step = 0; step < pressedRole; step += 1) {
+          requestMove(1, false);
+        }
+      }
     };
 
     stack.addEventListener("pointerup", endDeckDrag);
@@ -2192,7 +2390,7 @@ const totalLabel = formatTime(first.duration);
         window.clearTimeout(wheelTimer);
         wheelTimer = window.setTimeout(() => {
           if (Math.abs(wheelAccum) >= 24) {
-            requestMove(wheelAccum > 0 ? 1 : -1, false);
+            requestMove(wheelAccum > 0 ? -1 : 1, false);
           }
           wheelAccum = 0;
           wheelLocked = true;
@@ -2219,7 +2417,6 @@ const totalLabel = formatTime(first.duration);
       const modeButton =
         body.querySelector<HTMLButtonElement>("[data-np-mode]");
       const seek = body.querySelector<HTMLElement>("[data-np-seek]");
-      const face = card.querySelector<HTMLButtonElement>("[data-np-peek-face]");
 
       toggle?.addEventListener("click", () => {
         if (card !== activeCard) return;
@@ -2289,20 +2486,406 @@ const totalLabel = formatTime(first.duration);
           seekToSeconds(next);
         });
       }
+    };
 
-      face?.addEventListener("click", () => {
-        if (card === activeCard || !face.dataset.interactive) return;
-        const role = deckCards.indexOf(card);
-        if (role === 1) {
-          requestMove(1, false);
-        } else if (role === 2) {
-          requestMove(1, false);
-          requestMove(1, false);
+    deckCards.forEach(wireCard);
+
+    // ── Expanded nine-card carousel ───────────────────────────────
+    type ExpandedCard = { el: HTMLElement; trackIndex: number };
+
+    let expandedStage: HTMLElement | null = null;
+    let expandedClose: HTMLButtonElement | null = null;
+    let expandedCards: ExpandedCard[] = [];
+    let expandedOpen = false;
+    let expandedClosing = false;
+    let expandedCenter = 0;
+    let expandedBaseW = 0;
+    let expandedBaseH = 0;
+    let expandedCenterScale = 1.2;
+    let expandedStep = 70;
+    let expandedOpenTimer = 0;
+    let expandedCloseTimer = 0;
+    let expandedReturnFocus: HTMLElement | null = null;
+    let expandedPreviousOverflow = "";
+    let expandedFly: HTMLElement | null = null;
+
+    const settleDeck = () => {
+      draggingDeck = false;
+      dragPointerId = -1;
+      deckOffset = 0;
+      deckTarget = 0;
+      deckVelocity = 0;
+      springing = false;
+      pendingMoves.length = 0;
+      renderDeck();
+    };
+
+    const expandedTargetRect = () => {
+      const width = expandedBaseW * expandedCenterScale;
+      const height = expandedBaseH * expandedCenterScale;
+      return {
+        left: (window.innerWidth - width) / 2,
+        top: (window.innerHeight - height) / 2,
+        width,
+        height,
+      };
+    };
+
+    const makeFlyCard = (trackIndex: number) => {
+      const fly = serverCard.cloneNode(true) as HTMLElement;
+      fly.classList.add("np-fly-card");
+      fly.removeAttribute("data-np-card");
+      fly.removeAttribute("data-np-track-index");
+      fly.querySelectorAll("[id]").forEach(node => node.removeAttribute("id"));
+      const body = getBody(fly);
+      if (body) {
+        body.setAttribute("inert", "");
+        body.setAttribute("aria-hidden", "true");
+      }
+      applyCardContent(fly, tracks[trackIndex]!, trackIndex);
+      const flySeek = fly.querySelector<HTMLElement>("[data-np-seek]");
+      const flyCurrent = fly.querySelector<HTMLElement>("[data-np-current]");
+      const flyRatio = durationMs > 0 ? positionMs / durationMs : 0;
+      flySeek?.style.setProperty("--np-p", `${flyRatio * 100}%`);
+      if (flyCurrent) flyCurrent.textContent = formatTime(positionMs);
+      fly.style.transform = "";
+      fly.style.opacity = "";
+      fly.style.filter = "";
+      fly.style.zIndex = "";
+      return fly;
+    };
+
+    const createExpanded = () => {
+      if (expandedDialog) return;
+
+      const astroScope = serverCard
+        .getAttributeNames()
+        .find(name => name.startsWith("data-astro-cid-"));
+      const scope = (el: Element) => {
+        if (astroScope) el.setAttribute(astroScope, "");
+      };
+
+      const dialog = document.createElement("dialog");
+      dialog.className = "np-expand";
+      dialog.setAttribute("aria-label", "Music cards");
+      scope(dialog);
+
+      const glass = document.createElement("div");
+      glass.className = "np-expand-glass";
+      scope(glass);
+
+      const stage = document.createElement("div");
+      stage.className = "np-expand-stage";
+      scope(stage);
+
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "np-expand-close";
+      close.setAttribute("aria-label", "Close");
+      close.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+      scope(close);
+
+      const hint = document.createElement("p");
+      hint.className = "np-expand-hint";
+      hint.textContent = "↑ ↓ · ESC";
+      scope(hint);
+
+      dialog.append(glass, stage, close, hint);
+
+      dialog.addEventListener("click", event => {
+        if (event.target === glass) closeExpanded();
+      });
+      close.addEventListener("click", () => closeExpanded());
+      dialog.addEventListener("cancel", event => {
+        event.preventDefault();
+        if (!expandedClosing) closeExpanded();
+      });
+      dialog.addEventListener("keydown", event => {
+        if (!expandedOpen || expandedClosing) return;
+        if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+          event.preventDefault();
+          selectExpanded(expandedCenter - 1);
+        } else if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+          event.preventDefault();
+          selectExpanded(expandedCenter + 1);
+        }
+      });
+
+      expandedDialog = dialog;
+      expandedStage = stage;
+      expandedClose = close;
+
+      expandedCards = tracks.map((track, trackIndex) => {
+        const el = serverCard.cloneNode(true) as HTMLElement;
+        el.classList.add("np-expand-card");
+        el.removeAttribute("data-np-card");
+        el.removeAttribute("data-np-track-index");
+        el.querySelectorAll("[id]").forEach(node => node.removeAttribute("id"));
+
+        const body = getBody(el);
+        if (body) {
+          body.setAttribute("inert", "");
+          body.setAttribute("aria-hidden", "true");
+        }
+        applyCardContent(el, track, trackIndex);
+        el.dataset.npExpandOffset = "0";
+
+        el.addEventListener("click", () => {
+          if (!expandedOpen || expandedClosing) return;
+          const offset = Number(el.dataset.npExpandOffset || "0");
+          if (offset === 0 || Math.abs(offset) > 3) return;
+          selectExpanded(trackIndex);
+        });
+        el.addEventListener("keydown", event => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          if (!expandedOpen || expandedClosing) return;
+          const offset = Number(el.dataset.npExpandOffset || "0");
+          if (offset === 0 || Math.abs(offset) > 3) return;
+          event.preventDefault();
+          selectExpanded(trackIndex);
+        });
+
+        stage.appendChild(el);
+        return { el, trackIndex };
+      });
+
+      document.body.appendChild(dialog);
+    };
+
+    const measureExpanded = () => {
+      expandedBaseW = serverCard.offsetWidth || 480;
+      expandedBaseH = serverCard.offsetHeight || 200;
+
+      const maxWidth = Math.min(window.innerWidth * 0.94, 940);
+      expandedCenterScale = clamp(maxWidth / expandedBaseW, 1.02, 1.3);
+
+      const outerHalf = (expandedBaseH * expandedCenterScale * 0.56) / 2;
+      const maxHalf = window.innerHeight * 0.43;
+      expandedStep = clamp((maxHalf - outerHalf) / 4, 36, 88);
+
+      expandedStage?.style.setProperty("--np-expand-w", `${expandedBaseW}px`);
+    };
+
+    const renderExpanded = () => {
+      if (!expandedStage) return;
+
+      const count = tracks.length;
+      const scaleFactors = [1, 0.9, 0.78, 0.66, 0.56];
+      const opacityFactors = [1, 0.92, 0.7, 0.45, 0.22];
+      const blurFactors = [0, 0.6, 1.8, 3.8, 7];
+
+      expandedCards.forEach(({ el, trackIndex }) => {
+        let offset = trackIndex - expandedCenter;
+        if (offset > count / 2) offset -= count;
+        if (offset < -count / 2) offset += count;
+
+        const abs = Math.abs(offset);
+        if (abs > 4) {
+          el.hidden = true;
+          el.dataset.clickable = "false";
+          el.tabIndex = -1;
+          return;
+        }
+
+        el.hidden = false;
+        const sign = Math.sign(offset);
+        const scale = scaleFactors[abs]! * expandedCenterScale;
+        const angle = sign * abs * 8;
+
+        el.style.transform = `translate(-50%, -50%) translateY(${
+          offset * expandedStep
+        }px) translateZ(${-abs * 18}px) rotateX(${angle}deg) scale(${scale})`;
+        el.style.opacity = String(opacityFactors[abs]!);
+        el.style.filter =
+          blurFactors[abs]! > 0.01 ? `blur(${blurFactors[abs]}px)` : "none";
+        el.style.zIndex = String(100 - abs * 10);
+        el.dataset.npExpandOffset = String(offset);
+
+        const clickable = abs >= 1 && abs <= 3;
+        el.dataset.clickable = String(clickable);
+        el.dataset.center = String(abs === 0);
+        el.tabIndex = clickable ? 0 : -1;
+        el.setAttribute("role", clickable ? "button" : "group");
+
+        if (clickable) {
+          const track = tracks[trackIndex]!;
+          el.setAttribute("aria-label", `${track.title} — ${track.artist}`);
+        } else {
+          el.removeAttribute("aria-label");
         }
       });
     };
 
-    deckCards.forEach(wireCard);
+    const selectExpanded = (trackIndex: number) => {
+      if (!expandedOpen || expandedClosing) return;
+      const count = tracks.length;
+      if (!count) return;
+
+      const next = ((trackIndex % count) + count) % count;
+      if (next === expandedCenter) return;
+
+      expandedCenter = next;
+      setDeckWindow(next, isPlaying);
+      renderExpanded();
+      syncExpandedProgress();
+    };
+
+    const syncExpandedProgress = () => {
+      const center = expandedCards.find(
+        item => item.trackIndex === expandedCenter
+      );
+      if (!center) return;
+
+      const seek = center.el.querySelector<HTMLElement>("[data-np-seek]");
+      const current = center.el.querySelector<HTMLElement>("[data-np-current]");
+      const ratio = durationMs > 0 ? positionMs / durationMs : 0;
+      seek?.style.setProperty("--np-p", `${ratio * 100}%`);
+      if (current) current.textContent = formatTime(positionMs);
+    };
+
+    function openExpanded() {
+      if (expandedOpen || expandedClosing) return;
+
+      settleDeck();
+      createExpanded();
+      if (!expandedDialog || !expandedStage) return;
+
+      measureExpanded();
+      expandedCenter = index;
+      renderExpanded();
+      syncExpandedProgress();
+
+      expandedReturnFocus =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+      expandedPreviousOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      expandedOpen = true;
+
+      expandedDialog.classList.remove("is-closing");
+      expandedDialog.classList.toggle("is-playing", isPlaying);
+      expandedDialog.removeAttribute("data-ready");
+      if (!expandedDialog.open) expandedDialog.showModal();
+      expandedClose?.focus({ preventScroll: true });
+
+      const source = activeCard.getBoundingClientRect();
+      const target = expandedTargetRect();
+      const fly = makeFlyCard(index);
+      fly.style.width = `${expandedBaseW}px`;
+      fly.style.left = `${source.left}px`;
+      fly.style.top = `${source.top}px`;
+      fly.style.transform = `scale(${source.width / expandedBaseW})`;
+
+      expandedDialog.appendChild(fly);
+      expandedFly = fly;
+
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      const finishOpen = () => {
+        window.clearTimeout(expandedOpenTimer);
+        if (expandedFly !== fly) return;
+        fly.remove();
+        expandedFly = null;
+        expandedDialog?.setAttribute("data-ready", "true");
+      };
+
+      requestAnimationFrame(() => {
+        expandedDialog?.classList.add("is-open");
+        if (reduce) {
+          finishOpen();
+          return;
+        }
+        requestAnimationFrame(() => {
+          fly.style.transform = `translate(${
+            target.left - source.left
+          }px, ${target.top - source.top}px) scale(${
+            target.width / expandedBaseW
+          })`;
+        });
+      });
+
+      fly.addEventListener("transitionend", finishOpen, { once: true });
+      expandedOpenTimer = window.setTimeout(finishOpen, reduce ? 0 : 780);
+    }
+
+    function closeExpanded() {
+      if (!expandedOpen || expandedClosing) return;
+      expandedClosing = true;
+
+      window.clearTimeout(expandedOpenTimer);
+      if (expandedFly) {
+        expandedFly.remove();
+        expandedFly = null;
+      }
+
+      const dialog = expandedDialog;
+      if (!dialog) {
+        expandedOpen = false;
+        expandedClosing = false;
+        document.body.style.overflow = expandedPreviousOverflow;
+        return;
+      }
+
+      measureExpanded();
+      const source = expandedTargetRect();
+      const target = activeCard.getBoundingClientRect();
+      const fly = makeFlyCard(expandedCenter);
+      fly.style.width = `${expandedBaseW}px`;
+      fly.style.left = `${source.left}px`;
+      fly.style.top = `${source.top}px`;
+      fly.style.transform = `scale(${source.width / expandedBaseW})`;
+
+      dialog.appendChild(fly);
+      expandedFly = fly;
+      dialog.classList.remove("is-open");
+      dialog.classList.add("is-closing");
+
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      const finishClose = () => {
+        window.clearTimeout(expandedCloseTimer);
+        if (expandedFly !== fly) return;
+        fly.remove();
+        expandedFly = null;
+        if (dialog.open) dialog.close();
+        dialog.classList.remove("is-closing");
+        dialog.removeAttribute("data-ready");
+        document.body.style.overflow = expandedPreviousOverflow;
+        expandedOpen = false;
+        expandedClosing = false;
+        expandedReturnFocus?.focus({ preventScroll: true });
+        expandedReturnFocus = null;
+      };
+
+      requestAnimationFrame(() => {
+        if (reduce) {
+          finishClose();
+          return;
+        }
+        requestAnimationFrame(() => {
+          fly.style.transform = `translate(${
+            target.left - source.left
+          }px, ${target.top - source.top}px) scale(${
+            target.width / expandedBaseW
+          })`;
+        });
+      });
+
+      fly.addEventListener("transitionend", finishClose, { once: true });
+      expandedCloseTimer = window.setTimeout(finishClose, reduce ? 0 : 780);
+    }
+
+    window.addEventListener("resize", () => {
+      if (!expandedOpen || expandedClosing) return;
+      measureExpanded();
+      renderExpanded();
+    });
 
     // ── Media keyboard shortcuts ──────────────────────────────────
     if (mediaKeysCleanup) mediaKeysCleanup.abort();
@@ -2316,6 +2899,7 @@ const totalLabel = formatTime(first.duration);
         target.isContentEditable);
 
     const hasBlockingOverlay = () => {
+      if (expandedOpen) return true;
       const terminal = document.querySelector<HTMLElement>("[data-terminal]");
       if (terminal && !terminal.hidden) return true;
       const search = document.getElementById("search-modal");
@@ -2361,6 +2945,17 @@ const totalLabel = formatTime(first.duration);
     syncStageHeight();
     measureDeck();
     renderDeck();
+
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        if (expandedDialog?.open) expandedDialog.close();
+        expandedOpen = false;
+        expandedClosing = false;
+        document.body.style.overflow = expandedPreviousOverflow;
+      },
+      { once: true }
+    );
 
     if ("ResizeObserver" in window) {
       const stageObserver = new ResizeObserver(() => {
