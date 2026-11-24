@@ -249,10 +249,11 @@
 
   .astro-code {
     --code-line-height: 1.1375rem;
-    --code-gutter-width: 2.55rem;
+    --code-gutter-width: 3.15rem;
+    --code-gutter-gap: 0.9rem;
     --code-gutter-bg: color-mix(
       in srgb,
-      var(--foreground) 4%,
+      var(--foreground) 2%,
       var(--shiki-light-bg)
     );
     @apply flex border bg-(--shiki-light-bg) text-(--shiki-light) outline-border [&_span]:text-(--shiki-light);
@@ -280,6 +281,7 @@
   .astro-code.has-code-gutter code {
     flex: 1 0 auto;
     min-width: max-content;
+    padding-left: var(--code-gutter-gap);
   }
 
   .astro-code .line {
@@ -298,8 +300,6 @@
     align-self: stretch;
     width: var(--code-gutter-width);
     overflow: hidden;
-    border-right: 1px solid
-      color-mix(in srgb, var(--foreground) 6%, transparent);
     background: var(--code-gutter-bg);
     color: color-mix(in srgb, var(--foreground) 30%, transparent);
     font-size: 0.72rem;
@@ -314,7 +314,7 @@
     display: block;
     flex: none;
     height: var(--code-line-height);
-    padding-right: 0.55rem;
+    padding-right: 0.85rem;
     color: inherit !important;
     line-height: var(--code-line-height);
   }
@@ -324,7 +324,7 @@
   }
 
   html[data-theme="dark"] .astro-code {
-    --code-gutter-bg: color-mix(in srgb, #ffffff 4%, var(--shiki-dark-bg));
+    --code-gutter-bg: color-mix(in srgb, #ffffff 2%, var(--shiki-dark-bg));
     @apply bg-(--shiki-dark-bg) text-(--shiki-dark) [&_span]:text-(--shiki-dark);
   }
 
@@ -337,7 +337,7 @@
     .line.diff.add::after {
       position: absolute;
       top: 0;
-      left: -0.7rem;
+      left: calc(-1 * var(--code-gutter-gap) + 0.25rem);
       color: var(--color-green-500, #22c55e);
       content: "+";
     }
@@ -347,7 +347,7 @@
     .line.diff.remove::after {
       position: absolute;
       top: 0;
-      left: -0.7rem;
+      left: calc(-1 * var(--code-gutter-gap) + 0.25rem);
       color: var(--color-red-500, #ef4444);
       content: "-";
     }
