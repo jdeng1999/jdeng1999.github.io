@@ -23,44 +23,6 @@ function writeStored(key: string, value: string) {
   }
 }
 
-function playBlip(
-  frequency = 520,
-  duration = 0.045,
-  volume = 0.028,
-  type: OscillatorType = "sine"
-) {
-  try {
-    const AudioCtor =
-      window.AudioContext ||
-      (window as Window & { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-
-    if (!AudioCtor) return;
-    audioContext ??= new AudioCtor();
-
-    if (audioContext.state === "suspended") {
-      void audioContext.resume();
-    }
-
-    const now = audioContext.currentTime;
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-
-    oscillator.type = type;
-    oscillator.frequency.value = frequency;
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(volume, now + 0.006);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start(now);
-    oscillator.stop(now + duration + 0.02);
-  } catch {
-    /* audio is best-effort */
-  }
-}
-
 function playMuteAlert(enabled: boolean) {
   try {
     const AudioCtor =
@@ -142,10 +104,6 @@ function setupSoundFx() {
         playMuteAlert(soundEnabled);
         return;
       }
-
-      if (!soundEnabled) return;
-      if (!target.closest("a, button, summary, [role='button']")) return;
-      playBlip();
     },
     true
   );
