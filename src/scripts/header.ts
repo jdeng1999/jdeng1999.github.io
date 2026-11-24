@@ -61,6 +61,45 @@ function playBlip(
   }
 }
 
+function playMuteAlert(enabled: boolean) {
+  try {
+    const AudioCtor =
+      window.AudioContext ||
+      (window as Window & { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+
+    if (!AudioCtor) return;
+    audioContext ??= new AudioCtor();
+
+    if (audioContext.state === "suspended") {
+      void audioContext.resume();
+    }
+
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "sine";
+    if (enabled) {
+      oscillator.frequency.setValueAtTime(520, now);
+      oscillator.frequency.exponentialRampToValueAtTime(1040, now + 0.06);
+    } else {
+      oscillator.frequency.setValueAtTime(600, now);
+      oscillator.frequency.exponentialRampToValueAtTime(250, now + 0.05);
+    }
+
+    gain.gain.setValueAtTime(0.055, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.08);
+  } catch {
+    /* audio is best-effort */
+  }
+}
+
 function syncSoundToggles() {
   document
     .querySelectorAll<HTMLElement>("[data-sound-toggle]")
@@ -100,7 +139,7 @@ function setupSoundFx() {
         soundEnabled = !soundEnabled;
         writeStored("sound-fx", String(soundEnabled));
         syncSoundToggles();
-        if (soundEnabled) playBlip(660, 0.07, 0.035);
+        playMuteAlert(soundEnabled);
         return;
       }
 
