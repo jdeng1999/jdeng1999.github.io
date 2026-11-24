@@ -185,12 +185,6 @@
   opacity: 1;
 }
 
-/* The crescent's thin upper horn makes the glyph read slightly high; bias it
-   down so it sits optically level with the icons beside it. */
-.theme-dial-slot[data-theme-icon="dark"] svg {
-  transform: translateY(0.75px);
-}
-
 /* First paint and re-renders must not animate from the neutral position. */
 .theme-dial[data-instant] .theme-dial-slot {
   transition: none;
