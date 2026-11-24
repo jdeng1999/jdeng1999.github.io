@@ -211,6 +211,9 @@ export const SITE = {
   },
   likes: {
     enabled: true, // show/hide the shared like button in the footer
-    base: 3744, // starting total when the public counter is first created
+    // Fallback total painted before the counter API answers (and the seed if
+    // the remote key ever has to be recreated). Nudge it up now and then so a
+    // first visit starts close to the live number.
+    base: 3751,
   },
 } as const;

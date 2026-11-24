@@ -158,6 +158,7 @@ const formatted = new Intl.NumberFormat(Astro.currentLocale || "en").format(
 
 <script>
   const STORAGE_KEY = "jdeng:liked";
+  const CACHE_KEY = "jdeng:likes-cache";
   const LIKE_API = "https://countapi.mileshilliard.com/api/v1";
   const LIKE_KEY = "jdeng1999_github_io_footer_likes";
 
@@ -176,6 +177,27 @@ const formatted = new Intl.NumberFormat(Astro.currentLocale || "en").format(
   const writeLiked = (liked: boolean) => {
     try {
       localStorage.setItem(STORAGE_KEY, String(liked));
+    } catch {
+      /* storage can be unavailable in private mode */
+    }
+  };
+
+  // The counter API answers in 1-4s, so the last known total is cached and
+  // painted straight away; the network read then refreshes it silently.
+  const readCache = () => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const value = Number((JSON.parse(raw) as { value?: unknown })?.value);
+      return Number.isFinite(value) && value > 0 ? value : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const writeCache = (value: number) => {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ value }));
     } catch {
       /* storage can be unavailable in private mode */
     }
@@ -244,7 +266,10 @@ const formatted = new Intl.NumberFormat(Astro.currentLocale || "en").format(
         }
 
         const value = await readValue(response);
-        if (value !== null && version === localChange) remoteLikes = value;
+        if (value !== null && version === localChange) {
+          remoteLikes = value;
+          writeCache(value);
+        }
       } catch {
         /* Keep the server-rendered baseline when the network is unavailable. */
       }
@@ -275,6 +300,7 @@ const formatted = new Intl.NumberFormat(Astro.currentLocale || "en").format(
       const value = await readValue(response);
       if (value === null) throw new Error("Like counter did not respond");
       remoteLikes = value;
+      writeCache(value);
     } catch {
       remoteLikes = previous;
       writeLiked(false);
@@ -315,12 +341,13 @@ const formatted = new Intl.NumberFormat(Astro.currentLocale || "en").format(
     if (!navigated) return;
     navigated = false;
     localChange += 1;
-    remoteLikes = null;
+    remoteLikes = readCache();
     remotePromise = null;
     paint();
     void loadRemote();
   });
 
+  remoteLikes = readCache();
   paint();
   void loadRemote();
 </script>
