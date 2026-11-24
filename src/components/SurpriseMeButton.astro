@@ -1,0 +1,991 @@
+---
+interface SurprisePost {
+  title: string;
+  href: string;
+  tag: string;
+  readingTime: string;
+  description: string;
+}
+
+interface SurpriseLabels {
+  label: string;
+  title: string;
+  selecting: string;
+  shuffling: string;
+  found: string;
+  read: string;
+  respin: string;
+  close: string;
+  pickAria: string;
+}
+
+interface Props {
+  posts: SurprisePost[];
+  labels: SurpriseLabels;
+}
+
+const { posts, labels } = Astro.props;
+const postsJson = JSON.stringify(posts).replace(/</g, "\\u003c");
+const labelsJson = JSON.stringify(labels).replace(/</g, "\\u003c");
+---
+
+{posts.length > 0 && (
+  <div class="sm-root">
+    <button
+      class="sm-trigger"
+      type="button"
+      data-sm-trigger
+      title={labels.pickAria}
+      aria-label={labels.pickAria}
+      aria-haspopup="dialog"
+      aria-controls="sm-modal"
+    >
+      <span class="sm-die" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect width="18" height="18" x="3" y="3" rx="4" ry="4" />
+          <circle cx="8" cy="8" r="1.15" fill="currentColor" />
+          <circle cx="16" cy="8" r="1.15" fill="currentColor" />
+          <circle cx="12" cy="12" r="1.15" fill="currentColor" />
+          <circle cx="8" cy="16" r="1.15" fill="currentColor" />
+          <circle cx="16" cy="16" r="1.15" fill="currentColor" />
+        </svg>
+      </span>
+      <span class="sm-trigger-label">{labels.label}</span>
+      <span class="sm-sparkles" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11 2.6l1.55 5.35a2 2 0 0 0 1.35 1.35L19.25 10.85a.32.32 0 0 1 0 .6l-5.35 1.55a2 2 0 0 0-1.35 1.35L11 19.7a.32.32 0 0 1-.6 0l-1.55-5.35a2 2 0 0 0-1.35-1.35L2.15 11.45a.32.32 0 0 1 0-.6L7.5 9.3a2 2 0 0 0 1.35-1.35L10.4 2.6a.32.32 0 0 1 .6 0Z" />
+          <path d="M19 2.2l.55 1.9c.08.27.25.44.52.52l1.9.55a.16.16 0 0 1 0 .3l-1.9.55a.73.73 0 0 0-.52.52L19 8.45a.16.16 0 0 1-.3 0l-.55-1.91a.73.73 0 0 0-.52-.52l-1.9-.55a.16.16 0 0 1 0-.3l1.9-.55a.73.73 0 0 0 .52-.52L18.7 2.2a.16.16 0 0 1 .3 0Z" />
+        </svg>
+      </span>
+    </button>
+
+    <div
+      id="sm-modal"
+      class="sm-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sm-title"
+      hidden
+    >
+      <div class="sm-backdrop" data-sm-backdrop aria-hidden="true" />
+
+      <div class="sm-card">
+        <div class="sm-glow sm-glow-a" aria-hidden="true" />
+        <div class="sm-glow sm-glow-b" aria-hidden="true" />
+
+        <div class="sm-head">
+          <div class="sm-head-left">
+            <span class="sm-dice-badge" aria-hidden="true">
+              <svg
+                id="sm-dice"
+                class="sm-dice-modal"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect width="18" height="18" x="3" y="3" rx="4" ry="4" />
+                <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                <circle cx="16" cy="8" r="1.2" fill="currentColor" />
+                <circle cx="12" cy="12" r="1.2" fill="currentColor" />
+                <circle cx="8" cy="16" r="1.2" fill="currentColor" />
+                <circle cx="16" cy="16" r="1.2" fill="currentColor" />
+              </svg>
+            </span>
+            <div>
+              <h2 id="sm-title" class="sm-title">
+                {labels.title}
+              </h2>
+              <p id="sm-status" class="sm-status" aria-live="polite">
+                {labels.selecting}
+              </p>
+            </div>
+          </div>
+
+          <button
+            id="sm-close"
+            class="sm-close"
+            type="button"
+            aria-label={labels.close}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="sm-stage">
+          <div id="sm-shuffle" class="sm-shuffle">
+            <div class="sm-shuffle-label">
+              <span class="sm-ping" aria-hidden="true" />
+              <span>{labels.shuffling}</span>
+            </div>
+            <div id="sm-shuffle-title" class="sm-shuffle-title">
+              {posts[0]?.title}
+            </div>
+          </div>
+
+          <div id="sm-winner" class="sm-winner" hidden>
+            <div class="sm-winner-meta">
+              <span id="sm-winner-tag" class="sm-winner-tag">
+                #dev
+              </span>
+              <span class="sm-winner-time">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span id="sm-winner-time-val">5 min</span>
+              </span>
+            </div>
+            <h3 id="sm-winner-title" class="sm-winner-title">
+              {posts[0]?.title}
+            </h3>
+            <p id="sm-winner-desc" class="sm-winner-desc">
+              {posts[0]?.description}
+            </p>
+            <div class="sm-actions">
+              <a id="sm-read" class="sm-read" href={posts[0]?.href}>
+                <span>{labels.read}</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </a>
+              <button id="sm-respin" class="sm-respin" type="button">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                <span>{labels.respin}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="application/json" data-sm-posts set:html={postsJson} />
+    <script type="application/json" data-sm-labels set:html={labelsJson} />
+  </div>
+)}
+
+<style>
+  .sm-root {
+    display: inline-block;
+    max-width: 100%;
+  }
+
+  .sm-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    max-width: 100%;
+    padding: 0.38rem 0.88rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.35;
+    cursor: pointer;
+  }
+
+  .sm-trigger:hover,
+  .sm-trigger:active {
+    background: transparent;
+  }
+
+  .sm-trigger:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 58%, transparent);
+    outline-offset: 3px;
+  }
+
+  .sm-trigger-label {
+    white-space: nowrap;
+  }
+
+  .sm-die {
+    display: inline-grid;
+    flex: none;
+    width: 1.05rem;
+    height: 1.05rem;
+    place-items: center;
+  }
+
+  .sm-die svg {
+    width: 100%;
+    height: 100%;
+    transform-origin: center;
+    transition-property: transform, translate, scale, rotate;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 0.5s;
+  }
+
+  .sm-trigger:hover .sm-die svg {
+    rotate: 180deg;
+  }
+
+  .sm-sparkles {
+    display: inline-grid;
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    place-items: center;
+    color: #f6c85f;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, #f6c85f 42%, transparent));
+  }
+
+  .sm-sparkles svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .sm-overlay {
+    position: fixed;
+    z-index: 120;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .sm-overlay[hidden],
+  .sm-shuffle[hidden],
+  .sm-winner[hidden] {
+    display: none !important;
+  }
+
+  .sm-backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--background) 80%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    animation: sm-fade-in 0.22s ease both;
+  }
+
+  .sm-card {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 32rem;
+    overflow: hidden;
+    padding: 1.5rem;
+    border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--background) 96%, transparent);
+    color: var(--foreground);
+    box-shadow:
+      0 35px 70px -30px color-mix(in srgb, var(--foreground) 32%, transparent),
+      0 0 40px -12px color-mix(in srgb, var(--accent) 22%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.15);
+    backdrop-filter: blur(20px) saturate(1.15);
+    animation: sm-card-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .sm-glow {
+    position: absolute;
+    width: 12rem;
+    height: 12rem;
+    border-radius: 50%;
+    filter: blur(42px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .sm-glow-a {
+    top: -6rem;
+    left: -6rem;
+    background: color-mix(in srgb, var(--accent) 24%, transparent);
+  }
+
+  .sm-glow-b {
+    right: -6rem;
+    bottom: -6rem;
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
+  .sm-head {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 28%, transparent);
+  }
+
+  .sm-head-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .sm-dice-badge {
+    display: grid;
+    flex: none;
+    width: 2.35rem;
+    height: 2.35rem;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  .sm-dice-modal {
+    width: 1.35rem;
+    height: 1.35rem;
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .sm-title {
+    margin: 0;
+    color: var(--foreground);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+
+  .sm-status {
+    margin: 0.15rem 0 0;
+    color: color-mix(in srgb, var(--foreground) 58%, transparent);
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .sm-close {
+    display: grid;
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+    border-radius: 0.65rem;
+    background: color-mix(in srgb, var(--muted) 18%, transparent);
+    color: color-mix(in srgb, var(--foreground) 66%, transparent);
+    cursor: pointer;
+    transition:
+      border-color 0.18s ease,
+      background 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .sm-close:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent);
+  }
+
+  .sm-close:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 58%, transparent);
+    outline-offset: 2px;
+  }
+
+  .sm-close svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .sm-stage {
+    position: relative;
+    z-index: 1;
+    margin-top: 1.25rem;
+  }
+
+  .sm-shuffle {
+    display: flex;
+    min-height: 7rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--muted) 16%, transparent);
+    text-align: center;
+    box-shadow: inset 0 0 24px -18px
+      color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+
+  .sm-shuffle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.55rem;
+    color: color-mix(in srgb, var(--accent) 82%, var(--foreground));
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .sm-ping {
+    position: relative;
+    display: inline-block;
+    width: 0.38rem;
+    height: 0.38rem;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+
+  .sm-ping::after {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--accent);
+    content: "";
+    animation: sm-ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  .sm-shuffle-title {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--accent);
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.4;
+    text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 34%, transparent);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .sm-winner {
+    padding: 1.2rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    box-shadow: 0 22px 40px -30px
+      color-mix(in srgb, var(--accent) 45%, transparent);
+    animation: sm-winner-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .sm-winner-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .sm-winner-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .sm-winner-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: color-mix(in srgb, var(--foreground) 58%, transparent);
+    font-size: 0.67rem;
+  }
+
+  .sm-winner-time svg {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+
+  .sm-winner-title {
+    margin: 0.65rem 0 0;
+    font-size: 1.08rem;
+    font-weight: 700;
+    line-height: 1.45;
+    letter-spacing: -0.015em;
+  }
+
+  .sm-winner-desc {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 0.4rem 0 0;
+    color: color-mix(in srgb, var(--foreground) 72%, transparent);
+    font-size: 0.76rem;
+    line-height: 1.6;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .sm-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+    margin-top: 1.05rem;
+  }
+
+  .sm-read,
+  .sm-respin {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.4rem;
+    padding: 0.55rem 1rem;
+    border-radius: 0.75rem;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease,
+      background 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .sm-read {
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    background: var(--accent);
+    color: var(--background);
+    box-shadow: 0 14px 28px -18px
+      color-mix(in srgb, var(--accent) 70%, transparent);
+  }
+
+  .sm-read:hover {
+    box-shadow: 0 17px 34px -16px
+      color-mix(in srgb, var(--accent) 72%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .sm-read svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .sm-respin {
+    border: 1px solid color-mix(in srgb, var(--border) 38%, transparent);
+    background: color-mix(in srgb, var(--muted) 22%, transparent);
+    color: var(--foreground);
+  }
+
+  .sm-respin:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    background: color-mix(in srgb, var(--accent) 9%, transparent);
+    color: var(--accent);
+  }
+
+  .sm-respin svg {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .sm-read:focus-visible,
+  .sm-respin:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 58%, transparent);
+    outline-offset: 2px;
+  }
+
+  @keyframes sm-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes sm-card-in {
+    from {
+      opacity: 0;
+      transform: scale(0.975) translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes sm-winner-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes sm-ping {
+    0% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(2.6);
+    }
+  }
+
+  @media (min-width: 640px) {
+    .sm-actions {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .sm-read {
+      flex: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sm-backdrop,
+    .sm-card,
+    .sm-winner,
+    .sm-ping::after {
+      animation: none !important;
+    }
+
+    .sm-trigger,
+    .sm-trigger .sm-sparkles,
+    .sm-read,
+    .sm-respin {
+      transition: none !important;
+    }
+  }
+</style>
+
+<script>
+  type SurprisePost = {
+    title: string;
+    href: string;
+    tag: string;
+    readingTime: string;
+    description: string;
+  };
+
+  type SurpriseLabels = {
+    label: string;
+    title: string;
+    selecting: string;
+    shuffling: string;
+    found: string;
+    read: string;
+    respin: string;
+    close: string;
+    pickAria: string;
+  };
+
+  const SOUND_KEY = "sound-fx";
+  let surpriseCleanup: AbortController | null = null;
+  let surpriseClose: (() => void) | null = null;
+  let surpriseAudio: AudioContext | null = null;
+
+  const isSoundEnabled = () => {
+    try {
+      return localStorage.getItem(SOUND_KEY) === "true";
+    } catch {
+      return false;
+    }
+  };
+
+  const getAudio = () => {
+    if (surpriseAudio) return surpriseAudio;
+    const AudioCtor =
+      window.AudioContext ||
+      (window as Window & { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioCtor) return null;
+    surpriseAudio = new AudioCtor();
+    return surpriseAudio;
+  };
+
+  const playTick = (frequency: number) => {
+    if (!isSoundEnabled()) return;
+    try {
+      const ctx = getAudio();
+      if (!ctx) return;
+      if (ctx.state === "suspended") void ctx.resume();
+      const now = ctx.currentTime;
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, now);
+      oscillator.frequency.exponentialRampToValueAtTime(
+        frequency * 0.45,
+        now + 0.018
+      );
+      gain.gain.setValueAtTime(0.055, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start(now);
+      oscillator.stop(now + 0.026);
+    } catch {
+      /* audio is best-effort */
+    }
+  };
+
+  const playChime = () => {
+    if (!isSoundEnabled()) return;
+    try {
+      const ctx = getAudio();
+      if (!ctx) return;
+      if (ctx.state === "suspended") void ctx.resume();
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      const now = ctx.currentTime;
+      notes.forEach((frequency, index) => {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const start = now + index * 0.04;
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(frequency, start);
+        gain.gain.setValueAtTime(0.075, start);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.6);
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start(start + 0.01);
+        oscillator.stop(start + 0.66);
+      });
+    } catch {
+      /* audio is best-effort */
+    }
+  };
+
+  function initSurprise() {
+    const trigger =
+      document.querySelector<HTMLButtonElement>("[data-sm-trigger]");
+    if (!trigger) {
+      surpriseClose?.();
+      surpriseClose = null;
+      surpriseCleanup?.abort();
+      surpriseCleanup = null;
+      return;
+    }
+
+    const root = trigger.closest<HTMLElement>(".sm-root");
+    if (!root || root.dataset.smReady === "true") return;
+    root.dataset.smReady = "true";
+
+    const modal = document.getElementById("sm-modal") as HTMLElement | null;
+    const backdrop = document.querySelector<HTMLElement>("[data-sm-backdrop]");
+    const closeButton = document.getElementById("sm-close");
+    const shuffleView = document.getElementById("sm-shuffle");
+    const shuffleTitle = document.getElementById("sm-shuffle-title");
+    const winnerCard = document.getElementById("sm-winner");
+    const winnerTag = document.getElementById("sm-winner-tag");
+    const winnerTime = document.getElementById("sm-winner-time-val");
+    const winnerTitle = document.getElementById("sm-winner-title");
+    const winnerDesc = document.getElementById("sm-winner-desc");
+    const readButton = document.getElementById(
+      "sm-read"
+    ) as HTMLAnchorElement | null;
+    const respinButton = document.getElementById("sm-respin");
+    const statusText = document.getElementById("sm-status");
+    const diceIcon = document.getElementById("sm-dice");
+    const postsScript = root.querySelector("[data-sm-posts]");
+    const labelsScript = root.querySelector("[data-sm-labels]");
+
+    if (
+      !modal ||
+      !backdrop ||
+      !closeButton ||
+      !shuffleView ||
+      !shuffleTitle ||
+      !winnerCard ||
+      !winnerTag ||
+      !winnerTime ||
+      !winnerTitle ||
+      !winnerDesc ||
+      !readButton ||
+      !respinButton ||
+      !statusText ||
+      !diceIcon ||
+      !postsScript ||
+      !labelsScript
+    ) {
+      return;
+    }
+
+    // The overlay is fixed-positioned; keeping it under <body> prevents
+    // transformed ancestors from creating an unintended containing block.
+    if (modal.parentElement !== document.body) {
+      document.body.appendChild(modal);
+    }
+
+    let posts: SurprisePost[] = [];
+    let labels: SurpriseLabels;
+    try {
+      posts = JSON.parse(postsScript.textContent || "[]") as SurprisePost[];
+      labels = JSON.parse(labelsScript.textContent || "{}") as SurpriseLabels;
+    } catch {
+      return;
+    }
+    if (posts.length === 0) return;
+
+    let shuffleTimer = 0;
+    let spinning = false;
+    let previousOverflow = "";
+
+    const setStatus = (text: string) => {
+      statusText.textContent = text;
+    };
+
+    const close = () => {
+      window.clearInterval(shuffleTimer);
+      shuffleTimer = 0;
+      spinning = false;
+      modal.hidden = true;
+      document.body.style.overflow = previousOverflow;
+      surpriseClose = null;
+    };
+
+    const revealWinner = (post: SurprisePost) => {
+      spinning = false;
+      setStatus(labels.found);
+      winnerTag.textContent = post.tag ? `#${post.tag}` : "#dev";
+      winnerTime.textContent = post.readingTime || "5 min";
+      winnerTitle.textContent = post.title;
+      winnerDesc.textContent = post.description || "";
+      readButton.href = post.href;
+      shuffleView.hidden = true;
+      winnerCard.hidden = false;
+      playChime();
+      window.setTimeout(() => readButton.focus({ preventScroll: true }), 60);
+    };
+
+    const spin = () => {
+      if (spinning) return;
+      spinning = true;
+      window.clearInterval(shuffleTimer);
+
+      const currentPath = window.location.pathname;
+      const pool =
+        posts.length > 1
+          ? posts.filter(post => post.href !== currentPath)
+          : posts;
+      const winner = pool[Math.floor(Math.random() * pool.length)] || posts[0];
+      if (!winner) {
+        spinning = false;
+        return;
+      }
+
+      shuffleView.hidden = false;
+      winnerCard.hidden = true;
+      setStatus(labels.selecting);
+      diceIcon.style.transform = `rotate(${Math.floor(360 + Math.random() * 720)}deg)`;
+
+      let step = 0;
+      shuffleTimer = window.setInterval(() => {
+        step += 1;
+        const randomPost = posts[Math.floor(Math.random() * posts.length)];
+        shuffleTitle.textContent = randomPost?.title || winner.title;
+        playTick(600 + (step / 7) * 300);
+
+        if (step >= 7) {
+          window.clearInterval(shuffleTimer);
+          shuffleTimer = 0;
+          revealWinner(winner);
+        }
+      }, 65);
+    };
+
+    const open = () => {
+      if (!modal.hidden) return;
+      previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      modal.hidden = false;
+      surpriseClose = close;
+      spin();
+    };
+
+    const closeController = new AbortController();
+    surpriseCleanup = closeController;
+    const { signal } = closeController;
+
+    surpriseClose = close;
+    trigger.addEventListener("click", open, { signal });
+    backdrop.addEventListener("click", close, { signal });
+    closeButton.addEventListener("click", close, { signal });
+    respinButton.addEventListener("click", spin, { signal });
+    readButton.addEventListener("click", close, { signal });
+
+    document.addEventListener(
+      "keydown",
+      event => {
+        if (modal.hidden) return;
+        if (event.key === "Escape") {
+          event.preventDefault();
+          close();
+          return;
+        }
+        if (event.key.toLowerCase() === "r" || event.key === " ") {
+          if (document.activeElement === readButton) return;
+          event.preventDefault();
+          spin();
+        }
+      },
+      { signal }
+    );
+  }
+
+  initSurprise();
+  document.addEventListener("astro:page-load", initSurprise);
+  document.addEventListener(
+    "astro:before-swap",
+    () => {
+      surpriseClose?.();
+      surpriseClose = null;
+      surpriseCleanup?.abort();
+      surpriseCleanup = null;
+    },
+    { once: false }
+  );
+</script>

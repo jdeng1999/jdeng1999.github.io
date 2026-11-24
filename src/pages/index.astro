@@ -14,9 +14,11 @@ import { SOCIALS } from "@/constants";
 import CodeGlitch from "@/components/CodeGlitch.astro";
 import TechMarquee from "@/components/TechMarquee.astro";
 import HeroTerminal from "@/components/HeroTerminal.astro";
+import SurpriseMeButton from "@/components/SurpriseMeButton.astro";
 import { useTranslations } from "@/i18n/utils";
 import { getEntryPath } from "@/utils/contentEntry";
 import { getLocalizedTitle } from "@/utils/localizedTitle";
+import { getReadingTime } from "@/utils/readingTime";
 
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
@@ -52,6 +54,26 @@ const terminalPosts = sortedPosts.map(post => ({
   title: getLocalizedTitle(post.id, post.data.title, locale),
   href: `${prefix}${getEntryPath(post)}`,
 }));
+
+const surprisePosts = sortedPosts.map(post => ({
+  title: getLocalizedTitle(post.id, post.data.title, locale),
+  href: `${prefix}${getEntryPath(post)}`,
+  tag: post.data.tags?.[0] || "dev",
+  readingTime: getReadingTime(post.body ?? "", locale),
+  description: post.data.description,
+}));
+
+const surpriseLabels = {
+  label: t("surprise.label"),
+  title: t("surprise.title"),
+  selecting: t("surprise.selecting"),
+  shuffling: t("surprise.shuffling"),
+  found: t("surprise.found"),
+  read: t("surprise.read"),
+  respin: t("surprise.respin"),
+  close: t("surprise.close"),
+  pickAria: t("surprise.pickAria"),
+};
 
 const whatIDo =
   locale === "zh"
@@ -194,6 +216,13 @@ const whatIcons = {
                         </span>
                       </p>
                     ))}
+                  </div>
+
+                  <div class="hero-surprise-row">
+                    <SurpriseMeButton
+                      posts={surprisePosts}
+                      labels={surpriseLabels}
+                    />
                   </div>
 
                   <div class="hero-meta-row">
@@ -679,6 +708,12 @@ const whatIcons = {
     letter-spacing: 0.002em;
     color: color-mix(in srgb, var(--color-foreground) 72%, transparent);
     text-wrap: pretty;
+  }
+
+  .hero-surprise-row {
+    display: flex;
+    align-items: center;
+    margin-top: 0.85rem;
   }
 
   /* All locales share the same footprint, so switching language can never
@@ -1222,6 +1257,7 @@ const whatIcons = {
   }
 
   .featured-arrow {
+    --chevron-optical-shift: 0.8px;
     display: inline-grid;
     width: 1.7rem;
     height: 1.7rem;
@@ -1259,6 +1295,16 @@ const whatIcons = {
   .featured-arrow svg {
     width: 0.85rem;
     height: 0.85rem;
+  }
+
+  /* Chevrons read as pushed toward their tip when only the bounding box is
+     centred, so nudge each glyph toward the point it aims at by a hair. */
+  .featured-arrow[data-featured-prev] svg {
+    transform: translateX(calc(-1 * var(--chevron-optical-shift)));
+  }
+
+  .featured-arrow[data-featured-next] svg {
+    transform: translateX(var(--chevron-optical-shift));
   }
 
   .featured-rail {

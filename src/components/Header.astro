@@ -7,11 +7,12 @@
  *
  * Styles live in src/styles/header.css and client logic in src/scripts/header.ts.
  */
-import IconMoon from "@/assets/icons/IconMoon.svg";
 import IconSearch from "@/assets/icons/IconSearch.svg";
 import IconArchive from "@/assets/icons/IconArchive.svg";
 import IconGallery from "@/assets/icons/IconGallery.svg";
 import IconSunHigh from "@/assets/icons/IconSunHigh.svg";
+import IconMoonStars from "@/assets/icons/IconMoonStars.svg";
+import IconDeviceDesktop from "@/assets/icons/IconDeviceDesktop.svg";
 import SiteLogo from "./SiteLogo.astro";
 import MobileMenu from "./MobileMenu.astro";
 import { SITE } from "@/config";
@@ -87,7 +88,7 @@ const accents = [
           }
           class="group relative z-20 flex shrink-0 items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl"
         >
-          <SiteLogo class="text-[1.65rem] sm:text-[1.95rem]" cursor />
+          <SiteLogo class="text-[1.65rem] sm:text-[1.95rem]" />
         </a>
 
         <!-- Nav area -->
@@ -95,25 +96,21 @@ const accents = [
           {SITE.lightAndDarkMode && (
             <button
               id="theme-btn-mobile"
-              class="nav-icon-btn lg:hidden!"
+              class="nav-icon-btn nav-theme-dial-btn lg:hidden!"
               aria-label="auto"
               aria-live="polite"
             >
-              <IconSunHigh class="theme-icon theme-icon--light size-4.5" />
-              <IconMoon class="theme-icon theme-icon--dark size-4.5" />
-              <svg
-                class="theme-icon theme-icon--system size-4.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <rect x="3" y="4" width="18" height="12" rx="2"></rect>
-                <path d="M8 20h8M12 16v4"></path>
-              </svg>
+              <span class="theme-dial" data-theme-dial aria-hidden="true">
+                <span class="theme-dial-slot" data-theme-icon="light">
+                  <IconSunHigh class="size-4.5" />
+                </span>
+                <span class="theme-dial-slot" data-theme-icon="dark">
+                  <IconMoonStars class="size-4.5" />
+                </span>
+                <span class="theme-dial-slot" data-theme-icon="system">
+                  <IconDeviceDesktop class="size-4.5" />
+                </span>
+              </span>
             </button>
           )}
 
@@ -189,7 +186,7 @@ const accents = [
             </li>
 
             <!-- Separator -->
-            <li class="flex items-center px-1" aria-hidden="true">
+            <li class="flex items-center px-2.5" aria-hidden="true">
               <div class="h-4 w-px bg-border/30"></div>
             </li>
 
@@ -198,25 +195,21 @@ const accents = [
               <li class="flex items-center">
                 <button
                   id="theme-btn"
-                  class="nav-icon-btn"
+                  class="nav-icon-btn nav-theme-dial-btn"
                   aria-label="auto"
                   aria-live="polite"
                 >
-                  <IconSunHigh class="theme-icon theme-icon--light size-4.5" />
-                  <IconMoon class="theme-icon theme-icon--dark size-4.5" />
-                  <svg
-                    class="theme-icon theme-icon--system size-4.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <rect x="3" y="4" width="18" height="12" rx="2"></rect>
-                    <path d="M8 20h8M12 16v4"></path>
-                  </svg>
+                  <span class="theme-dial" data-theme-dial aria-hidden="true">
+                    <span class="theme-dial-slot" data-theme-icon="light">
+                      <IconSunHigh class="size-4.5" />
+                    </span>
+                    <span class="theme-dial-slot" data-theme-icon="dark">
+                      <IconMoonStars class="size-4.5" />
+                    </span>
+                    <span class="theme-dial-slot" data-theme-icon="system">
+                      <IconDeviceDesktop class="size-4.5" />
+                    </span>
+                  </span>
                 </button>
               </li>
             )}
@@ -261,7 +254,7 @@ const accents = [
             </li>
 
             <!-- Separator -->
-            <li class="flex items-center px-1" aria-hidden="true">
+            <li class="flex items-center px-2.5" aria-hidden="true">
               <div class="h-4 w-px bg-border/30"></div>
             </li>
 

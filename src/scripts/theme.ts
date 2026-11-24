@@ -6,6 +6,9 @@ const SYSTEM = "system";
 
 type ThemeMode = typeof LIGHT | typeof DARK | typeof SYSTEM;
 
+// Order the dial cycles through, matching the slot angles in header.css.
+const THEME_ORDER: ThemeMode[] = [LIGHT, DARK, SYSTEM];
+
 const isThemeMode = (value: string | null): value is ThemeMode =>
   value === LIGHT || value === DARK || value === SYSTEM;
 
@@ -31,6 +34,90 @@ let themeValue: ThemeMode =
   (window.theme?.themeValue as ThemeMode | undefined) ?? getPreferredMode();
 if (!isThemeMode(themeValue)) themeValue = getPreferredMode();
 
+/**
+ * Rotates the theme dial so the icon for `mode` swings into the button, the
+ * way a rotary switch clicks into place. Each step advances one slot forward,
+ * so repeated clicks keep spinning the same direction.
+ */
+function rotateThemeDials(mode: ThemeMode): void {
+  const count = THEME_ORDER.length;
+  const index = THEME_ORDER.indexOf(mode);
+  if (index < 0) return;
+
+  const stepAngle = 360 / count;
+
+  document.querySelectorAll<HTMLElement>("[data-theme-dial]").forEach(dial => {
+    const stored = dial.dataset.dialStep;
+    const previous = stored === undefined ? index : Number(stored);
+    // Always spin forward, so a mode change reads as a wheel click.
+    const step = previous + ((((index - previous) % count) + count) % count);
+
+    // The first paint and repeat renders jump into place; only a real mode
+    // change (one slot forward) plays the swing.
+    const instant = stored === undefined || step === previous;
+    if (instant) dial.setAttribute("data-instant", "");
+
+    dial.style.setProperty("--dial-angle", `${step * -stepAngle}deg`);
+    dial.dataset.dialStep = String(step);
+
+    if (instant) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => dial.removeAttribute("data-instant"));
+      });
+    } else {
+      // A stale flag from a hidden-tab first paint must not swallow the swing.
+      dial.removeAttribute("data-instant");
+    }
+
+    dial
+      .querySelectorAll<HTMLElement>("[data-theme-icon]")
+      .forEach(slot =>
+        slot.toggleAttribute("data-active", slot.dataset.themeIcon === mode)
+      );
+  });
+}
+
+/* Short blip when the mode changes, mirroring the header's sound-effects
+   toggle: rising for light, falling for dark, a flat tick for system. */
+let themeAudio: AudioContext | null = null;
+
+function playThemeCue(mode: ThemeMode): void {
+  try {
+    if (localStorage.getItem("sound-fx") !== "true") return;
+
+    const AudioCtor =
+      window.AudioContext ||
+      (window as Window & { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioCtor) return;
+
+    themeAudio ??= new AudioCtor();
+    if (themeAudio.state === "suspended") void themeAudio.resume();
+
+    const ctx = themeAudio;
+    const now = ctx.currentTime;
+    const [from, to] =
+      mode === LIGHT ? [640, 990] : mode === DARK ? [640, 420] : [560, 720];
+
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    oscillator.type = "triangle";
+    oscillator.frequency.setValueAtTime(from, now);
+    oscillator.frequency.exponentialRampToValueAtTime(to, now + 0.08);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.05, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+    oscillator.connect(gain).connect(ctx.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.14);
+  } catch {
+    /* audio is best-effort */
+  }
+}
+
 function setPreference(): void {
   try {
     localStorage.setItem(THEME, themeValue);
@@ -51,6 +138,8 @@ function reflectPreference(): void {
     .forEach(button => {
       button.setAttribute("aria-label", label);
     });
+
+  rotateThemeDials(themeValue);
 
   // Get a reference to the body element
   const body = document.body;
@@ -99,6 +188,7 @@ function setThemeFeature(): void {
       themeValue === LIGHT ? DARK : themeValue === DARK ? SYSTEM : LIGHT;
     window.theme?.setTheme(themeValue);
     setPreference();
+    playThemeCue(themeValue);
   };
 
   const themeBtn = document.querySelector("#theme-btn");

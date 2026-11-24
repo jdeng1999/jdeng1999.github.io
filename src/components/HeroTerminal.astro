@@ -286,32 +286,12 @@ const payloadJson = JSON.stringify(payload).replace(/</g, "\\u003c");
     border: 1px solid
       color-mix(in srgb, var(--color-foreground) 12%, transparent);
     border-radius: 0.8rem;
-    background-color: color-mix(
-      in srgb,
-      var(--color-background) 72%,
-      transparent
-    );
-    background-image:
-      radial-gradient(
-        120% 180% at 8% 0%,
-        color-mix(in srgb, var(--color-accent) 12%, transparent),
-        transparent 58%
-      ),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.075), transparent 52%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.18),
-      inset 0 -14px 24px -20px
-        color-mix(in srgb, var(--color-accent) 38%, transparent),
-      0 8px 24px -20px rgba(0, 0, 0, 0.55);
-    -webkit-backdrop-filter: blur(16px) saturate(150%);
-    backdrop-filter: blur(16px) saturate(150%);
+    background: transparent;
     font-family: var(--font-firacode), ui-monospace, monospace;
     letter-spacing: 0.02em;
     transition:
-      transform 0.25s ease,
-      border-color 0.25s ease,
-      box-shadow 0.25s ease,
-      background-color 0.25s ease;
+      transform 0.2s ease,
+      border-color 0.2s ease;
   }
 
   .terminal-badge > * {
@@ -319,35 +299,8 @@ const payloadJson = JSON.stringify(payload).replace(/</g, "\\u003c");
     z-index: 2;
   }
 
-  /* A whisper of theme colour caught inside the glass */
-  .terminal-badge::before {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    border-radius: inherit;
-    background: radial-gradient(
-      70% 130% at 12% 50%,
-      color-mix(in srgb, var(--color-accent) 9%, transparent),
-      transparent 62%
-    );
-    content: "";
-    opacity: 0.85;
-    pointer-events: none;
-  }
-
   .terminal-badge:hover {
     border-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
-    background-color: color-mix(
-      in srgb,
-      var(--color-background) 64%,
-      transparent
-    );
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      inset 0 -14px 24px -20px
-        color-mix(in srgb, var(--color-accent) 52%, transparent),
-      0 12px 28px -20px rgba(0, 0, 0, 0.6);
-    transform: translateY(-1px);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -371,7 +324,7 @@ const payloadJson = JSON.stringify(payload).replace(/</g, "\\u003c");
     border: 1px solid
       color-mix(in srgb, var(--color-foreground) 22%, transparent);
     border-radius: 0.28rem;
-    background: color-mix(in srgb, var(--color-foreground) 3%, transparent);
+    background: transparent;
     font-size: 0.58rem;
     line-height: 1;
     color: color-mix(in srgb, var(--color-foreground) 45%, transparent);
