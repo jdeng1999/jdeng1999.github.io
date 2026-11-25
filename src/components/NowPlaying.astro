@@ -1964,7 +1964,7 @@ const totalLabel = formatTime(first.duration);
       const playClick = (offset: number, levelScale: number) => {
         const start = now + 0.012 + offset;
         const master = ctx.createGain();
-        master.gain.value = 0.8 * levelScale * volume;
+        master.gain.value = 1.8 * levelScale * volume;
         master.connect(ctx.destination);
 
         const transient = ctx.createBufferSource();

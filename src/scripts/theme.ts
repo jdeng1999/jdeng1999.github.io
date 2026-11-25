@@ -110,7 +110,7 @@ function playThemeCue(mode: ThemeMode): void {
     oscillator.frequency.exponentialRampToValueAtTime(to, now + 0.08);
 
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.05 * volume, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.2 * volume, now + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
 
     oscillator.connect(gain).connect(ctx.destination);
@@ -130,9 +130,40 @@ function setPreference(): void {
   reflectPreference();
 }
 
+/* Long enough to outlast the 300ms palette cross-fade in global.css. */
+const THEME_SWITCH_ATTR = "data-theme-switching";
+const THEME_SWITCH_MS = 300;
+const THEME_SWITCH_MARGIN = 80;
+let themeSwitchTimer: number | undefined;
+
+/**
+ * Flags the document while the palette changes so every themed surface fades
+ * together with the body instead of snapping (see global.css).
+ */
+function markThemeSwitch(): void {
+  const root = document.firstElementChild;
+  if (!root) return;
+  root.setAttribute(THEME_SWITCH_ATTR, "");
+  // Flush the style change so the transition is already in place when the
+  // palette variables flip; otherwise the two updates can land in one recalc
+  // and the surfaces snap again.
+  void document.documentElement.offsetWidth;
+  window.clearTimeout(themeSwitchTimer);
+  themeSwitchTimer = window.setTimeout(() => {
+    root.removeAttribute(THEME_SWITCH_ATTR);
+  }, THEME_SWITCH_MS + THEME_SWITCH_MARGIN);
+}
+
 function reflectPreference(): void {
   const root = document.firstElementChild;
-  root?.setAttribute("data-theme", resolveMode(themeValue));
+  const resolvedTheme = resolveMode(themeValue);
+
+  // Only a real light <-> dark change animates; the first paint and repeat
+  // calls (navigation, re-renders) must stay instant.
+  const previousTheme = root?.getAttribute("data-theme");
+  if (previousTheme && previousTheme !== resolvedTheme) markThemeSwitch();
+
+  root?.setAttribute("data-theme", resolvedTheme);
   root?.setAttribute("data-theme-mode", themeValue);
 
   const label = themeValue;
@@ -144,16 +175,14 @@ function reflectPreference(): void {
 
   rotateThemeDials(themeValue);
 
-  // Get a reference to the body element
-  const body = document.body;
+  // The surface color lives on the root element, which does not transition, so
+  // reading it here yields the *new* palette. Reading the body instead returns
+  // the still-transitioning (old) color, leaving the browser chrome one toggle
+  // behind.
+  const shell = document.documentElement;
 
-  // Check if the body element exists before using getComputedStyle
-  if (body) {
-    // Get the computed styles for the body element
-    const computedStyles = window.getComputedStyle(body);
-
-    // Get the background color property
-    const bgColor = computedStyles.backgroundColor;
+  if (shell) {
+    const bgColor = window.getComputedStyle(shell).backgroundColor;
 
     // Set the background color in <meta theme-color ... />
     document
@@ -182,6 +211,9 @@ if (window.theme) {
 reflectPreference();
 
 function setThemeFeature(): void {
+  // A switch interrupted by navigation must not leave the fade flag behind.
+  document.firstElementChild?.removeAttribute(THEME_SWITCH_ATTR);
+
   // set on load so screen readers can get the latest value on the button
   reflectPreference();
 

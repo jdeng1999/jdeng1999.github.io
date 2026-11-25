@@ -25,8 +25,8 @@ export function setSoundLevel(level: SoundLevel): void {
   }
 }
 
-/** 1 for the loud level, 0.5 for the quiet level, 0 when muted. */
+/** 1 for the loud level, 0.7 for the quiet level, 0 when muted. */
 export function soundGain(): number {
   const level = getSoundLevel();
-  return level === 2 ? 1 : level === 1 ? 0.5 : 0;
+  return level === 2 ? 1 : level === 1 ? 0.7 : 0;
 }

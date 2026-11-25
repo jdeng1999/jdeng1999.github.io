@@ -236,11 +236,6 @@ if (SITE.showCoverImages) {
           {readingTime}
         </span>
       )}
-      {sequence > 0 && (
-        <span class="card-order" aria-hidden="true">
-          {String(sequence).padStart(2, "0")}
-        </span>
-      )}
     </div>
 
     <p
@@ -365,26 +360,7 @@ if (SITE.showCoverImages) {
     );
   }
 
-  .card-order {
-    margin-left: auto;
-    font-family: var(--font-firacode), ui-monospace, monospace;
-    font-size: 0.58rem;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.12em;
-    color: color-mix(in srgb, var(--color-foreground) 30%, transparent);
-    transition: color 0.25s ease;
-  }
-
-  :global(.group\/card:hover) .card-order,
-  :global(.group\/card:focus-within) .card-order {
-    color: color-mix(in srgb, var(--color-accent) 72%, transparent);
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .card-order {
-      transition: none;
-    }
-
     .card-glow-effect {
       background: none;
     }

@@ -162,10 +162,38 @@ i {
   body {
     @apply flex min-h-svh flex-col bg-background font-app text-foreground selection:bg-accent/75 selection:text-background;
   }
-  /* The reference theme switch eases the surface color; keep it in sync. */
-  html,
+  /* The reference theme switch eases the surface color; keep it in sync.
+     Only `body` is transitioned: animating the root element's background makes
+     Chrome briefly resolve viewport units (vw) without the scrollbar, which
+     resizes every vw-based headline mid-switch and makes the page jitter. */
   body {
     transition: background-color 0.3s ease;
+  }
+
+  /* The body surface eases over 300ms, so every panel painted from the theme
+     variables has to ease with it. Otherwise surfaces built with color-mix()
+     jump to the new palette while the page is still fading, which reads as a
+     black (or white) flash — the "What I do" cards are the worst case because
+     their background is almost the same color as the page.
+     `data-theme-switching` only exists while a switch is running, so elements
+     keep their own transitions the rest of the time. The dial slots are
+     excluded so their swing keeps its dedicated transform timing. */
+  html[data-theme-switching] :where(*:not(.theme-dial-slot)) {
+    transition-property:
+      background-color, border-color, color, box-shadow, outline-color,
+      text-decoration-color, caret-color !important;
+    transition-duration: 0.3s !important;
+    transition-delay: 0s !important;
+    transition-timing-function: ease !important;
+  }
+
+  html[data-theme-switching] :where(*::before, *::after) {
+    transition-property:
+      background-color, border-color, color, box-shadow, outline-color,
+      text-decoration-color, caret-color !important;
+    transition-duration: 0.3s !important;
+    transition-delay: 0s !important;
+    transition-timing-function: ease !important;
   }
   a,
   button {

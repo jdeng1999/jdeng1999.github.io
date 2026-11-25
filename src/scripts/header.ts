@@ -62,8 +62,9 @@ function playSoundCue(level: SoundLevel) {
       oscillator.frequency.exponentialRampToValueAtTime(1040, now + 0.06);
     }
 
-    // Level 1 is half as loud as level 2; muting still gives a quiet click.
-    const peak = level === 0 ? 0.03 : level === 1 ? 0.032 : 0.064;
+    // Level 1 is quieter than level 2, but still clearly audible; muting still
+    // gives a soft click.
+    const peak = level === 0 ? 0.08 : level === 1 ? 0.14 : 0.24;
     gain.gain.setValueAtTime(peak, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
 

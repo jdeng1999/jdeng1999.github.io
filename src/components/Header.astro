@@ -425,47 +425,71 @@ const accents = [
                             type="button"
                             class="sound-toggle-icon muted"
                             data-sound-toggle
+                            data-sound-level="0"
                             data-label-on={t("nav.soundFxOn")}
                             data-label-off={t("nav.soundFxOff")}
                             aria-pressed="false"
                             aria-label={t("nav.soundFxToggle")}
                           >
-                            <svg
-                              class="sound-icon sound-icon--on"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              stroke-width="1.9"
-                              aria-hidden="true"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M11 5 6 9H3v6h3l5 4V5Z"
-                              />
-                              <path
-                                stroke-linecap="round"
-                                d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"
-                              />
-                            </svg>
-                            <svg
-                              class="sound-icon sound-icon--off"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              stroke-width="1.9"
-                              aria-hidden="true"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M11 5 6 9H3v6h3l5 4V5Z"
-                              />
-                              <path
-                                stroke-linecap="round"
-                                d="m16 9 5 5m0-5-5 5"
-                              />
-                            </svg>
+                            <span class="sound-glyph-stack" aria-hidden="true">
+                              <!-- One wave: quiet -->
+                              <svg
+                                class="sound-glyph sound-glyph--low"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="M11 5 6 9H3v6h3l5 4V5Z"
+                                />
+                                <path
+                                  stroke-linecap="round"
+                                  d="M15.5 8.5a5 5 0 0 1 0 7"
+                                />
+                              </svg>
+                              <!-- Two waves: loud -->
+                              <svg
+                                class="sound-glyph sound-glyph--high"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="M11 5 6 9H3v6h3l5 4V5Z"
+                                />
+                                <path
+                                  stroke-linecap="round"
+                                  d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"
+                                />
+                              </svg>
+                              <!-- Muted -->
+                              <svg
+                                class="sound-glyph sound-glyph--off"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  d="M11 5 6 9H3v6h3l5 4V5Z"
+                                />
+                                <path
+                                  stroke-linecap="round"
+                                  d="m16 9 5 5m0-5-5 5"
+                                />
+                              </svg>
+                            </span>
                           </button>
                         </div>
                       </div>
