@@ -414,7 +414,7 @@ function setupLanguageRoll() {
 
           window.setTimeout(() => {
             void navigate(link.href);
-          }, 240);
+          }, 520);
         },
         { signal }
       );

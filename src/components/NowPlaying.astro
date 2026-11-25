@@ -317,18 +317,6 @@ const totalLabel = formatTime(first.duration);
                 <path d="M14.5 9.2c.6-1.2 1.8-2.2 3.3-2.2H21" />
               </svg>
             </button>
-
-            <a
-              class="np-preview"
-              data-np-preview
-              href={first.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              hidden
-            >
-              <span class="np-preview-dot" aria-hidden="true"></span>
-              {previewLabel}
-            </a>
           </div>
         </div>
       </div>
@@ -528,6 +516,7 @@ const totalLabel = formatTime(first.duration);
     flex-direction: column;
     min-width: 0;
     pointer-events: auto;
+    container-type: inline-size;
   }
 
   .np-body[inert] {
@@ -1001,63 +990,16 @@ const totalLabel = formatTime(first.duration);
     fill: currentColor;
   }
 
-  .np-preview {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin-left: auto;
-    font-family: var(--font-firacode), ui-monospace, monospace;
-    font-size: 0.54rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--color-foreground) 42%, transparent);
-    text-decoration: none;
-    transition: color 0.2s ease;
-  }
-
-  .np-preview[hidden] {
-    display: none;
-  }
-
-  .np-preview:hover {
-    color: var(--color-accent);
-  }
-
-  .np-preview:focus-visible {
-    border-radius: 0.2rem;
-    outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-    outline-offset: 2px;
-  }
-
-  .np-preview-dot {
-    width: 0.3rem;
-    height: 0.3rem;
-    border-radius: 999px;
-    background: var(--color-accent);
-    opacity: 0.75;
-  }
-
-  /* ─── Narrow phones: keep the controls on one line ─── */
-  @media (max-width: 480px) {
-    /* The card header already links to the same track, so the preview label
-       can yield the limited width instead of being clipped. */
-    .np-preview {
-      display: none;
-    }
-
+  /* The content column is fixed by the card grid, so adapt the controls to its
+     width rather than to the viewport. */
+  @container (max-width: 260px) {
     .np-controls {
       justify-content: center;
       gap: 0.6rem;
     }
   }
 
-  @media (max-width: 380px) {
-    .np-card {
-      grid-template-columns: 5.1rem minmax(0, 1fr);
-      gap: 0.75rem;
-      padding: 0.72rem;
-    }
-
+  @container (max-width: 210px) {
     .np-skip,
     .np-restart,
     .np-mode {
@@ -1073,6 +1015,14 @@ const totalLabel = formatTime(first.duration);
     .np-restart,
     .np-mode {
       margin-left: 0;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .np-card {
+      grid-template-columns: 5.1rem minmax(0, 1fr);
+      gap: 0.75rem;
+      padding: 0.72rem;
     }
   }
 
@@ -4131,7 +4081,15 @@ const totalLabel = formatTime(first.duration);
 
       if (expandedWheel) {
         const half = (expandedBaseW * expandedCenterScale) / 2;
-        expandedWheel.style.left = `calc(50% + ${half + 50}px)`;
+        const wheelWidth = expandedWheel.offsetWidth || 36;
+        const idealLeft = window.innerWidth / 2 + half + 50;
+        const maxLeft = window.innerWidth - wheelWidth - 16;
+        const fits = idealLeft <= maxLeft;
+        // Keep the indicator fully on screen; hide it when the card leaves no
+        // room instead of letting the ticks get clipped by the viewport.
+        expandedWheel.style.left = `${fits ? idealLeft : maxLeft}px`;
+        expandedWheel.style.opacity = fits ? "" : "0";
+        expandedWheel.style.pointerEvents = fits ? "" : "none";
       }
 
       expandedDialog?.style.setProperty("--np-expand-h", `${expandedBaseH}px`);
@@ -4161,7 +4119,7 @@ const totalLabel = formatTime(first.duration);
 
         el.hidden = false;
         const sign = Math.sign(offset);
-        const scale = scaleFactors[abs]! * expandedCenterScale;
+        const scale = scaleFactors[abs]!;
         const angle = sign * abs * 7;
         const offsetY =
           offset === 0
@@ -4170,9 +4128,14 @@ const totalLabel = formatTime(first.duration);
               ? -offset * expandedStep
               : (expandedBelowSteps[abs - 1] ?? 0);
 
-        el.style.transform = `translate(-50%, -50%) translateY(${offsetY}px) translateZ(${
-          -abs * 18
-        }px) rotateX(${angle}deg) scale(${scale})`;
+        // The card is laid out at its enlarged size via zoom instead of being
+        // transform-scaled up: transformed text was re-rastered at the small
+        // layout size and looked blurry. Transforms below stay relative.
+        el.style.zoom = String(expandedCenterScale);
+        const zoom = expandedCenterScale || 1;
+        el.style.transform = `translate(-50%, -50%) translateY(${
+          offsetY / zoom
+        }px) translateZ(${(-abs * 18) / zoom}px) rotateX(${angle}deg) scale(${scale})`;
         el.style.opacity = String(opacityFactors[abs]!);
         el.style.filter =
           abs === 0
@@ -4268,9 +4231,7 @@ const totalLabel = formatTime(first.duration);
     };
 
     const revealExpandedPair = (distance: number) => {
-      const centerTransform = `translate(-50%, -50%) translateY(0px) translateZ(0px) rotateX(0deg) scale(${
-        expandedCenterScale * 0.96
-      })`;
+      const centerTransform = `translate(-50%, -50%) translateY(0px) translateZ(0px) rotateX(0deg) scale(0.96)`;
 
       expandedCards.forEach(({ el }) => {
         if (Math.abs(Number(el.dataset.npExpandOffset || "0")) !== distance)
