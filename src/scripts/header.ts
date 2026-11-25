@@ -1,4 +1,11 @@
 import { navigate } from "astro:transitions/client";
+import {
+  SOUND_KEY,
+  SOUND_LEVEL_KEY,
+  getSoundLevel,
+  setSoundLevel,
+  type SoundLevel,
+} from "@/scripts/sound";
 
 let scrollCleanup: AbortController | null = null;
 let mobileNavCleanup: AbortController | null = null;
@@ -9,7 +16,7 @@ const MENU_LANGUAGE_KEY = "mobile-menu-open-after-language";
 
 let appearanceBound = false;
 let soundBound = false;
-let soundEnabled = false;
+let soundLevel: SoundLevel = 0;
 let audioContext: AudioContext | null = null;
 
 function readStored(key: string, fallback = "") {
@@ -28,7 +35,7 @@ function writeStored(key: string, value: string) {
   }
 }
 
-function playMuteAlert(enabled: boolean) {
+function playSoundCue(level: SoundLevel) {
   try {
     const AudioCtor =
       window.AudioContext ||
@@ -47,15 +54,17 @@ function playMuteAlert(enabled: boolean) {
     const gain = audioContext.createGain();
 
     oscillator.type = "sine";
-    if (enabled) {
-      oscillator.frequency.setValueAtTime(520, now);
-      oscillator.frequency.exponentialRampToValueAtTime(1040, now + 0.06);
-    } else {
+    if (level === 0) {
       oscillator.frequency.setValueAtTime(600, now);
       oscillator.frequency.exponentialRampToValueAtTime(250, now + 0.05);
+    } else {
+      oscillator.frequency.setValueAtTime(520, now);
+      oscillator.frequency.exponentialRampToValueAtTime(1040, now + 0.06);
     }
 
-    gain.gain.setValueAtTime(0.055, now);
+    // Level 1 is half as loud as level 2; muting still gives a quiet click.
+    const peak = level === 0 ? 0.03 : level === 1 ? 0.032 : 0.064;
+    gain.gain.setValueAtTime(peak, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
 
     oscillator.connect(gain);
@@ -71,9 +80,11 @@ function syncSoundToggles() {
   document
     .querySelectorAll<HTMLElement>("[data-sound-toggle]")
     .forEach(button => {
-      button.classList.toggle("active", soundEnabled);
-      button.classList.toggle("muted", !soundEnabled);
-      button.setAttribute("aria-pressed", String(soundEnabled));
+      const enabled = soundLevel > 0;
+      button.dataset.soundLevel = String(soundLevel);
+      button.classList.toggle("active", enabled);
+      button.classList.toggle("muted", !enabled);
+      button.setAttribute("aria-pressed", String(enabled));
 
       const label = button.querySelector<HTMLElement>("[data-sound-label]");
       if (!label) return;
@@ -84,12 +95,12 @@ function syncSoundToggles() {
         button.dataset.labelOff ??
         button.getAttribute("data-label-off") ??
         "Muted";
-      label.textContent = soundEnabled ? on : off;
+      label.textContent = enabled ? on : off;
     });
 }
 
 function setupSoundFx() {
-  soundEnabled = readStored("sound-fx", "false") === "true";
+  soundLevel = getSoundLevel();
   syncSoundToggles();
 
   if (soundBound) return;
@@ -103,10 +114,10 @@ function setupSoundFx() {
 
       const toggle = target.closest<HTMLElement>("[data-sound-toggle]");
       if (toggle) {
-        soundEnabled = !soundEnabled;
-        writeStored("sound-fx", String(soundEnabled));
+        soundLevel = ((soundLevel + 1) % 3) as SoundLevel;
+        setSoundLevel(soundLevel);
         syncSoundToggles();
-        playMuteAlert(soundEnabled);
+        playSoundCue(soundLevel);
         return;
       }
     },
@@ -116,8 +127,8 @@ function setupSoundFx() {
   document.addEventListener("astro:page-load", syncSoundToggles);
 
   window.addEventListener("storage", event => {
-    if (event.key !== "sound-fx") return;
-    soundEnabled = readStored("sound-fx", "false") === "true";
+    if (event.key !== SOUND_KEY && event.key !== SOUND_LEVEL_KEY) return;
+    soundLevel = getSoundLevel();
     syncSoundToggles();
   });
 }

@@ -396,12 +396,17 @@ const { id, label = "Image viewer" } = Astro.props;
           if (queuedDelta !== 0) {
             const next = Math.sign(queuedDelta);
             queuedDelta -= next;
+            // Let the completed slide paint before chaining the next one, so a
+            // fast double swipe still shows the middle image instead of
+            // flashing past it.
             window.requestAnimationFrame(() => {
-              if (!dialog.open) {
-                queuedDelta = 0;
-                return;
-              }
-              animateTo(next, 0);
+              window.setTimeout(() => {
+                if (!dialog.open) {
+                  queuedDelta = 0;
+                  return;
+                }
+                animateTo(next, 0);
+              }, 120);
             });
           }
         };

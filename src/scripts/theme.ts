@@ -1,4 +1,6 @@
 // Constants
+import { soundGain } from "@/scripts/sound";
+
 const THEME = "theme";
 const LIGHT = "light";
 const DARK = "dark";
@@ -83,7 +85,8 @@ let themeAudio: AudioContext | null = null;
 
 function playThemeCue(mode: ThemeMode): void {
   try {
-    if (localStorage.getItem("sound-fx") !== "true") return;
+    const volume = soundGain();
+    if (volume <= 0) return;
 
     const AudioCtor =
       window.AudioContext ||
@@ -107,7 +110,7 @@ function playThemeCue(mode: ThemeMode): void {
     oscillator.frequency.exponentialRampToValueAtTime(to, now + 0.08);
 
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.05, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.05 * volume, now + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
 
     oscillator.connect(gain).connect(ctx.destination);

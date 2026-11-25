@@ -1737,6 +1737,8 @@ const totalLabel = formatTime(first.duration);
 </style>
 
 <script>
+  import { soundGain } from "@/scripts/sound";
+
   type LyricLine = { at: number; text: string };
 
   type MusicTrack = {
@@ -1931,7 +1933,8 @@ const totalLabel = formatTime(first.duration);
   // filtered noise transient. Synthesised locally, no audio asset is loaded.
   const playGearSwitch = () => {
     try {
-      if (localStorage.getItem("sound-fx") !== "true") return;
+      const volume = soundGain();
+      if (volume <= 0) return;
       const nowMs = performance.now();
       if (nowMs - gearLastPlayedAt < 40) return;
       gearLastPlayedAt = nowMs;
@@ -1961,7 +1964,7 @@ const totalLabel = formatTime(first.duration);
       const playClick = (offset: number, levelScale: number) => {
         const start = now + 0.012 + offset;
         const master = ctx.createGain();
-        master.gain.value = 0.8 * levelScale;
+        master.gain.value = 0.8 * levelScale * volume;
         master.connect(ctx.destination);
 
         const transient = ctx.createBufferSource();
@@ -3953,13 +3956,10 @@ const totalLabel = formatTime(first.duration);
         return { el, trackIndex };
       });
 
-      const isMobileExpanded = () =>
-        window.matchMedia("(max-width: 860px)").matches;
-
       dialog.addEventListener(
         "pointerdown",
         event => {
-          if (!isMobileExpanded() || event.pointerType === "mouse") return;
+          if (event.button !== 0) return;
           if (!expandedOpen || expandedClosing || !expandedInteractionReady)
             return;
           const target = event.target;
@@ -3971,6 +3971,22 @@ const totalLabel = formatTime(first.duration);
             target.closest(
               "input, textarea, select, [role='slider'], [data-np-seek], .np-expand-wheel"
             )
+          ) {
+            return;
+          }
+
+          // Only a drag that starts on the focused card flips the carousel;
+          // the empty space and the blurred cards around it stay inert.
+          const centerCard = expandedCards.find(
+            item => item.trackIndex === expandedCenter
+          )?.el;
+          const bounds = centerCard?.getBoundingClientRect();
+          if (
+            !bounds ||
+            event.clientX < bounds.left ||
+            event.clientX > bounds.right ||
+            event.clientY < bounds.top ||
+            event.clientY > bounds.bottom
           ) {
             return;
           }
