@@ -281,6 +281,50 @@
     color 0.2s ease;
 }
 
+/* ─── Language code roll (CN / EN) ─── */
+.lang-roll {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  height: 1em;
+  line-height: 1;
+  vertical-align: -0.06em;
+}
+
+.lang-roll-item {
+  display: block;
+  transition:
+    transform 0.24s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.18s ease;
+  will-change: transform;
+}
+
+.lang-roll-item--next {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(105%);
+  opacity: 0;
+}
+
+.lang-roll.is-switching [data-lang-current] {
+  transform: translateY(-105%);
+  opacity: 0;
+}
+
+.lang-roll.is-switching .lang-roll-item--next {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lang-roll-item {
+    transition: none;
+  }
+}
+
 .nav-lang-chip:hover .nav-lang-chip-icon {
   transform: scale(1.1);
   color: var(--accent);
@@ -293,9 +337,21 @@
   letter-spacing: 0.05em;
 }
 
-/* ─── More (···) Popover ─── */
+/* ─── More Popover ─── */
 .more-btn-container {
   position: relative;
+}
+
+#more-btn .more-icon--close {
+  display: none;
+}
+
+#more-btn[aria-expanded="true"] .more-icon--dots {
+  display: none;
+}
+
+#more-btn[aria-expanded="true"] .more-icon--close {
+  display: block;
 }
 
 #more-btn[aria-expanded="true"] {
@@ -675,6 +731,39 @@ html[data-accent="indigo"] [data-accent-color="indigo"] {
 
 /* ─── Touch layouts: let the accent palette use the full sheet width ─── */
 @media (max-width: 1023px) {
+  #nav-menu .nav-icon-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  #nav-menu .nav-icon-btn svg {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+
+  .hamburger-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .hamburger-box {
+    width: 20px;
+    height: 16px;
+  }
+
+  .hamburger-line--2 {
+    top: 7px;
+  }
+
+  .hamburger-line--3 {
+    top: 14px;
+  }
+
+  .hamburger-btn[aria-expanded="true"] .hamburger-line--1,
+  .hamburger-btn[aria-expanded="true"] .hamburger-line--3 {
+    top: 7px;
+  }
+
   .accent-swatches {
     width: 100%;
     max-width: none;
@@ -697,5 +786,12 @@ html[data-accent="indigo"] [data-accent-color="indigo"] {
   /* Touch devices have no hover: keep the row steady on tap */
   .accent-swatch:hover {
     height: 2.4rem;
+  }
+}
+
+/* Desktop: the navigation bar is intentionally wider than page content. */
+@media (min-width: 1024px) {
+  #main-header .app-layout {
+    max-width: clamp(60rem, 74vw, 112rem);
   }
 }

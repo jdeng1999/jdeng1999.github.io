@@ -1037,6 +1037,45 @@ const totalLabel = formatTime(first.duration);
     opacity: 0.75;
   }
 
+  /* ─── Narrow phones: keep the controls on one line ─── */
+  @media (max-width: 480px) {
+    /* The card header already links to the same track, so the preview label
+       can yield the limited width instead of being clipped. */
+    .np-preview {
+      display: none;
+    }
+
+    .np-controls {
+      justify-content: center;
+      gap: 0.6rem;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .np-card {
+      grid-template-columns: 5.1rem minmax(0, 1fr);
+      gap: 0.75rem;
+      padding: 0.72rem;
+    }
+
+    .np-skip,
+    .np-restart,
+    .np-mode {
+      width: 1.55rem;
+      height: 1.55rem;
+    }
+
+    .np-toggle {
+      width: 2.1rem;
+      height: 2.1rem;
+    }
+
+    .np-restart,
+    .np-mode {
+      margin-left: 0;
+    }
+  }
+
   /* Spotify's preview embed is used for audio only; it never paints the card. */
   .np-embed {
     position: absolute;
@@ -2330,18 +2369,34 @@ const totalLabel = formatTime(first.duration);
       const trackIndex = cardTrackIndex(card);
       const isCurrent = trackIndex === playbackIndex;
       const cardPlaying = isCurrent && isPlaying;
-      card.dataset.npPlaying = String(cardPlaying);
-      card.dataset.npCurrent = String(isCurrent);
+      const playingValue = String(cardPlaying);
+      const currentValue = String(isCurrent);
+
+      // Only touch the DOM when something actually changed. Repainting every
+      // stacked card on play/pause made the blurred layers re-rasterize and
+      // flash, so unchanged cards must stay completely untouched.
+      if (card.dataset.npPlaying !== playingValue) {
+        card.dataset.npPlaying = playingValue;
+      }
+      if (card.dataset.npCurrent !== currentValue) {
+        card.dataset.npCurrent = currentValue;
+      }
 
       const toggle = card.querySelector<HTMLButtonElement>("[data-np-toggle]");
       if (toggle) {
-        toggle.setAttribute("aria-pressed", String(cardPlaying));
-        toggle.setAttribute(
-          "aria-label",
-          cardPlaying ? labels.pause : labels.play
-        );
+        if (toggle.getAttribute("aria-pressed") !== playingValue) {
+          toggle.setAttribute("aria-pressed", playingValue);
+        }
+        const toggleLabel = cardPlaying ? labels.pause : labels.play;
+        if (toggle.getAttribute("aria-label") !== toggleLabel) {
+          toggle.setAttribute("aria-label", toggleLabel);
+        }
       }
     };
+
+    // Visible progress values keyed per card. Unchanged cards skip every DOM
+    // write, which keeps the blurred carousel layers stable while browsing.
+    const paintedProgress = new WeakMap<HTMLElement, string>();
 
     const paintCardProgress = (card: HTMLElement) => {
       const trackIndex = cardTrackIndex(card);
@@ -2352,20 +2407,39 @@ const totalLabel = formatTime(first.duration);
       const position = isCurrent ? clamp(positionMs, 0, total) : 0;
       const hasProgress = isCurrent && position > 0;
       const ratio = total > 0 ? position / total : 0;
+      const currentLabel = formatTime(position);
+      const totalLabel = formatTime(total);
+      const signature = `${currentLabel}|${totalLabel}|${hasProgress ? 1 : 0}|${
+        isCurrent ? 1 : 0
+      }|${Math.round(position)}`;
+      if (paintedProgress.get(card) === signature) return;
+      paintedProgress.set(card, signature);
 
       const seek = card.querySelector<HTMLElement>("[data-np-seek]");
       const fill = card.querySelector<HTMLElement>("[data-np-fill]");
       const currentText = card.querySelector<HTMLElement>("[data-np-current]");
       const totalText = card.querySelector<HTMLElement>("[data-np-total]");
 
-      card.dataset.npProgress = hasProgress ? "active" : "empty";
-      if (totalText) totalText.textContent = formatTime(total);
-      if (currentText) currentText.textContent = formatTime(position);
+      const progressValue = hasProgress ? "active" : "empty";
+      if (card.dataset.npProgress !== progressValue) {
+        card.dataset.npProgress = progressValue;
+      }
+      if (totalText && totalText.textContent !== totalLabel) {
+        totalText.textContent = totalLabel;
+      }
+      if (currentText && currentText.textContent !== currentLabel) {
+        currentText.textContent = currentLabel;
+      }
       seek?.style.setProperty("--np-p", `${ratio * 100}%`);
       seek?.setAttribute("aria-valuemax", String(Math.round(total / 1000)));
       seek?.setAttribute("aria-valuenow", String(Math.round(position / 1000)));
-      seek?.setAttribute("aria-valuetext", formatTime(position));
-      if (fill) fill.style.opacity = hasProgress ? "1" : "0";
+      seek?.setAttribute("aria-valuetext", currentLabel);
+      if (fill) {
+        const fillOpacity = hasProgress ? "1" : "0";
+        if (fill.style.opacity !== fillOpacity) {
+          fill.style.opacity = fillOpacity;
+        }
+      }
     };
 
     const paintCard = (card: HTMLElement) => {
@@ -2691,6 +2765,9 @@ const totalLabel = formatTime(first.duration);
     const slotZ = [4, 3, 2, 1];
     const lastRole = visibleCount - 1;
     let deckSuspended = false;
+    // While the expanded carousel is open, the footer deck is only visible as
+    // a blurred backdrop, so its content swap is deferred until close.
+    let deckPendingCenter: number | null = null;
 
     const measureDeck = () => {
       remSize = unitRem();
@@ -2967,16 +3044,29 @@ const totalLabel = formatTime(first.duration);
     // Re-seat the four-card footer deck on any track in the full collection
     // without touching playback. Card browsing is independent from the song
     // that is currently sounding.
-    function setDeckWindow(centerIndex: number) {
+    const applyDeckWindowContent = () => {
       const count = tracks.length;
       if (!count) return;
-
-      index = ((centerIndex % count) + count) % count;
       deckCards.forEach((card, slot) => {
         const offset = deckSlotOffsets[slot] ?? 0;
         const trackIndex = (((index + offset) % count) + count) % count;
         applyCardContent(card, tracks[trackIndex]!, trackIndex);
       });
+    };
+
+    function setDeckWindow(centerIndex: number) {
+      const count = tracks.length;
+      if (!count) return;
+
+      const next = ((centerIndex % count) + count) % count;
+      const deferContent = expandedOpen && !expandedClosing;
+      index = next;
+      if (deferContent) {
+        deckPendingCenter = next;
+      } else {
+        deckPendingCenter = null;
+        applyDeckWindowContent();
+      }
 
       deckOffset = 0;
       deckTarget = 0;
@@ -2987,7 +3077,14 @@ const totalLabel = formatTime(first.duration);
       pendingMoves.length = 0;
       wheelAccum = 0;
       setActiveCard(deckCards[0]!);
-      applyDeckWindow();
+      if (deferContent) {
+        // The front card still shows the previous track, so setActiveCard
+        // restored the old index. Keep the browsed one for state and for the
+        // deferred content flush on close.
+        index = next;
+      } else {
+        applyDeckWindow();
+      }
       renderDeck();
       paintAllCards();
       syncStageHeight();
@@ -3518,6 +3615,8 @@ const totalLabel = formatTime(first.duration);
     let expandedMobileMoved = false;
     let expandedMobileTriggered = false;
     let expandedMobileStartY = 0;
+    let expandedMobileStartX = 0;
+    let expandedMobileAxis: "pending" | "vertical" | "horizontal" = "pending";
     let expandedMobilePointer = -1;
     let deckReturnFinals: Array<{
       card: HTMLElement;
@@ -3914,10 +4013,13 @@ const totalLabel = formatTime(first.duration);
           if (!expandedOpen || expandedClosing || !expandedInteractionReady)
             return;
           const target = event.target;
+          // Sliders already own their gesture (and stop propagation), so only
+          // plain inputs need to be excluded here. Control buttons stay in the
+          // gesture: a tap runs them, a vertical drag browses the carousel.
           if (
             target instanceof Element &&
             target.closest(
-              "button, a, input, [role='slider'], [data-np-seek], .np-controls"
+              "input, textarea, select, [role='slider'], [data-np-seek], .np-expand-wheel"
             )
           ) {
             return;
@@ -3926,8 +4028,10 @@ const totalLabel = formatTime(first.duration);
           expandedMobileDrag = true;
           expandedMobileMoved = false;
           expandedMobileTriggered = false;
+          expandedMobileAxis = "pending";
           expandedMobilePointer = event.pointerId;
           expandedMobileStartY = event.clientY;
+          expandedMobileStartX = event.clientX;
         },
         { passive: true }
       );
@@ -3939,14 +4043,35 @@ const totalLabel = formatTime(first.duration);
             return;
 
           const dy = event.clientY - expandedMobileStartY;
-          if (Math.abs(dy) > 6) expandedMobileMoved = true;
+          const dx = event.clientX - expandedMobileStartX;
+
+          if (expandedMobileAxis === "pending") {
+            if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+            expandedMobileAxis =
+              Math.abs(dy) > Math.abs(dx) ? "vertical" : "horizontal";
+            if (expandedMobileAxis === "horizontal") {
+              // Horizontal gestures belong to the content under the finger.
+              expandedMobileDrag = false;
+              expandedMobilePointer = -1;
+              return;
+            }
+          }
+
+          if (expandedMobileAxis !== "vertical") return;
+
+          if (Math.abs(dy) > 6) {
+            expandedMobileMoved = true;
+            // Keep the press from becoming a click on a control button once
+            // the gesture reads as a swipe.
+            expandedSuppressClickUntil = performance.now() + 600;
+          }
 
           if (!expandedMobileTriggered && Math.abs(dy) > 30) {
             expandedMobileTriggered = true;
             selectExpanded(expandedCenter + (dy < 0 ? -1 : 1));
           }
 
-          if (expandedMobileMoved) event.preventDefault();
+          if (expandedMobileMoved && event.cancelable) event.preventDefault();
         },
         { passive: false }
       );
@@ -3955,7 +4080,7 @@ const totalLabel = formatTime(first.duration);
         if (!expandedMobileDrag || event.pointerId !== expandedMobilePointer)
           return;
         const dy = event.clientY - expandedMobileStartY;
-        const moved = expandedMobileMoved;
+        const moved = expandedMobileMoved || expandedMobileAxis === "vertical";
         let suppressClick = moved;
         if (!expandedMobileTriggered && Math.abs(dy) > 30) {
           expandedMobileTriggered = true;
@@ -3965,6 +4090,7 @@ const totalLabel = formatTime(first.duration);
         expandedMobileDrag = false;
         expandedMobileMoved = false;
         expandedMobileTriggered = false;
+        expandedMobileAxis = "pending";
         expandedMobilePointer = -1;
         if (suppressClick) expandedSuppressClickUntil = performance.now() + 350;
       };
@@ -3976,15 +4102,11 @@ const totalLabel = formatTime(first.duration);
         "click",
         event => {
           if (performance.now() >= expandedSuppressClickUntil) return;
-          const target = event.target;
-          if (
-            target instanceof Element &&
-            target.closest("button, a, input, [role='slider'], .np-controls")
-          ) {
-            return;
-          }
+          // A swipe that began on a control button must not also trigger that
+          // button when the finger lifts.
           event.preventDefault();
           event.stopPropagation();
+          event.stopImmediatePropagation();
         },
         { capture: true }
       );
@@ -4427,6 +4549,16 @@ const totalLabel = formatTime(first.duration);
         card.style.filter = "blur(2px)";
       });
 
+      // Flush any deck content deferred while the carousel was open, now that
+      // the footer cards are invisible for the close transition.
+      if (deckPendingCenter !== null) {
+        index = deckPendingCenter;
+        deckPendingCenter = null;
+        applyDeckWindowContent();
+        setActiveCard(deckCards[0]!);
+        paintAllCards();
+      }
+
       measureExpanded();
       const center = expandedCards.find(
         item => item.trackIndex === expandedCenter
@@ -4661,6 +4793,7 @@ const totalLabel = formatTime(first.duration);
         expandedInteractionReady = false;
         expandedWheelShift = 0;
         deckSuspended = false;
+        deckPendingCenter = null;
         delete root!.dataset.npReturning;
         deckReturnFinals = [];
         document.body.style.overflow = expandedPreviousOverflow;

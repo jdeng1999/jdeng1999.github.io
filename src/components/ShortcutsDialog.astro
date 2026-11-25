@@ -486,19 +486,12 @@ const gotoHint = t("shortcuts.group.gotoHelp").replace("{g}", "G");
   const getOverlay = () =>
     document.querySelector<HTMLElement>("[data-shortcuts]");
 
-  const closeMobileMenu = () => {
-    const menu = document.querySelector("#mobile-menu");
-    const button = document.querySelector("#menu-btn");
-    menu?.classList.remove("is-open");
-    menu?.setAttribute("aria-hidden", "true");
-    button?.setAttribute("aria-expanded", "false");
-  };
-
   const openShortcuts = () => {
     const overlay = getOverlay();
     if (!overlay || !overlay.hidden) return;
 
-    closeMobileMenu();
+    // The mobile menu deliberately stays open underneath: opening and closing
+    // the shortcuts sheet must not re-run the menu's open animation.
 
     const moreButton = document.querySelector<HTMLElement>("#more-btn");
     if (moreButton?.getAttribute("aria-expanded") === "true") {

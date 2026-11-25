@@ -1,7 +1,6 @@
 ---
 import IconArchive from "@/assets/icons/IconArchive.svg";
 import IconGallery from "@/assets/icons/IconGallery.svg";
-import IconSearch from "@/assets/icons/IconSearch.svg";
 import IconSunHigh from "@/assets/icons/IconSunHigh.svg";
 import IconMoon from "@/assets/icons/IconMoon.svg";
 import IconDeviceDesktop from "@/assets/icons/IconDeviceDesktop.svg";
@@ -28,6 +27,7 @@ const targetLanguageUrl = getTargetLanguageUrl(pathname, targetLocale);
 const langToggleTitle =
   targetLocale === "zh" ? "切换到中文" : "Switch to English";
 const langToggleText = targetLocale === "zh" ? "CN" : "EN";
+const langNextText = locale === "zh" ? "CN" : "EN";
 
 const isActive = (path: string) => checkRouteActive(currentPath, path);
 
@@ -50,7 +50,7 @@ const accents = [
 
   <!-- Floating Glass Panel -->
   <div class="app-layout">
-    <div class="mobile-menu-panel relative mx-auto mt-2 mb-6 w-full overflow-hidden rounded-2xl border border-white/10 shadow-2xl dark:border-white/5">
+    <div class="mobile-menu-panel relative mb-6 w-full overflow-hidden">
       <div class="mobile-menu-inner">
         <!-- Primary navigation links -->
         <nav
@@ -195,31 +195,6 @@ const accents = [
         <!-- Divider -->
         <div class="mobile-menu-divider"></div>
 
-        <!-- Utilities section label -->
-        <p class="mobile-section-label">
-          {locale === "es"
-            ? "Herramientas"
-            : locale === "zh"
-              ? "工具"
-              : "Tools"}
-        </p>
-
-        <!-- Action row: Search -->
-        <div class="mobile-menu-actions">
-          <button
-            data-search-trigger
-            class="mobile-action-btn"
-            aria-label={t("nav.openSearch")}
-          >
-            <IconSearch class="size-4 shrink-0" />
-            <span>{t("nav.search")}</span>
-            <kbd class="mobile-kbd ml-auto">⌘K</kbd>
-          </button>
-        </div>
-
-        <!-- Divider -->
-        <div class="mobile-menu-divider"></div>
-
         <!-- Preferences section label -->
         <p class="mobile-section-label">
           {locale === "es"
@@ -229,42 +204,43 @@ const accents = [
               : "Preferences"}
         </p>
 
-        <!-- Theme + language -->
-        <div class="mobile-prefs-row">
+        <!-- Theme, language, sound and shortcuts -->
+        <div class="mobile-utility-row">
           {SITE.lightAndDarkMode && (
             <button
               type="button"
               id="theme-btn-mobile"
-              class="mobile-pref-btn flex-1"
+              class="mobile-icon-btn"
               aria-label="auto"
               aria-live="polite"
+              title={t("nav.themeLabel")}
             >
               <span class="mobile-theme-dial" aria-hidden="true">
                 <span class="theme-dial" data-theme-dial>
                   <span class="theme-dial-slot" data-theme-icon="light">
-                    <IconSunHigh class="size-4.5" />
+                    <IconSunHigh class="size-4" />
                   </span>
                   <span class="theme-dial-slot" data-theme-icon="dark">
-                    <IconMoon class="size-4.5" />
+                    <IconMoon class="size-4" />
                   </span>
                   <span class="theme-dial-slot" data-theme-icon="system">
-                    <IconDeviceDesktop class="size-4.5" />
+                    <IconDeviceDesktop class="size-4" />
                   </span>
                 </span>
               </span>
-              <span>{t("nav.themeLabel")}</span>
             </button>
           )}
 
           <a
             href={targetLanguageUrl}
-            class="mobile-pref-btn flex-1"
+            class="mobile-icon-btn mobile-lang-btn"
             aria-label={langToggleTitle}
+            title={langToggleTitle}
             data-lang-toggle={targetLocale}
             hreflang={targetLocale === "zh" ? "zh-CN" : "en"}
           >
             <svg
-              class="size-4 shrink-0"
+              class="size-4.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -277,10 +253,73 @@ const accents = [
                 d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c-.03.077-.07.154-.114.23-.9 1.54-2.11 3.05-3.535 4.5M6.412 9a14.95 14.95 0 003.535 4.5m0 0a14.973 14.973 0 01-3.298 3.19M6.412 9H3.9M15 9h-2.5"
               ></path>
             </svg>
-            <span>
-              {t("nav.languageLabel")} · {langToggleText}
+            <span class="mobile-lang-code lang-roll" data-lang-roll>
+              <span class="lang-roll-item" data-lang-current>
+                {langToggleText}
+              </span>
+              <span
+                class="lang-roll-item lang-roll-item--next"
+                aria-hidden="true"
+              >
+                {langNextText}
+              </span>
             </span>
           </a>
+
+          <button
+            type="button"
+            class="mobile-icon-btn"
+            data-sound-toggle
+            data-label-on={t("nav.soundFxOn")}
+            data-label-off={t("nav.soundFxOff")}
+            aria-pressed="false"
+            aria-label={t("nav.soundFxToggle")}
+            title={t("nav.soundFxToggle")}
+          >
+            <svg
+              class="size-4.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M11 5 6 9H3v6h3l5 4V5Z"
+              />
+              <path
+                stroke-linecap="round"
+                d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"
+              />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="mobile-icon-btn"
+            data-shortcuts-open
+            aria-label={t("nav.shortcuts")}
+            title={t("nav.shortcuts")}
+          >
+            <svg
+              class="size-4.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1.1-1.4 2.1"
+              />
+              <path stroke-linecap="round" d="M12 16.5h.01" />
+            </svg>
+          </button>
         </div>
 
         <!-- Accent color -->
@@ -302,62 +341,6 @@ const accents = [
               ></button>
             ))}
           </div>
-        </div>
-
-        <!-- Sound + help -->
-        <div class="mobile-prefs-row">
-          <button
-            type="button"
-            class="mobile-pref-btn flex-1"
-            data-sound-toggle
-            data-label-on={t("nav.soundFxOn")}
-            data-label-off={t("nav.soundFxOff")}
-            aria-pressed="false"
-          >
-            <svg
-              class="size-4 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="1.8"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M11 5 6 9H3v6h3l5 4V5Z"
-              />
-              <path
-                stroke-linecap="round"
-                d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"
-              />
-            </svg>
-            <span data-sound-label>{t("nav.soundFxOff")}</span>
-          </button>
-
-          <button
-            type="button"
-            class="mobile-pref-btn flex-1"
-            data-shortcuts-open
-          >
-            <svg
-              class="size-4 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="1.8"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="9" />
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1.1-1.4 2.1"
-              />
-              <path stroke-linecap="round" d="M12 16.5h.01" />
-            </svg>
-            <span>{t("nav.shortcuts")}</span>
-          </button>
         </div>
       </div>
     </div>
@@ -393,7 +376,10 @@ const accents = [
 
   .mobile-menu-backdrop {
     position: fixed;
-    inset: 0;
+    top: var(--menu-top, 0px);
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: -1;
     background: rgba(0, 0, 0, 0);
     backdrop-filter: blur(0px);
@@ -416,13 +402,9 @@ const accents = [
   }
 
   .mobile-menu-panel {
-    background:
-      linear-gradient(
-        155deg,
-        color-mix(in srgb, var(--accent) 5%, transparent),
-        transparent 46%
-      ),
-      color-mix(in srgb, var(--background) 98.5%, transparent);
+    background: var(--background);
+    margin-inline: -1rem;
+    width: calc(100% + 2rem);
     box-shadow:
       0 28px 64px -28px rgba(0, 0, 0, 0.45),
       0 4px 14px -6px rgba(0, 0, 0, 0.16);
@@ -436,13 +418,29 @@ const accents = [
     visibility: hidden;
   }
 
-  .mobile-menu .mobile-menu-panel {
-    border-color: color-mix(in srgb, var(--foreground) 10%, transparent);
+  /* Fuse the open menu with the navigation bar above it. */
+  :global(#main-header:has(#mobile-menu.is-open)) {
+    background: var(--background) !important;
+    box-shadow: none;
+    transition: none;
+  }
+
+  /* Restoring the menu after a language switch: show it already expanded so
+     the sheet does not replay its open animation. */
+  .mobile-menu.is-instant .mobile-menu-backdrop,
+  .mobile-menu.is-instant .mobile-menu-panel,
+  .mobile-menu.is-instant .mobile-nav-link,
+  .mobile-menu.is-instant .mobile-section-label,
+  .mobile-menu.is-instant .mobile-utility-row,
+  .mobile-menu.is-instant .mobile-accent-row {
+    transition: none !important;
+  }
+
+  :global(html:has(#mobile-menu.is-instant) .hamburger-line) {
+    transition: none !important;
   }
 
   .mobile-menu.is-open .mobile-menu-panel {
-    backdrop-filter: blur(22px) saturate(170%);
-    -webkit-backdrop-filter: blur(22px) saturate(170%);
     opacity: 1;
     transform: translateY(0) scale(1);
     visibility: visible;
@@ -451,10 +449,16 @@ const accents = [
   /* ─── Mobile Menu Inner ─── */
   .mobile-menu-inner {
     position: relative;
-    max-height: calc(100dvh - 7rem);
+    max-height: calc(100svh - 7rem);
     padding: 1rem 1rem 1.1rem;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .mobile-menu-inner::-webkit-scrollbar {
+    display: none;
   }
 
   /* ─── Section labels ─── */
@@ -512,7 +516,7 @@ const accents = [
     transition-delay: calc(0.07s * var(--i, 0) + 0.1s);
   }
 
-  :is(.mobile-nav-link, .mobile-action-btn, .mobile-pref-btn):hover {
+  :is(.mobile-nav-link, .mobile-icon-btn):hover {
     color: var(--accent);
     background: color-mix(in srgb, var(--accent) 8%, transparent);
   }
@@ -568,139 +572,127 @@ const accents = [
     );
   }
 
-  /* ─── Mobile Action Buttons ─── */
-  .mobile-menu-actions {
+  /* ─── Compact icon utilities ─── */
+  .mobile-utility-row {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    opacity: 0;
-    transform: translateY(6px);
-    transition:
-      opacity 0.3s ease,
-      transform 0.3s ease;
-    transition-delay: 0.32s;
-    margin-bottom: 0.5rem;
-  }
-
-  .mobile-menu.is-open .mobile-menu-actions {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .mobile-action-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    min-height: 2.55rem;
-    padding: 0.5625rem 0.8rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: color-mix(in srgb, var(--foreground) 80%, transparent);
-    border-radius: 0.625rem;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition:
-      color 0.15s ease,
-      background-color 0.15s ease;
-    text-align: left;
-    width: 100%;
-  }
-
-  /* KBD inside mobile actions */
-  .mobile-kbd {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.625rem;
-    font-weight: 700;
-    padding: 0.1rem 0.3rem;
-    border-radius: 0.25rem;
-    border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
-    border-bottom-width: 2px;
-    background: color-mix(in srgb, var(--background) 80%, transparent);
-    color: color-mix(in srgb, var(--foreground) 45%, transparent);
-    font-family: inherit;
-    line-height: 1;
-  }
-
-  /* ─── Preferences Row ─── */
-  .mobile-prefs-row {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.6rem;
-    opacity: 0;
-    transform: translateY(6px);
-    transition:
-      opacity 0.3s ease,
-      transform 0.3s ease;
-    transition-delay: 0.38s;
-  }
-
-  .mobile-menu.is-open .mobile-prefs-row {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .mobile-pref-btn {
-    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    min-height: 2.65rem;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: color-mix(in srgb, var(--foreground) 75%, transparent);
-    border-radius: 0.625rem;
-    border: 1px solid color-mix(in srgb, var(--border) 20%, transparent);
-    background: color-mix(in srgb, var(--foreground) 3%, transparent);
-    cursor: pointer;
-    text-decoration: none;
+    gap: clamp(0.55rem, 3vw, 0.95rem);
+    margin: 0.15rem 0 0.2rem;
+    opacity: 0;
+    transform: translateY(6px);
     transition:
-      color 0.15s ease,
-      background-color 0.15s ease,
-      border-color 0.15s ease;
-    white-space: nowrap;
+      opacity 0.3s ease,
+      transform 0.3s ease;
+    transition-delay: 0.36s;
   }
 
-  .mobile-pref-btn:hover {
+  .mobile-menu.is-open .mobile-utility-row {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .mobile-icon-btn {
+    display: inline-grid;
+    flex: none;
+    width: 2.85rem;
+    height: 2.85rem;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 0.8rem;
+    background: transparent;
+    color: color-mix(in srgb, var(--foreground) 64%, transparent);
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.18s ease;
+  }
+
+  .mobile-utility-row,
+  .mobile-utility-row * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* No container/frame in any state: these utilities are free-floating icons. */
+  @media (hover: hover) {
+    .mobile-icon-btn:hover {
+      color: var(--accent);
+    }
+  }
+
+  .mobile-icon-btn:active,
+  .mobile-icon-btn:focus-visible {
     color: var(--accent);
-    border-color: color-mix(in srgb, var(--accent) 25%, transparent);
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    background: transparent;
+    outline: none;
+  }
+
+  .mobile-icon-btn.active {
+    color: var(--accent);
+  }
+
+  .mobile-lang-btn {
+    display: inline-flex;
+    width: auto;
+    min-width: 2.85rem;
+    padding: 0 0.65rem;
+    gap: 0.28rem;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-lang-code {
+    font-family: var(--font-firacode, monospace);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    opacity: 0.78;
+  }
+
+  .mobile-icon-btn svg {
+    width: 1.1rem;
+    height: 1.1rem;
   }
 
   .mobile-theme-dial {
     position: relative;
     display: inline-grid;
-    flex: none;
-    width: 2rem;
-    height: 2rem;
+    width: 1.5rem;
+    height: 1.5rem;
     place-items: center;
     overflow: hidden;
-    border-radius: 0.4rem;
+    border-radius: 0.35rem;
   }
 
   .mobile-theme-dial .theme-dial {
+    --dial-radius: 1.05rem;
     width: 100%;
     height: 100%;
   }
 
-  .mobile-pref-btn[aria-pressed="true"] {
-    color: var(--accent);
-    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  .mobile-theme-dial .theme-dial-slot {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: -0.75rem 0 0 -0.75rem;
+  }
+
+  .mobile-theme-dial .theme-dial-slot svg {
+    width: 1rem;
+    height: 1rem;
   }
 
   .mobile-accent-row {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.65rem;
-    margin-bottom: 0.15rem;
-    padding: 0.7rem 0.75rem 0.8rem;
-    border: 1px solid color-mix(in srgb, var(--border) 22%, transparent);
-    border-radius: 0.9rem;
-    background: color-mix(in srgb, var(--foreground) 4%, transparent);
+    gap: 0.55rem;
+    margin: 0.35rem 0 0;
+    padding: 0.35rem 0.15rem 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     opacity: 0;
     transform: translateY(6px);
     transition:
@@ -712,6 +704,49 @@ const accents = [
   .mobile-menu.is-open .mobile-accent-row {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  .mobile-accent-row .accent-swatches {
+    width: 100%;
+    min-height: 0;
+    justify-content: space-between;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mobile-accent-row .accent-swatches .accent-swatch {
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 999px;
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .mobile-accent-row .accent-swatches .accent-swatch::before {
+    inset: -0.7rem;
+  }
+
+  .mobile-accent-row .accent-swatches .accent-swatch:hover {
+    height: 1.2rem;
+    transform: scale(1.18);
+  }
+
+  html[data-accent="blue"] .mobile-accent-row [data-accent-color="blue"],
+  html[data-accent="green"] .mobile-accent-row [data-accent-color="green"],
+  html[data-accent="purple"] .mobile-accent-row [data-accent-color="purple"],
+  html[data-accent="amber"] .mobile-accent-row [data-accent-color="amber"],
+  html[data-accent="rose"] .mobile-accent-row [data-accent-color="rose"],
+  html[data-accent="cyan"] .mobile-accent-row [data-accent-color="cyan"],
+  html[data-accent="teal"] .mobile-accent-row [data-accent-color="teal"],
+  html[data-accent="orange"] .mobile-accent-row [data-accent-color="orange"],
+  html[data-accent="pink"] .mobile-accent-row [data-accent-color="pink"],
+  html[data-accent="indigo"] .mobile-accent-row [data-accent-color="indigo"] {
+    height: 1.2rem;
+    box-shadow:
+      0 0 0 2px var(--background),
+      0 0 0 3px var(--accent);
   }
 
   .mobile-accent-label {

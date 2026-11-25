@@ -33,6 +33,8 @@ const targetLanguageUrl = getTargetLanguageUrl(pathname, targetLocale);
 const langToggleTitle =
   targetLocale === "zh" ? "切换到中文" : "Switch to English";
 const langToggleText = targetLocale === "zh" ? "CN" : "EN";
+// The code shown after switching (the current locale's own short code).
+const langNextText = locale === "zh" ? "CN" : "EN";
 
 // Remove trailing slash from current pathname if exists
 const currentPath =
@@ -191,7 +193,17 @@ const accents = [
                     d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c-.03.077-.07.154-.114.23-.9 1.54-2.11 3.05-3.535 4.5M6.412 9a14.95 14.95 0 003.535 4.5m0 0a14.973 14.973 0 01-3.298 3.19M6.412 9H3.9M15 9h-2.5"
                   ></path>
                 </svg>
-                <span class="nav-lang-chip-label">{langToggleText}</span>
+                <span class="nav-lang-chip-label lang-roll" data-lang-roll>
+                  <span class="lang-roll-item" data-lang-current>
+                    {langToggleText}
+                  </span>
+                  <span
+                    class="lang-roll-item lang-roll-item--next"
+                    aria-hidden="true"
+                  >
+                    {langNextText}
+                  </span>
+                </span>
               </a>
             </li>
 
@@ -227,16 +239,34 @@ const accents = [
                 aria-haspopup="true"
                 aria-expanded="false"
               >
-                <!-- Three dots icon -->
+                <!-- Ringed ellipsis; swaps to an X while the panel is open -->
                 <svg
-                  class="size-4.5"
+                  class="more-icon more-icon--dots size-4.5"
                   viewBox="0 0 24 24"
-                  fill="currentColor"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                   aria-hidden="true"
                 >
-                  <circle cx="5" cy="12" r="1.5"></circle>
-                  <circle cx="12" cy="12" r="1.5"></circle>
-                  <circle cx="19" cy="12" r="1.5"></circle>
+                  <circle cx="12" cy="12" r="8.4" />
+                  <g fill="currentColor" stroke="none">
+                    <circle cx="8.4" cy="12" r="1.1" />
+                    <circle cx="12" cy="12" r="1.1" />
+                    <circle cx="15.6" cy="12" r="1.1" />
+                  </g>
+                </svg>
+                <svg
+                  class="more-icon more-icon--close size-4.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" />
                 </svg>
               </button>
 

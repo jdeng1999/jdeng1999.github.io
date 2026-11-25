@@ -1,6 +1,11 @@
+import { navigate } from "astro:transitions/client";
+
 let scrollCleanup: AbortController | null = null;
 let mobileNavCleanup: AbortController | null = null;
 let moreCleanup: AbortController | null = null;
+let languageCleanup: AbortController | null = null;
+
+const MENU_LANGUAGE_KEY = "mobile-menu-open-after-language";
 
 let appearanceBound = false;
 let soundBound = false;
@@ -188,13 +193,22 @@ function setupMobileNav() {
   const { signal } = mobileNavCleanup;
 
   const menuBtn = document.querySelector("#menu-btn");
-  const mobileMenu = document.querySelector("#mobile-menu");
+  const mobileMenu = document.querySelector<HTMLDivElement>("#mobile-menu");
   const backdrop = document.querySelector(".mobile-menu-backdrop");
 
   if (!menuBtn || !mobileMenu) return;
 
   const labelOpen = menuBtn.getAttribute("data-label-open") || "Open Menu";
   const labelClose = menuBtn.getAttribute("data-label-close") || "Close Menu";
+  const menuLanguageKey = MENU_LANGUAGE_KEY;
+
+  // The dimming backdrop must start below the sticky header, otherwise it
+  // darkens the header band and the sheet no longer looks fused with it.
+  const syncMenuTop = () => {
+    const header = document.getElementById("main-header");
+    const top = header?.offsetHeight ?? 0;
+    mobileMenu.style.setProperty("--menu-top", `${top}px`);
+  };
 
   const closeMenu = () => {
     menuBtn.setAttribute("aria-expanded", "false");
@@ -203,6 +217,23 @@ function setupMobileNav() {
     mobileMenu.setAttribute("aria-hidden", "true");
   };
 
+  const openMenu = (instant = false) => {
+    syncMenuTop();
+    if (instant) mobileMenu.classList.add("is-instant");
+    menuBtn.setAttribute("aria-expanded", "true");
+    menuBtn.setAttribute("aria-label", labelClose);
+    mobileMenu.classList.add("is-open");
+    mobileMenu.setAttribute("aria-hidden", "false");
+    if (instant) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => mobileMenu.classList.remove("is-instant"));
+      });
+    }
+  };
+
+  syncMenuTop();
+  window.addEventListener("resize", syncMenuTop, { passive: true, signal });
+
   menuBtn.addEventListener(
     "click",
     () => {
@@ -210,10 +241,7 @@ function setupMobileNav() {
       if (isOpen) {
         closeMenu();
       } else {
-        menuBtn.setAttribute("aria-expanded", "true");
-        menuBtn.setAttribute("aria-label", labelClose);
-        mobileMenu.classList.add("is-open");
-        mobileMenu.setAttribute("aria-hidden", "false");
+        openMenu();
       }
     },
     { signal }
@@ -224,8 +252,28 @@ function setupMobileNav() {
   }
 
   mobileMenu.querySelectorAll("a").forEach(link => {
-    link.addEventListener("click", closeMenu, { signal });
+    link.addEventListener(
+      "click",
+      () => {
+        if (link.hasAttribute("data-lang-toggle")) return;
+        closeMenu();
+      },
+      { signal }
+    );
   });
+
+  // A language switch navigates, but the menu was open when the user pressed
+  // the toggle. Restore it already-expanded, without replaying the animation.
+  if (window.matchMedia("(max-width: 1023px)").matches) {
+    let reopenAfterLanguage = false;
+    try {
+      reopenAfterLanguage = sessionStorage.getItem(menuLanguageKey) === "1";
+      if (reopenAfterLanguage) sessionStorage.removeItem(menuLanguageKey);
+    } catch {
+      /* storage can be unavailable */
+    }
+    if (reopenAfterLanguage) openMenu(true);
+  }
 }
 
 function setupMorePopover() {
@@ -316,10 +364,68 @@ function setupMorePopover() {
   });
 }
 
+function setupLanguageRoll() {
+  if (languageCleanup) languageCleanup.abort();
+  languageCleanup = new AbortController();
+  const { signal } = languageCleanup;
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  document
+    .querySelectorAll<HTMLAnchorElement>("a[data-lang-toggle]")
+    .forEach(link => {
+      link.addEventListener(
+        "click",
+        event => {
+          if (event.defaultPrevented) return;
+          if (
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) {
+            return;
+          }
+
+          // Keep the mobile menu open across the language navigation.
+          if (document.querySelector("#mobile-menu.is-open")) {
+            try {
+              sessionStorage.setItem(MENU_LANGUAGE_KEY, "1");
+            } catch {
+              /* storage can be unavailable */
+            }
+          }
+
+          if (reduceMotion) return;
+
+          const roll = link.querySelector<HTMLElement>("[data-lang-roll]");
+          if (!roll) return;
+          if (roll.classList.contains("is-switching")) {
+            event.preventDefault();
+            return;
+          }
+
+          event.preventDefault();
+          document
+            .querySelectorAll<HTMLElement>("[data-lang-roll]")
+            .forEach(item => item.classList.add("is-switching"));
+
+          window.setTimeout(() => {
+            void navigate(link.href);
+          }, 240);
+        },
+        { signal }
+      );
+    });
+}
+
 export function initHeader() {
   setupScrollPhysics();
   setupMobileNav();
   setupMorePopover();
+  setupLanguageRoll();
   setupAppearance();
   setupSoundFx();
 }
