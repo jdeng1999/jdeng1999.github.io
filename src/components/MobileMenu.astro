@@ -554,7 +554,16 @@ const accents = [
 
   :is(.mobile-nav-link, .mobile-icon-btn):hover {
     color: var(--accent);
+  }
+
+  .mobile-nav-link:hover {
     background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  /* The utility icons stay free-floating: hover only shifts the ink colour,
+     never paints a tinted frame behind them. */
+  .mobile-icon-btn:hover {
+    background: transparent;
   }
 
   .mobile-nav-link.active {

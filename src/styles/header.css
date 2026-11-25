@@ -190,12 +190,6 @@
   transition: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .theme-dial-slot {
-    transition: none;
-  }
-}
-
 /* ─── Desktop Search Button ─── */
 .nav-search-btn {
   display: inline-flex;
