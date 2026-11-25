@@ -1,1 +1,30 @@
-<svg height="800" viewBox="0 0 1024 1024" width="800" xmlns="http://www.w3.org/2000/svg"><path d="m32 512a480 480 0 1 0 960 0 480 480 0 1 0 -960 0z" fill="#fee8eb"/><path d="m601.6 473.6c-57.6-64-57.6-140.8-57.6-249.6-179.2 70.4-134.4 262.4-140.8 326.4-44.8-38.4-57.6-128-57.6-128-51.2 25.6-76.8 89.6-76.8 140.8 0 128 108.8 236.8 243.2 236.8s243.2-102.4 243.2-236.8c0-76.8-57.6-115.2-57.6-217.6-83.2 25.6-96 89.6-96 128z" fill="#ff6b6a"/><path d="m505.6 537.6c83.2 32 64 121.6 64 147.2 19.2-19.2 25.6-57.6 25.6-57.6 19.2 12.8 32 38.4 32 64 0 57.6-51.2 108.8-108.8 108.8s-108.8-51.2-108.8-108.8c6.4-57.6 96-102.4 96-153.6z" fill="#ffa9b1"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="a1" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#f4ffff"/>
+      <stop offset=".35" stop-color="#8deaff"/>
+      <stop offset=".7" stop-color="#3978dd"/>
+      <stop offset="1" stop-color="#152c78"/>
+    </linearGradient>
+    <linearGradient id="a2" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff"/>
+      <stop offset="1" stop-color="#82dfff"/>
+    </linearGradient>
+    <filter id="ag">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+  <path d="M80 12 132 43 119 104 80 145 41 104 28 43Z" fill="#55cfff" opacity=".3" filter="url(#ag)"/>
+  <path d="M28 43 52 17 108 17 132 43 119 104 80 145 41 104Z" fill="url(#a1)" stroke="#d5fbff" stroke-width="2"/>
+  <path d="M28 43 52 17 62 43Z" fill="#fff" opacity=".85"/>
+  <path d="M52 17 108 17 98 43 62 43Z" fill="#eaffff" opacity=".9"/>
+  <path d="M108 17 132 43 98 43Z" fill="#67d9ff" opacity=".9"/>
+  <path d="M28 43 62 43 80 145 41 104Z" fill="#8beaff" opacity=".5"/>
+  <path d="M62 43 98 43 80 145Z" fill="#f5ffff" opacity=".65"/>
+  <path d="M98 43 132 43 119 104 80 145Z" fill="#2459b8" opacity=".65"/>
+  <path d="M62 43 80 17 98 43 80 145Z" fill="none" stroke="#efffff" stroke-width="1.2" opacity=".8"/>
+  <path d="M18 25 21 15 24 25 34 28 24 31 21 41 18 31 8 28Z" fill="#fff"/>
+  <path d="M132 75 134 69 136 75 142 77 136 79 134 85 132 79 126 77Z" fill="#fff" opacity=".9"/>
+  <circle cx="42" cy="65" r="2" fill="#fff"/>
+  <circle cx="114" cy="21" r="2" fill="#fff"/>
+</svg>
