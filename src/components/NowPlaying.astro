@@ -2417,8 +2417,19 @@ const totalLabel = formatTime(first.duration);
       }
     };
 
+    const paintPlaybackCards = () => {
+      const paint = (card: HTMLElement) => {
+        if (cardTrackIndex(card) === playbackIndex) paintCardProgress(card);
+      };
+      deckCards.forEach(paint);
+      expandedCards.forEach(({ el }) => paint(el));
+    };
+
     const setPlaying = (playing: boolean) => {
+      const changed =
+        isPlaying !== playing || root.dataset.npPlaying !== String(playing);
       isPlaying = playing;
+      if (!changed) return;
       root.dataset.npPlaying = String(playing);
       expandedDialog?.classList.toggle("is-playing", playing);
       paintAllCards();
@@ -2427,12 +2438,12 @@ const totalLabel = formatTime(first.duration);
     };
 
     const paintDuration = () => {
-      paintAllCards();
+      paintPlaybackCards();
     };
 
     const paintProgress = (ms: number) => {
       positionMs = clamp(ms, 0, Math.max(durationMs, 0));
-      paintAllCards();
+      paintPlaybackCards();
     };
 
     const setPreviewHidden = (hidden: boolean) => {

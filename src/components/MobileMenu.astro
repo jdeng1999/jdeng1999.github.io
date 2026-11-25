@@ -2,8 +2,15 @@
 import IconArchive from "@/assets/icons/IconArchive.svg";
 import IconGallery from "@/assets/icons/IconGallery.svg";
 import IconSearch from "@/assets/icons/IconSearch.svg";
+import IconSunHigh from "@/assets/icons/IconSunHigh.svg";
+import IconMoon from "@/assets/icons/IconMoon.svg";
+import IconDeviceDesktop from "@/assets/icons/IconDeviceDesktop.svg";
 import { SITE } from "@/config";
-import { useTranslations, isActive as checkRouteActive } from "@/i18n/utils";
+import {
+  useTranslations,
+  getTargetLanguageUrl,
+  isActive as checkRouteActive,
+} from "@/i18n/utils";
 
 interface Props {
   currentPath: string;
@@ -14,6 +21,13 @@ const { currentPath } = Astro.props;
 const locale = Astro.currentLocale || "en";
 const t = useTranslations(locale);
 const localePrefix = locale === "es" ? "/es" : locale === "zh" ? "/zh" : "";
+
+const { pathname } = Astro.url;
+const targetLocale = locale === "zh" ? "en" : "zh";
+const targetLanguageUrl = getTargetLanguageUrl(pathname, targetLocale);
+const langToggleTitle =
+  targetLocale === "zh" ? "切换到中文" : "Switch to English";
+const langToggleText = targetLocale === "zh" ? "CN" : "EN";
 
 const isActive = (path: string) => checkRouteActive(currentPath, path);
 
@@ -214,6 +228,60 @@ const accents = [
               ? "偏好设置"
               : "Preferences"}
         </p>
+
+        <!-- Theme + language -->
+        <div class="mobile-prefs-row">
+          {SITE.lightAndDarkMode && (
+            <button
+              type="button"
+              id="theme-btn-mobile"
+              class="mobile-pref-btn flex-1"
+              aria-label="auto"
+              aria-live="polite"
+            >
+              <span class="mobile-theme-dial" aria-hidden="true">
+                <span class="theme-dial" data-theme-dial>
+                  <span class="theme-dial-slot" data-theme-icon="light">
+                    <IconSunHigh class="size-4.5" />
+                  </span>
+                  <span class="theme-dial-slot" data-theme-icon="dark">
+                    <IconMoon class="size-4.5" />
+                  </span>
+                  <span class="theme-dial-slot" data-theme-icon="system">
+                    <IconDeviceDesktop class="size-4.5" />
+                  </span>
+                </span>
+              </span>
+              <span>{t("nav.themeLabel")}</span>
+            </button>
+          )}
+
+          <a
+            href={targetLanguageUrl}
+            class="mobile-pref-btn flex-1"
+            aria-label={langToggleTitle}
+            data-lang-toggle={targetLocale}
+            hreflang={targetLocale === "zh" ? "zh-CN" : "en"}
+          >
+            <svg
+              class="size-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c-.03.077-.07.154-.114.23-.9 1.54-2.11 3.05-3.535 4.5M6.412 9a14.95 14.95 0 003.535 4.5m0 0a14.973 14.973 0 01-3.298 3.19M6.412 9H3.9M15 9h-2.5"
+              ></path>
+            </svg>
+            <span>
+              {t("nav.languageLabel")} · {langToggleText}
+            </span>
+          </a>
+        </div>
 
         <!-- Accent color -->
         <div class="mobile-accent-row">
@@ -599,6 +667,22 @@ const accents = [
     color: var(--accent);
     border-color: color-mix(in srgb, var(--accent) 25%, transparent);
     background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  .mobile-theme-dial {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 0.4rem;
+  }
+
+  .mobile-theme-dial .theme-dial {
+    width: 100%;
+    height: 100%;
   }
 
   .mobile-pref-btn[aria-pressed="true"] {

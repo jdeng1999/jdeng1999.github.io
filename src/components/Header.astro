@@ -93,52 +93,6 @@ const accents = [
 
         <!-- Nav area -->
         <nav id="nav-menu" class="flex shrink-0 items-center gap-1.5 lg:gap-2">
-          {SITE.lightAndDarkMode && (
-            <button
-              id="theme-btn-mobile"
-              class="nav-icon-btn nav-theme-dial-btn lg:hidden!"
-              aria-label="auto"
-              aria-live="polite"
-            >
-              <span class="theme-dial" data-theme-dial aria-hidden="true">
-                <span class="theme-dial-slot" data-theme-icon="light">
-                  <IconSunHigh class="size-4.5" />
-                </span>
-                <span class="theme-dial-slot" data-theme-icon="dark">
-                  <IconMoon class="size-4.5" />
-                </span>
-                <span class="theme-dial-slot" data-theme-icon="system">
-                  <IconDeviceDesktop class="size-4.5" />
-                </span>
-              </span>
-            </button>
-          )}
-
-          <!-- Mobile language toggle (single button) -->
-          <a
-            href={targetLanguageUrl}
-            class="nav-lang-chip lg:hidden!"
-            aria-label={langToggleTitle}
-            data-lang-toggle={targetLocale}
-            hreflang={targetLocale === "zh" ? "zh-CN" : "en"}
-          >
-            <svg
-              class="nav-lang-chip-icon size-3.5 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="1.8"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c-.03.077-.07.154-.114.23-.9 1.54-2.11 3.05-3.535 4.5M6.412 9a14.95 14.95 0 003.535 4.5m0 0a14.973 14.973 0 01-3.298 3.19M6.412 9H3.9M15 9h-2.5"
-              ></path>
-            </svg>
-            <span class="nav-lang-chip-label">{langToggleText}</span>
-          </a>
-
           <!-- Mobile search button (visible only on screens < 1024px) -->
           <button
             data-search-trigger
@@ -533,12 +487,6 @@ const accents = [
     </div>
   </div>
   <MobileMenu currentPath={currentPath} />
-
-  <!-- Bottom border with gradient -->
-  <div
-    id="header-border"
-    class="header-border-line h-px w-full bg-linear-to-r from-transparent via-border/40 to-transparent opacity-0 transition-opacity duration-300"
-  ></div>
 </header>
 
 <script>

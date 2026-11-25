@@ -163,9 +163,7 @@ function setupScrollPhysics() {
   const { signal } = scrollCleanup;
 
   const header = document.getElementById("main-header");
-  const borderLine = document.getElementById("header-border");
-
-  if (!header || !borderLine) return;
+  if (!header) return;
 
   let rafPending = false;
   const handleScroll = () => {
@@ -176,8 +174,6 @@ function setupScrollPhysics() {
       // Only the surface changes on scroll; the header keeps its height so
       // navigation targets never shift under the pointer.
       header.classList.toggle("header-scrolled", scrolled);
-      borderLine.classList.toggle("opacity-0", !scrolled);
-      borderLine.classList.toggle("opacity-100", scrolled);
       rafPending = false;
     });
   };
