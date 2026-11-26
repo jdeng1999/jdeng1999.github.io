@@ -873,20 +873,20 @@ const whatIcons = {
         linear-gradient(
           to right,
           transparent 0%,
-          #000 7%,
-          #000 93%,
+          #000 4%,
+          #000 96%,
           transparent 100%
         ),
-        linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+        linear-gradient(to bottom, #000 0%, #000 98%, transparent 100%);
       mask-image:
         linear-gradient(
           to right,
           transparent 0%,
-          #000 7%,
-          #000 93%,
+          #000 4%,
+          #000 96%,
           transparent 100%
         ),
-        linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+        linear-gradient(to bottom, #000 0%, #000 98%, transparent 100%);
     }
   }
 
@@ -1102,22 +1102,31 @@ const whatIcons = {
       linear-gradient(
         to right,
         transparent 0%,
-        #000 14%,
-        #000 86%,
+        #000 4%,
+        #000 96%,
         transparent 100%
       ),
-      linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+      linear-gradient(to bottom, #000 0%, #000 98%, transparent 100%);
     -webkit-mask-composite: source-in;
     mask-image:
       linear-gradient(
         to right,
         transparent 0%,
-        #000 14%,
-        #000 86%,
+        #000 4%,
+        #000 96%,
         transparent 100%
       ),
-      linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+      linear-gradient(to bottom, #000 0%, #000 98%, transparent 100%);
     mask-composite: intersect;
+  }
+
+  /* The glyph needs a panel proportioned like the desktop column; on the
+     stacked layout a full-width canvas would leave the mark tiny in the middle. */
+  @media (max-width: 1023px) {
+    .what-visual-rain {
+      width: min(100%, 26rem);
+      margin-inline: auto;
+    }
   }
 
   @media (min-width: 1024px) {

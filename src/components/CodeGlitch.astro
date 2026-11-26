@@ -1,8 +1,10 @@
 ---
 /**
  * CodeGlitch — canvas of continuously morphing characters, inspired by the
- * "LetterGlitch" visual. Rendered with plain canvas (no framework) and wired
- * to the site theme tokens, so it follows light/dark and accent changes.
+ * "LetterGlitch" visual. The character field is clipped to the site's 邓 mark
+ * (sampled from the favicon) with a soft, ragged dissolve. Rendered with plain
+ * canvas (no framework) and wired to the site theme tokens, so it follows
+ * light/dark and accent changes.
  */
 interface Props {
   class?: string;
@@ -29,15 +31,25 @@ const { class: className = "" } = Astro.props;
     color: RGB;
     target: RGB;
     progress: number;
+    /** 0 = inside the glyph (bright ink), 1 = edge / spill (full palette). */
+    zone: 0 | 1;
+    alpha: number;
   };
 
   const GLYPHS =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*()_+-=[]{};:<>/".split("");
 
-  const CHAR_WIDTH = 12;
-  const CHAR_HEIGHT = 20;
-  const FONT_SIZE = 14;
+  const CHAR_WIDTH = 8;
+  const CHAR_HEIGHT = 12;
+  const FONT_SIZE = 11;
   const GLITCH_INTERVAL = 55;
+
+  // The browser-tab mark is the shape reference: its gold glyph on a
+  // transparent canvas is sampled as a coverage mask.
+  const GLYPH_SRC = "/apple-touch-icon.png";
+  const GLYPH_INK = { x: 10, y: 18, w: 159, h: 155 };
+  const GLYPH_FIT = 0.94;
+  const GLYPH_STRETCH = 1.3;
 
   let dispose: (() => void) | null = null;
 
@@ -68,6 +80,11 @@ const { class: className = "" } = Astro.props;
     let rows = 0;
     let letters: Letter[] = [];
     let palette: RGB[] = [];
+    let paletteBright: RGB[] = [];
+    let glyph: HTMLImageElement | null = null;
+    let glyphFailed = false;
+    let disposed = false;
+    let coverage: Float32Array | null = null;
     let frame = 0;
     let running = false;
     let lastGlitch = 0;
@@ -116,21 +133,166 @@ const { class: className = "" } = Astro.props;
             { r: 34, g: 100, b: 227 },
             { r: 33, g: 47, b: 63 },
           ];
+
+      // The glyph's interior needs ink that actually contrasts with the page:
+      // on dark that is the bright accent/border pair, on light it is the
+      // darker accent (the pale border/muted stay in the dissolve halo).
+      const bg = parseColor(styles.getPropertyValue("--background"));
+      const luminance = (c: RGB) => {
+        const channel = (value: number) => {
+          const v = value / 255;
+          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        return (
+          0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b)
+        );
+      };
+      const contrast = (a: RGB, b: RGB) => {
+        const la = luminance(a);
+        const lb = luminance(b);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+      };
+
+      if (bg) {
+        const strong = palette.filter(c => contrast(c, bg) >= 2.6);
+        paletteBright = strong.length
+          ? strong
+          : [
+              palette.reduce((best, c) =>
+                contrast(c, bg) > contrast(best, bg) ? c : best
+              ),
+            ];
+      } else {
+        paletteBright = palette.slice(0, Math.max(1, palette.length - 1));
+      }
     };
 
     const randomGlyph = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
 
-    const randomColor = () =>
-      palette[Math.floor(Math.random() * palette.length)];
+    const randomColor = (zone: 0 | 1 = 1) => {
+      const source = zone === 0 ? paletteBright : palette;
+      return source[Math.floor(Math.random() * source.length)];
+    };
+
+    // Stable per-cell noise so the ragged contour does not flicker.
+    const noise = (x: number, y: number) => {
+      const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+      return n - Math.floor(n);
+    };
+
+    /**
+     * Sample the mark into a per-cell coverage grid. 0 = empty, 1 = solid
+     * ink. The glyph is centred and stretched a little horizontally so its
+     * strokes survive the 8 x 12 character grid.
+     */
+    const buildCoverage = (
+      cols: number,
+      rowCount: number,
+      cssWidth: number,
+      cssHeight: number
+    ) => {
+      if (!glyph) return null;
+
+      const SS = 2;
+      const mask = document.createElement("canvas");
+      mask.width = cols * SS;
+      mask.height = rowCount * SS;
+      const maskCtx = mask.getContext("2d", { willReadFrequently: true });
+      if (!maskCtx) return null;
+
+      // Keep the glyph's real aspect while it lives on an 8 x 12 cell grid.
+      const hCells = (cssHeight / CHAR_HEIGHT) * GLYPH_FIT;
+      const wCells =
+        hCells *
+        (CHAR_HEIGHT / CHAR_WIDTH) *
+        (GLYPH_INK.w / GLYPH_INK.h) *
+        GLYPH_STRETCH;
+      const x = ((cssWidth / CHAR_WIDTH - wCells) / 2) * SS;
+      const y = ((cssHeight / CHAR_HEIGHT - hCells) / 2) * SS;
+
+      // A soft pass widens the contour into a gradual dissolve band.
+      maskCtx.filter = "blur(0.8px)";
+      maskCtx.drawImage(
+        glyph,
+        GLYPH_INK.x,
+        GLYPH_INK.y,
+        GLYPH_INK.w,
+        GLYPH_INK.h,
+        x,
+        y,
+        wCells * SS,
+        hCells * SS
+      );
+
+      const data = maskCtx.getImageData(0, 0, cols * SS, rowCount * SS).data;
+      const cov = new Float32Array(cols * rowCount);
+
+      for (let cy = 0; cy < rowCount; cy++) {
+        for (let cx = 0; cx < cols; cx++) {
+          let sum = 0;
+          for (let sy = 0; sy < SS; sy++) {
+            for (let sx = 0; sx < SS; sx++) {
+              const px = ((cy * SS + sy) * cols * SS + (cx * SS + sx)) * 4 + 3;
+              sum += data[px] / 255;
+            }
+          }
+          cov[cy * cols + cx] = sum / (SS * SS);
+        }
+      }
+
+      return cov;
+    };
 
     const createLetters = () => {
-      letters = Array.from({ length: columns * rows }, () => {
-        const color = randomColor();
+      letters = Array.from({ length: columns * rows }, (_, index) => {
+        if (!coverage) {
+          // No mask (image failed): keep the original full-grid look.
+          const color = randomColor(1);
+          return {
+            char: randomGlyph(),
+            color: { ...color },
+            target: { ...color },
+            progress: 1,
+            zone: 1 as const,
+            alpha: 0.85,
+          };
+        }
+
+        const cov = coverage[index];
+        const cx = index % columns;
+        const cy = Math.floor(index / columns);
+        const n = noise(cx, cy);
+        let alpha = 0;
+        let zone: 0 | 1 = 1;
+
+        if (cov >= 0.5) {
+          // Solid interior: dense, bright ink.
+          alpha = 0.85;
+          zone = 0;
+        } else if (cov >= 0.28) {
+          // Inner edge: still filled, but thinning towards the contour.
+          alpha = 0.45 + 0.4 * ((cov - 0.28) / 0.22);
+          zone = cov >= 0.4 ? 0 : 1;
+        } else if (cov >= 0.1) {
+          // Dissolve band: ragged, translucent cells.
+          if (n < 0.25 + cov) {
+            alpha = 0.2 + 0.9 * (cov - 0.1);
+          }
+        } else if (cov > 0.02) {
+          // Faint spill beyond the contour.
+          if (n < (cov - 0.02) * 1.5) {
+            alpha = 0.12 + 0.5 * cov;
+          }
+        }
+
+        const color = randomColor(zone);
         return {
           char: randomGlyph(),
           color: { ...color },
           target: { ...color },
           progress: 1,
+          zone,
+          alpha,
         };
       });
     };
@@ -141,13 +303,15 @@ const { class: className = "" } = Astro.props;
       ctx.clearRect(0, 0, columns * CHAR_WIDTH, rows * CHAR_HEIGHT);
       ctx.font = `${FONT_SIZE}px "Fira Code", ui-monospace, monospace`;
       ctx.textBaseline = "top";
-      ctx.globalAlpha = 0.85;
 
       for (let i = 0; i < letters.length; i++) {
         const letter = letters[i];
+        if (letter.alpha <= 0) continue;
+
         const x = (i % columns) * CHAR_WIDTH;
         const y = Math.floor(i / columns) * CHAR_HEIGHT;
 
+        ctx.globalAlpha = letter.alpha;
         ctx.fillStyle = `rgb(${letter.color.r}, ${letter.color.g}, ${letter.color.b})`;
         ctx.fillText(letter.char, x, y);
       }
@@ -162,7 +326,7 @@ const { class: className = "" } = Astro.props;
       for (let i = 0; i < count; i++) {
         const letter = letters[Math.floor(Math.random() * letters.length)];
         letter.char = randomGlyph();
-        letter.target = randomColor();
+        letter.target = randomColor(letter.zone);
 
         if (reduced) {
           letter.color = { ...letter.target };
@@ -246,6 +410,14 @@ const { class: className = "" } = Astro.props;
       columns = Math.ceil(rect.width / CHAR_WIDTH);
       rows = Math.ceil(rect.height / CHAR_HEIGHT);
 
+      if (!glyph && !glyphFailed) {
+        // Wait for the mark; drawing the fallback rectangle first would flash.
+        letters = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
+      coverage = buildCoverage(columns, rows, rect.width, rect.height);
       createLetters();
       draw();
     };
@@ -255,7 +427,28 @@ const { class: className = "" } = Astro.props;
       resizeFrame = window.requestAnimationFrame(resize);
     };
 
+    const loadGlyph = () => {
+      const img = new Image();
+      img.decoding = "async";
+      img.onload = () => {
+        if (disposed) return;
+        glyph = img;
+        lastWidth = 0;
+        lastHeight = 0;
+        resize();
+      };
+      img.onerror = () => {
+        if (disposed) return;
+        glyphFailed = true;
+        lastWidth = 0;
+        lastHeight = 0;
+        resize();
+      };
+      img.src = GLYPH_SRC;
+    };
+
     readPalette();
+    loadGlyph();
     resize();
 
     if (document.fonts?.ready) {
@@ -278,7 +471,7 @@ const { class: className = "" } = Astro.props;
       readPalette();
 
       for (const letter of letters) {
-        letter.target = randomColor();
+        letter.target = randomColor(letter.zone);
         letter.progress = reduced ? 1 : 0;
         if (reduced) letter.color = { ...letter.target };
       }
@@ -307,6 +500,7 @@ const { class: className = "" } = Astro.props;
     motion.addEventListener("change", onMotionChange);
 
     dispose = () => {
+      disposed = true;
       stop();
       window.cancelAnimationFrame(resizeFrame);
       resizeObserver.disconnect();
