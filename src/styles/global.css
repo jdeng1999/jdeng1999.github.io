@@ -118,6 +118,63 @@ html[data-theme="dark"][data-accent="indigo"] {
   --color-gallery: var(--gallery-color);
 }
 
+/* Registered theme colors can be interpolated by the browser, which lets the
+   whole palette melt as one material instead of animating every element. */
+@property --background {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #10131a;
+}
+@property --foreground {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f6f7f8;
+}
+@property --accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #008fec;
+}
+@property --muted {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #212f3f;
+}
+@property --border {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #2264e3;
+}
+@property --featured-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f59e0b;
+}
+@property --gallery-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #a855f7;
+}
+
+/* A single, shared ease for the palette. Fast to respond, long enough to feel
+   soft, no overshoot. All palette tokens that carry the light/dark identity
+   melt together so no region arrives early or late; the decorative featured /
+   gallery tints stay snapped to keep the aurora layers cheap. */
+html {
+  transition:
+    --background 300ms cubic-bezier(0.22, 0.61, 0.24, 1),
+    --foreground 300ms cubic-bezier(0.22, 0.61, 0.24, 1),
+    --accent 300ms cubic-bezier(0.22, 0.61, 0.24, 1),
+    --muted 300ms cubic-bezier(0.22, 0.61, 0.24, 1),
+    --border 300ms cubic-bezier(0.22, 0.61, 0.24, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    transition: none;
+  }
+}
+
 .italic,
 .prose em,
 em,
@@ -162,39 +219,8 @@ i {
   body {
     @apply flex min-h-svh flex-col bg-background font-app text-foreground selection:bg-accent/75 selection:text-background;
   }
-  /* The reference theme switch eases the surface color; keep it in sync.
-     Only `body` is transitioned: animating the root element's background makes
-     Chrome briefly resolve viewport units (vw) without the scrollbar, which
-     resizes every vw-based headline mid-switch and makes the page jitter. */
-  body {
-    transition: background-color 0.3s ease;
-  }
-
-  /* The body surface eases over 300ms, so every panel painted from the theme
-     variables has to ease with it. Otherwise surfaces built with color-mix()
-     jump to the new palette while the page is still fading, which reads as a
-     black (or white) flash — the "What I do" cards are the worst case because
-     their background is almost the same color as the page.
-     `data-theme-switching` only exists while a switch is running, so elements
-     keep their own transitions the rest of the time. The dial slots are
-     excluded so their swing keeps its dedicated transform timing. */
-  html[data-theme-switching] :where(*:not(.theme-dial-slot)) {
-    transition-property:
-      background-color, border-color, color, box-shadow, outline-color,
-      text-decoration-color, caret-color !important;
-    transition-duration: 0.3s !important;
-    transition-delay: 0s !important;
-    transition-timing-function: ease !important;
-  }
-
-  html[data-theme-switching] :where(*::before, *::after) {
-    transition-property:
-      background-color, border-color, color, box-shadow, outline-color,
-      text-decoration-color, caret-color !important;
-    transition-duration: 0.3s !important;
-    transition-delay: 0s !important;
-    transition-timing-function: ease !important;
-  }
+  /* Surfaces inherit the animated palette tokens above; no per-element
+     transitions are needed during a switch. */
   a,
   button {
     @apply outline-offset-1 outline-accent focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-dashed;
