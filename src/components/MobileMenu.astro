@@ -500,12 +500,11 @@ const accents = [
   /* ─── Section labels ─── */
   .mobile-section-label {
     font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--foreground) 35%, transparent);
+    color: color-mix(in srgb, var(--foreground) 42%, transparent);
     padding: 0 0.3rem 0.5rem;
-    font-family: var(--font-firacode, monospace);
     user-select: none;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -609,12 +608,7 @@ const accents = [
   .mobile-menu-divider {
     margin: 0.625rem 0.25rem;
     height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in srgb, var(--border) 40%, transparent),
-      transparent
-    );
+    background: color-mix(in srgb, var(--foreground) 8%, transparent);
   }
 
   /* ─── Compact icon utilities ─── */

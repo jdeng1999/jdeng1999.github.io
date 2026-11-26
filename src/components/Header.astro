@@ -63,346 +63,386 @@ const accents = [
   {t("nav.skip")}
 </a>
 
-<header
-  id="main-header"
-  class="sticky top-0 z-40 w-full transition-colors duration-300"
->
+<header id="main-header" class="sticky top-0 z-40 w-full">
   <div class="header-scrolled-filter w-full">
-    <div class="app-layout">
-      <div
-        id="top-nav-wrap"
-        class:list={[
-          "py-3 sm:py-5",
-          "relative z-30 w-full",
-          "flex items-center justify-between gap-2 sm:gap-4",
-          "transition-all duration-300",
-        ]}
+    <div
+      id="top-nav-wrap"
+      class:list={[
+        "relative z-30 mx-auto mt-2 flex h-11 items-center justify-between gap-2 rounded-full border border-transparent pl-4 pr-2.5",
+        "lg:h-[2.625rem] lg:pl-5 lg:pr-3",
+      ]}
+    >
+      <!-- Logo -->
+      <a
+        href={localePrefix || "/"}
+        aria-label={
+          locale === "es"
+            ? "Inicio de J. Deng"
+            : locale === "zh"
+              ? "J. Deng 首页"
+              : "J. Deng Home"
+        }
+        class="site-brand group relative z-20 flex shrink-0 items-center gap-2 pe-1.5 text-[1.3rem] font-bold tracking-tight sm:text-[1.45rem] lg:min-w-[7.5rem] lg:pe-3 lg:text-[1.55rem]"
       >
-        <!-- Logo -->
-        <a
-          href={localePrefix || "/"}
-          aria-label={
-            locale === "es"
-              ? "Inicio de J. Deng"
-              : locale === "zh"
-                ? "J. Deng 首页"
-                : "J. Deng Home"
-          }
-          class="group relative z-20 flex shrink-0 items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl"
+        <SiteLogo class="text-[1.3rem] sm:text-[1.45rem] lg:text-[1.55rem]" />
+      </a>
+
+      <!-- Nav area -->
+      <nav
+        id="nav-menu"
+        class="ms-6 flex shrink-0 items-center gap-1.5 lg:ms-10 lg:gap-2"
+      >
+        <!-- Mobile search button (visible only on screens < 1024px) -->
+        <button
+          data-search-trigger
+          class="nav-icon-btn lg:hidden!"
+          aria-label={t("nav.openSearch")}
         >
-          <SiteLogo class="text-[1.65rem] sm:text-[1.95rem]" />
-        </a>
+          <IconSearch class="size-4.5" />
+        </button>
 
-        <!-- Nav area -->
-        <nav id="nav-menu" class="flex shrink-0 items-center gap-1.5 lg:gap-2">
-          <!-- Mobile search button (visible only on screens < 1024px) -->
-          <button
-            data-search-trigger
-            class="nav-icon-btn lg:hidden!"
-            aria-label={t("nav.openSearch")}
-          >
-            <IconSearch class="size-4.5" />
-          </button>
+        <!-- Mobile hamburger (animated lines) -->
+        <button
+          id="menu-btn"
+          class="hamburger-btn lg:hidden"
+          aria-label={t("nav.openMenu")}
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+          data-label-open={t("nav.openMenu")}
+          data-label-close={t("nav.closeMenu")}
+        >
+          <div class="hamburger-box">
+            <span class="hamburger-line hamburger-line--1"></span>
+            <span class="hamburger-line hamburger-line--2"></span>
+            <span class="hamburger-line hamburger-line--3"></span>
+          </div>
+        </button>
 
-          <!-- Mobile hamburger (animated lines) -->
-          <button
-            id="menu-btn"
-            class="hamburger-btn lg:hidden"
-            aria-label={t("nav.openMenu")}
-            aria-expanded="false"
-            aria-controls="mobile-menu"
-            data-label-open={t("nav.openMenu")}
-            data-label-close={t("nav.closeMenu")}
-          >
-            <div class="hamburger-box">
-              <span class="hamburger-line hamburger-line--1"></span>
-              <span class="hamburger-line hamburger-line--2"></span>
-              <span class="hamburger-line hamburger-line--3"></span>
-            </div>
-          </button>
+        <!-- Desktop links (always visible on lg+) -->
+        <ul class="hidden lg:flex lg:flex-row lg:items-center lg:gap-1">
+          <!-- Primary nav: Posts · About -->
+          <li>
+            <a
+              href={`${localePrefix}/posts`}
+              class:list={["nav-link", { "nav-active": isActive("/posts") }]}
+              aria-current={isActive("/posts") ? "page" : undefined}
+            >
+              {t("nav.posts")}
+            </a>
+          </li>
+          <li>
+            <a
+              href={`${localePrefix}/about`}
+              class:list={["nav-link", { "nav-active": isActive("/about") }]}
+              aria-current={isActive("/about") ? "page" : undefined}
+            >
+              {t("nav.about")}
+            </a>
+          </li>
 
-          <!-- Desktop links (always visible on lg+) -->
-          <ul class="hidden lg:flex lg:flex-row lg:items-center lg:gap-1">
-            <!-- Primary nav: Posts · About -->
-            <li>
-              <a
-                href={`${localePrefix}/posts`}
-                class:list={["nav-link", { "nav-active": isActive("/posts") }]}
-              >
-                {t("nav.posts")}
-              </a>
-            </li>
-            <li>
-              <a
-                href={`${localePrefix}/about`}
-                class:list={["nav-link", { "nav-active": isActive("/about") }]}
-              >
-                {t("nav.about")}
-              </a>
-            </li>
-
-            <!-- Separator -->
-            <li class="flex items-center px-2.5" aria-hidden="true">
-              <div class="h-4 w-px bg-border/30"></div>
-            </li>
-
-            <!-- Theme toggle -->
-            {SITE.lightAndDarkMode && (
-              <li class="flex items-center">
-                <button
-                  id="theme-btn"
-                  class="nav-icon-btn nav-theme-dial-btn"
-                  aria-label="auto"
-                  aria-live="polite"
-                >
-                  <span class="theme-dial" data-theme-dial aria-hidden="true">
-                    <span class="theme-dial-slot" data-theme-icon="light">
-                      <IconSunHigh class="size-4.5" />
-                    </span>
-                    <span class="theme-dial-slot" data-theme-icon="dark">
-                      <IconMoon class="size-4.5" />
-                    </span>
-                    <span class="theme-dial-slot" data-theme-icon="system">
-                      <IconDeviceDesktop class="size-4.5" />
-                    </span>
-                  </span>
-                </button>
-              </li>
-            )}
-
-            <!-- Language toggle (single button) -->
+          <!-- Theme toggle -->
+          {SITE.lightAndDarkMode && (
             <li class="flex items-center">
-              <a
-                href={targetLanguageUrl}
-                class="nav-lang-chip"
-                aria-label={langToggleTitle}
-                data-lang-toggle={targetLocale}
-                hreflang={targetLocale === "zh" ? "zh-CN" : "en"}
+              <button
+                id="theme-btn"
+                class="nav-icon-btn nav-theme-dial-btn"
+                aria-label="auto"
+                aria-live="polite"
               >
-                <svg
-                  class="nav-lang-chip-icon size-3.5 shrink-0"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  aria-hidden="true"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c-.03.077-.07.154-.114.23-.9 1.54-2.11 3.05-3.535 4.5M6.412 9a14.95 14.95 0 003.535 4.5m0 0a14.973 14.973 0 01-3.298 3.19M6.412 9H3.9M15 9h-2.5"
-                  ></path>
-                </svg>
-                <span class="nav-lang-chip-label lang-roll" data-lang-roll>
-                  <span class="lang-roll-item" data-lang-current>
-                    {langToggleText}
+                <span class="theme-dial" data-theme-dial aria-hidden="true">
+                  <span class="theme-dial-slot" data-theme-icon="light">
+                    <IconSunHigh class="size-4.5" />
                   </span>
-                  <span
-                    class="lang-roll-item lang-roll-item--next"
-                    aria-hidden="true"
-                  >
-                    {langNextText}
+                  <span class="theme-dial-slot" data-theme-icon="dark">
+                    <IconMoon class="size-4.5" />
+                  </span>
+                  <span class="theme-dial-slot" data-theme-icon="system">
+                    <IconDeviceDesktop class="size-4.5" />
                   </span>
                 </span>
-              </a>
-            </li>
-
-            <!-- Search ⌘K -->
-            <li class="flex items-center">
-              <button
-                data-search-trigger
-                class="nav-search-btn"
-                aria-label={t("nav.openSearch")}
-                aria-keyshortcuts="Meta+K"
-              >
-                <IconSearch class="size-4.5" />
               </button>
             </li>
+          )}
 
-            <!-- Separator -->
-            <li class="flex items-center px-2.5" aria-hidden="true">
-              <div class="h-4 w-px bg-border/30"></div>
-            </li>
-
-            <!-- ··· More button with popover -->
-            <li class="more-btn-container relative flex items-center">
-              <button
-                id="more-btn"
-                class="nav-icon-btn relative"
-                aria-label={
-                  locale === "es"
-                    ? "Más opciones"
-                    : locale === "zh"
-                      ? "更多选项"
-                      : "More options"
-                }
-                aria-haspopup="true"
-                aria-expanded="false"
+          <!-- Language toggle (single button) -->
+          <li class="flex items-center">
+            <a
+              href={targetLanguageUrl}
+              class="nav-lang-chip"
+              aria-label={langToggleTitle}
+              data-lang-toggle={targetLocale}
+              hreflang={targetLocale === "zh" ? "zh-CN" : "en"}
+            >
+              <svg
+                class="nav-lang-chip-icon size-3.5 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true"
               >
-                <!-- Ringed ellipsis; swaps to an X while the panel is open -->
-                <svg
-                  class="more-icon more-icon--dots size-4.5"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <g class="more-dots">
-                    <circle cx="5.2" cy="12" r="1.7" />
-                    <circle cx="12" cy="12" r="1.7" />
-                    <circle cx="18.8" cy="12" r="1.7" />
-                  </g>
-                </svg>
-                <svg
-                  class="more-icon more-icon--close size-4.5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
+                <path
                   stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c-.03.077-.07.154-.114.23-.9 1.54-2.11 3.05-3.535 4.5M6.412 9a14.95 14.95 0 003.535 4.5m0 0a14.973 14.973 0 01-3.298 3.19M6.412 9H3.9M15 9h-2.5"
+                ></path>
+              </svg>
+              <span class="nav-lang-chip-label lang-roll" data-lang-roll>
+                <span class="lang-roll-item" data-lang-current>
+                  {langToggleText}
+                </span>
+                <span
+                  class="lang-roll-item lang-roll-item--next"
                   aria-hidden="true"
                 >
-                  <path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" />
-                </svg>
-              </button>
+                  {langNextText}
+                </span>
+              </span>
+            </a>
+          </li>
 
-              <!-- More Popover -->
-              <div
-                id="more-popover"
-                class="more-popover hidden"
-                role="dialog"
-                aria-label={
-                  locale === "es"
-                    ? "Más opciones"
-                    : locale === "zh"
-                      ? "更多选项"
-                      : "More options"
-                }
+          <!-- Search ⌘K -->
+          <li class="flex items-center">
+            <button
+              data-search-trigger
+              class="nav-search-btn"
+              aria-label={t("nav.openSearch")}
+              aria-keyshortcuts="Meta+K"
+            >
+              <IconSearch class="size-4.5" />
+            </button>
+          </li>
+
+          <!-- ··· More button with popover -->
+          <li class="more-btn-container relative flex items-center">
+            <button
+              id="more-btn"
+              class="nav-icon-btn relative"
+              aria-label={
+                locale === "es"
+                  ? "Más opciones"
+                  : locale === "zh"
+                    ? "更多选项"
+                    : "More options"
+              }
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <!-- Ringed ellipsis; swaps to an X while the panel is open -->
+              <svg
+                class="more-icon more-icon--dots size-4.5"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
               >
-                <!-- Section: Explore -->
-                <div class="popover-section">
-                  <p class="popover-section-label">
-                    {locale === "es"
-                      ? "Explorar"
-                      : locale === "zh"
-                        ? "浏览"
-                        : "Explore"}
-                  </p>
-                  <div class="popover-links">
+                <g class="more-dots">
+                  <circle cx="5.2" cy="12" r="1.7" />
+                  <circle cx="12" cy="12" r="1.7" />
+                  <circle cx="18.8" cy="12" r="1.7" />
+                </g>
+              </svg>
+              <svg
+                class="more-icon more-icon--close size-4.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" />
+              </svg>
+            </button>
+
+            <!-- More Popover -->
+            <div
+              id="more-popover"
+              class="more-popover hidden"
+              role="dialog"
+              aria-label={
+                locale === "es"
+                  ? "Más opciones"
+                  : locale === "zh"
+                    ? "更多选项"
+                    : "More options"
+              }
+            >
+              <!-- Section: Explore -->
+              <div class="popover-section">
+                <p class="popover-section-label">
+                  {locale === "es"
+                    ? "Explorar"
+                    : locale === "zh"
+                      ? "浏览"
+                      : "Explore"}
+                </p>
+                <div class="popover-links">
+                  <a
+                    href={`${localePrefix}/tags`}
+                    class:list={[
+                      "popover-link",
+                      { "popover-link-active": isActive("/tags") },
+                    ]}
+                  >
+                    <!-- Tag icon -->
+                    <svg
+                      class="size-3.5 shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"
+                      ></path>
+                      <circle
+                        cx="7.1"
+                        cy="7.1"
+                        r="1"
+                        fill="currentColor"
+                        stroke="none"
+                      ></circle>
+                    </svg>
+                    {t("nav.tags")}
+                  </a>
+                  {SITE.showArchives && (
                     <a
-                      href={`${localePrefix}/tags`}
+                      href={`${localePrefix}/archives`}
                       class:list={[
                         "popover-link",
-                        { "popover-link-active": isActive("/tags") },
+                        { "popover-link-active": isActive("/archives") },
                       ]}
                     >
-                      <!-- Tag icon -->
-                      <svg
-                        class="size-3.5 shrink-0"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        aria-hidden="true"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z"
-                        ></path>
-                        <circle
-                          cx="7.1"
-                          cy="7.1"
-                          r="1"
-                          fill="currentColor"
-                          stroke="none"
-                        ></circle>
-                      </svg>
-                      {t("nav.tags")}
+                      <IconArchive class="size-3.5 shrink-0" />
+                      {t("nav.archives")}
                     </a>
-                    {SITE.showArchives && (
-                      <a
-                        href={`${localePrefix}/archives`}
-                        class:list={[
-                          "popover-link",
-                          { "popover-link-active": isActive("/archives") },
-                        ]}
-                      >
-                        <IconArchive class="size-3.5 shrink-0" />
-                        {t("nav.archives")}
-                      </a>
-                    )}
-                    {SITE.showGalleries && (
-                      <a
-                        href={`${localePrefix}/galleries`}
-                        class:list={[
-                          "popover-link",
-                          { "popover-link-active": isActive("/galleries") },
-                        ]}
-                      >
-                        <IconGallery class="size-3.5 shrink-0" />
-                        {t("nav.galleries")}
-                      </a>
-                    )}
-                  </div>
+                  )}
+                  {SITE.showGalleries && (
+                    <a
+                      href={`${localePrefix}/galleries`}
+                      class:list={[
+                        "popover-link",
+                        { "popover-link-active": isActive("/galleries") },
+                      ]}
+                    >
+                      <IconGallery class="size-3.5 shrink-0" />
+                      {t("nav.galleries")}
+                    </a>
+                  )}
                 </div>
+              </div>
 
-                {SITE.lightAndDarkMode && (
-                  <>
-                    <!-- Divider -->
-                    <div class="popover-divider" aria-hidden="true"></div>
+              {SITE.lightAndDarkMode && (
+                <>
+                  <!-- Divider -->
+                  <div class="popover-divider" aria-hidden="true"></div>
 
-                    <!-- Section: Preferences -->
-                    <div class="popover-section">
-                      <p class="popover-section-label">
-                        {locale === "es"
-                          ? "Preferencias"
-                          : locale === "zh"
-                            ? "偏好设置"
-                            : "Preferences"}
-                      </p>
-                      <div class="popover-links">
-                        <!-- Accent color row -->
-                        <div class="popover-row popover-row--accent">
-                          <div class="popover-row-label">
+                  <!-- Section: Preferences -->
+                  <div class="popover-section">
+                    <p class="popover-section-label">
+                      {locale === "es"
+                        ? "Preferencias"
+                        : locale === "zh"
+                          ? "偏好设置"
+                          : "Preferences"}
+                    </p>
+                    <div class="popover-links">
+                      <!-- Accent color row -->
+                      <div class="popover-row popover-row--accent">
+                        <div class="popover-row-label">
+                          <svg
+                            class="size-3.5 shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                            aria-hidden="true"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M7 21a4 4 0 0 1-4-4V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v12a4 4 0 0 1-4 4Zm0 0h12a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 0 1 2.828 0l2.829 2.829a2 2 0 0 1 0 2.828l-8.486 8.485M7 17h.01"
+                            />
+                          </svg>
+                          {t("nav.accentColor")}
+                        </div>
+                        <div
+                          class="accent-swatches"
+                          role="group"
+                          aria-label={t("nav.changeAccent")}
+                        >
+                          {accents.map(accent => (
+                            <button
+                              type="button"
+                              class="accent-swatch"
+                              data-accent-color={accent.key}
+                              style={`background-color: ${accent.color}`}
+                              data-tip={accent.label}
+                              aria-label={accent.label}
+                            ></button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <!-- Sound effects toggle (icon only) -->
+                      <div class="popover-row popover-row--icon">
+                        <div class="popover-row-label">
+                          <svg
+                            class="size-3.5 shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            aria-hidden="true"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M11 5 6 9H3v6h3l5 4V5Z"
+                            />
+                            <path
+                              stroke-linecap="round"
+                              d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"
+                            />
+                          </svg>
+                          {t("nav.soundFx")}
+                        </div>
+                        <button
+                          type="button"
+                          class="sound-toggle-icon muted"
+                          data-sound-toggle
+                          data-sound-level="0"
+                          data-label-on={t("nav.soundFxOn")}
+                          data-label-off={t("nav.soundFxOff")}
+                          aria-pressed="false"
+                          aria-label={t("nav.soundFxToggle")}
+                        >
+                          <span class="sound-glyph-stack" aria-hidden="true">
+                            <!-- One wave: quiet -->
                             <svg
-                              class="size-3.5 shrink-0"
+                              class="sound-glyph sound-glyph--low"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
-                              stroke-width="1.7"
+                              stroke-width="1.8"
                               aria-hidden="true"
                             >
                               <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                d="M7 21a4 4 0 0 1-4-4V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v12a4 4 0 0 1-4 4Zm0 0h12a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 0 1 2.828 0l2.829 2.829a2 2 0 0 1 0 2.828l-8.486 8.485M7 17h.01"
+                                d="M11 5 6 9H3v6h3l5 4V5Z"
+                              />
+                              <path
+                                stroke-linecap="round"
+                                d="M15.5 8.5a5 5 0 0 1 0 7"
                               />
                             </svg>
-                            {t("nav.accentColor")}
-                          </div>
-                          <div
-                            class="accent-swatches"
-                            role="group"
-                            aria-label={t("nav.changeAccent")}
-                          >
-                            {accents.map(accent => (
-                              <button
-                                type="button"
-                                class="accent-swatch"
-                                data-accent-color={accent.key}
-                                style={`background-color: ${accent.color}`}
-                                data-tip={accent.label}
-                                aria-label={accent.label}
-                              ></button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <!-- Sound effects toggle (icon only) -->
-                        <div class="popover-row popover-row--icon">
-                          <div class="popover-row-label">
+                            <!-- Two waves: loud -->
                             <svg
-                              class="size-3.5 shrink-0"
+                              class="sound-glyph sound-glyph--high"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -419,120 +459,68 @@ const accents = [
                                 d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"
                               />
                             </svg>
-                            {t("nav.soundFx")}
-                          </div>
-                          <button
-                            type="button"
-                            class="sound-toggle-icon muted"
-                            data-sound-toggle
-                            data-sound-level="0"
-                            data-label-on={t("nav.soundFxOn")}
-                            data-label-off={t("nav.soundFxOff")}
-                            aria-pressed="false"
-                            aria-label={t("nav.soundFxToggle")}
-                          >
-                            <span class="sound-glyph-stack" aria-hidden="true">
-                              <!-- One wave: quiet -->
-                              <svg
-                                class="sound-glyph sound-glyph--low"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                aria-hidden="true"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M11 5 6 9H3v6h3l5 4V5Z"
-                                />
-                                <path
-                                  stroke-linecap="round"
-                                  d="M15.5 8.5a5 5 0 0 1 0 7"
-                                />
-                              </svg>
-                              <!-- Two waves: loud -->
-                              <svg
-                                class="sound-glyph sound-glyph--high"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                aria-hidden="true"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M11 5 6 9H3v6h3l5 4V5Z"
-                                />
-                                <path
-                                  stroke-linecap="round"
-                                  d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"
-                                />
-                              </svg>
-                              <!-- Muted -->
-                              <svg
-                                class="sound-glyph sound-glyph--off"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                aria-hidden="true"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M11 5 6 9H3v6h3l5 4V5Z"
-                                />
-                                <path
-                                  stroke-linecap="round"
-                                  d="m16 9 5 5m0-5-5 5"
-                                />
-                              </svg>
-                            </span>
-                          </button>
-                        </div>
+                            <!-- Muted -->
+                            <svg
+                              class="sound-glyph sound-glyph--off"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              stroke-width="1.8"
+                              aria-hidden="true"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M11 5 6 9H3v6h3l5 4V5Z"
+                              />
+                              <path
+                                stroke-linecap="round"
+                                d="m16 9 5 5m0-5-5 5"
+                              />
+                            </svg>
+                          </span>
+                        </button>
                       </div>
                     </div>
-                  </>
-                )}
-
-                <!-- Help / shortcuts -->
-                <div class="popover-divider" aria-hidden="true"></div>
-                <div class="popover-section">
-                  <p class="popover-section-label">{t("nav.help")}</p>
-                  <div class="popover-links">
-                    <button
-                      type="button"
-                      class="popover-link popover-link-button"
-                      data-shortcuts-open
-                    >
-                      <svg
-                        class="size-3.5 shrink-0"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        aria-hidden="true"
-                      >
-                        <circle cx="12" cy="12" r="9" />
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1.1-1.4 2.1"
-                        />
-                        <path stroke-linecap="round" d="M12 16.5h.01" />
-                      </svg>
-                      {t("nav.shortcuts")}
-                      <kbd class="popover-shortcut">?</kbd>
-                    </button>
                   </div>
+                </>
+              )}
+
+              <!-- Help / shortcuts -->
+              <div class="popover-divider" aria-hidden="true"></div>
+              <div class="popover-section">
+                <p class="popover-section-label">{t("nav.help")}</p>
+                <div class="popover-links">
+                  <button
+                    type="button"
+                    class="popover-link popover-link-button"
+                    data-shortcuts-open
+                  >
+                    <svg
+                      class="size-3.5 shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="9" />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1.1-1.4 2.1"
+                      />
+                      <path stroke-linecap="round" d="M12 16.5h.01" />
+                    </svg>
+                    {t("nav.shortcuts")}
+                    <kbd class="popover-shortcut">?</kbd>
+                  </button>
                 </div>
               </div>
-            </li>
-          </ul>
-        </nav>
-      </div>
+            </div>
+          </li>
+        </ul>
+      </nav>
     </div>
   </div>
   <MobileMenu currentPath={currentPath} />

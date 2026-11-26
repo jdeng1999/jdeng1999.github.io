@@ -187,9 +187,11 @@ function setupScrollPhysics() {
     if (rafPending) return;
     rafPending = true;
     requestAnimationFrame(() => {
-      const scrolled = window.scrollY > 15;
-      // Only the surface changes on scroll; the header keeps its height so
-      // navigation targets never shift under the pointer.
+      // Past 80px the floater pulls toward the centre of the page: its
+      // max-width shrinks and the glass surface fades in (both in CSS).
+      // The class is only toggled on threshold crossings, so the bar keeps
+      // a single steady compact state instead of tracking every scroll tick.
+      const scrolled = window.scrollY > 80;
       header.classList.toggle("header-scrolled", scrolled);
       rafPending = false;
     });
