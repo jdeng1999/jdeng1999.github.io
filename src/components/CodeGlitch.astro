@@ -48,8 +48,20 @@ const { class: className = "" } = Astro.props;
   // transparent canvas is sampled as a coverage mask.
   const GLYPH_SRC = "/apple-touch-icon.png";
   const GLYPH_INK = { x: 10, y: 18, w: 159, h: 155 };
-  const GLYPH_FIT = 0.94;
+  const GLYPH_FIT = 0.8;
+  const GLYPH_TOP = 0.03;
   const GLYPH_STRETCH = 1.3;
+
+  // Right-hand 阝: a slimmer, longer final stem that reaches below the left
+  // 又 and past the old glyph box, drawn in the same mask as the mark.
+  const TAIL_X = 155;
+  const TAIL_TOP = 132;
+  const TAIL_TOP_WIDTH = 14;
+  const TAIL_BOTTOM_WIDTH = 7;
+  const TAIL_END = 0.965;
+
+  // A gentle weight lift for the 又 top-left corner.
+  const BOOST = { x: 36, y: 52, rx: 30, ry: 26, amount: 0.18 };
 
   let dispose: (() => void) | null = null;
 
@@ -122,22 +134,30 @@ const { class: className = "" } = Astro.props;
 
     const readPalette = () => {
       const styles = window.getComputedStyle(document.documentElement);
-      const found = ["--accent", "--border", "--muted"]
-        .map(token => parseColor(styles.getPropertyValue(token)))
-        .filter((color): color is RGB => Boolean(color));
+      const accent = parseColor(styles.getPropertyValue("--accent"));
+      const bg = parseColor(styles.getPropertyValue("--background"));
 
-      palette = found.length
-        ? found
+      // All code shades are derived from the site accent, not a parallel
+      // palette: the accent itself, a deeper mix toward the page, and a faint
+      // mix that only appears in the dissolve halo.
+      const base: RGB = accent ?? { r: 0, g: 143, b: 236 };
+      const mix = (a: RGB, b: RGB, t: number): RGB => ({
+        r: Math.round(a.r + (b.r - a.r) * t),
+        g: Math.round(a.g + (b.g - a.g) * t),
+        b: Math.round(a.b + (b.b - a.b) * t),
+      });
+
+      palette = bg
+        ? [base, mix(base, bg, 0.38), mix(base, bg, 0.66)]
         : [
-            { r: 0, g: 143, b: 236 },
-            { r: 34, g: 100, b: 227 },
-            { r: 33, g: 47, b: 63 },
+            base,
+            mix(base, { r: 255, g: 255, b: 255 }, 0.3),
+            mix(base, { r: 0, g: 0, b: 0 }, 0.35),
           ];
 
       // The glyph's interior needs ink that actually contrasts with the page:
-      // on dark that is the bright accent/border pair, on light it is the
-      // darker accent (the pale border/muted stay in the dissolve halo).
-      const bg = parseColor(styles.getPropertyValue("--background"));
+      // on dark that is the accent plus its mid shade; on light it is the
+      // darker accent (the pale mixes stay in the dissolve halo).
       const luminance = (c: RGB) => {
         const channel = (value: number) => {
           const v = value / 255;
@@ -208,7 +228,10 @@ const { class: className = "" } = Astro.props;
         (GLYPH_INK.w / GLYPH_INK.h) *
         GLYPH_STRETCH;
       const x = ((cssWidth / CHAR_WIDTH - wCells) / 2) * SS;
-      const y = ((cssHeight / CHAR_HEIGHT - hCells) / 2) * SS;
+      const y = ((cssHeight * GLYPH_TOP) / CHAR_HEIGHT) * SS;
+
+      const scaleX = (wCells * SS) / GLYPH_INK.w;
+      const scaleY = (hCells * SS) / GLYPH_INK.h;
 
       // A soft pass widens the contour into a gradual dissolve band.
       maskCtx.filter = "blur(0.8px)";
@@ -224,8 +247,41 @@ const { class: className = "" } = Astro.props;
         hCells * SS
       );
 
+      // Extend the 阝 stem: taper it thinner than the serif stroke, then let
+      // the alpha fall off so the tip dissolves into the code field.
+      const tailX = x + (TAIL_X - GLYPH_INK.x) * scaleX;
+      const tailTop = y + (TAIL_TOP - GLYPH_INK.y) * scaleY;
+      const tailEnd = ((cssHeight * TAIL_END) / CHAR_HEIGHT) * SS;
+
+      if (tailEnd > tailTop) {
+        const topHalf = (TAIL_TOP_WIDTH * scaleX) / 2;
+        const bottomHalf = (TAIL_BOTTOM_WIDTH * scaleX) / 2;
+        const grad = maskCtx.createLinearGradient(0, tailTop, 0, tailEnd);
+        grad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+        grad.addColorStop(0.6, "rgba(255, 255, 255, 0.9)");
+        grad.addColorStop(1, "rgba(255, 255, 255, 0.04)");
+
+        maskCtx.filter = "blur(0.35px)";
+        maskCtx.fillStyle = grad;
+        maskCtx.beginPath();
+        maskCtx.moveTo(tailX - topHalf, tailTop);
+        maskCtx.lineTo(tailX + topHalf, tailTop);
+        maskCtx.lineTo(tailX + bottomHalf, tailEnd);
+        maskCtx.lineTo(tailX - bottomHalf, tailEnd);
+        maskCtx.closePath();
+        maskCtx.fill();
+      }
+
       const data = maskCtx.getImageData(0, 0, cols * SS, rowCount * SS).data;
       const cov = new Float32Array(cols * rowCount);
+
+      // Soft, local weight boost for the 又 top-left corner. Only cells that
+      // already carry ink are lifted, so the stroke gets fuller without a
+      // floating patch of new characters.
+      const boostX = x + (BOOST.x - GLYPH_INK.x) * scaleX;
+      const boostY = y + (BOOST.y - GLYPH_INK.y) * scaleY;
+      const boostRx = BOOST.rx * scaleX;
+      const boostRy = BOOST.ry * scaleY;
 
       for (let cy = 0; cy < rowCount; cy++) {
         for (let cx = 0; cx < cols; cx++) {
@@ -236,7 +292,18 @@ const { class: className = "" } = Astro.props;
               sum += data[px] / 255;
             }
           }
-          cov[cy * cols + cx] = sum / (SS * SS);
+          let value = sum / (SS * SS);
+
+          if (value > 0.02) {
+            const mx = (cx + 0.5) * SS;
+            const my = (cy + 0.5) * SS;
+            const dx = (mx - boostX) / boostRx;
+            const dy = (my - boostY) / boostRy;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < 1) value = Math.min(1, value + BOOST.amount * (1 - d2));
+          }
+
+          cov[cy * cols + cx] = value;
         }
       }
 
@@ -467,7 +534,12 @@ const { class: className = "" } = Astro.props;
     );
     intersection.observe(root);
 
-    const themeObserver = new MutationObserver(() => {
+    // Theme/accent changes animate the CSS tokens for 300ms; wait for that
+    // settle, then retarget every character so the code shades follow the new
+    // accent with the existing colour interpolation (no hard jump).
+    let paletteTimer: number | undefined;
+
+    const applyPalette = () => {
       readPalette();
 
       for (const letter of letters) {
@@ -477,10 +549,15 @@ const { class: className = "" } = Astro.props;
       }
 
       if (reduced) draw();
+    };
+
+    const themeObserver = new MutationObserver(() => {
+      window.clearTimeout(paletteTimer);
+      paletteTimer = window.setTimeout(applyPalette, 340);
     });
     themeObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["data-theme"],
+      attributeFilter: ["data-theme", "data-accent"],
     });
 
     const onMotionChange = () => {
@@ -503,6 +580,7 @@ const { class: className = "" } = Astro.props;
       disposed = true;
       stop();
       window.cancelAnimationFrame(resizeFrame);
+      window.clearTimeout(paletteTimer);
       resizeObserver.disconnect();
       intersection.disconnect();
       themeObserver.disconnect();
@@ -521,7 +599,7 @@ const { class: className = "" } = Astro.props;
   }
 
   .glitch-canvas-wrap {
-    height: clamp(150px, 31vh, 232px);
+    height: clamp(190px, calc(31vh + 40px), 272px);
   }
 
   .glitch-canvas-wrap canvas {
@@ -530,7 +608,7 @@ const { class: className = "" } = Astro.props;
 
   @media (min-width: 1024px) {
     .glitch-canvas-wrap {
-      height: clamp(180px, 26vh, 268px);
+      height: clamp(220px, calc(26vh + 40px), 308px);
     }
   }
 </style>
