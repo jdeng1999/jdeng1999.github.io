@@ -14,11 +14,19 @@ const { label = "Tech Stack", class: className = "" } = Astro.props;
 const rows = [
   [
     { name: "Java", icon: "java" },
-    { name: "Spring Boot", icon: "springboot" },
+    { name: "Spring Cloud", icon: "springcloud" },
+    { name: "Dubbo", icon: "dubbo", ext: ".png", wide: true },
+    { name: "MyBatis-Plus", icon: "mybatisplus" },
     { name: "MySQL", icon: "mysql" },
+    { name: "PostgreSQL", icon: "postgresql" },
     { name: "Redis", icon: "redis" },
+    { name: "Elasticsearch", icon: "elasticsearch" },
+    { name: "MongoDB", icon: "mongodb" },
+    { name: "RabbitMQ", icon: "rabbitmq" },
     { name: "Maven", icon: "maven" },
     { name: "Docker", icon: "docker" },
+    { name: "Nginx", icon: "nginx" },
+    { name: "Jenkins", icon: "jenkins" },
     { name: "Linux", icon: "linux" },
     { name: "Git", icon: "git" },
   ],
@@ -27,8 +35,10 @@ const rows = [
     { name: "JavaScript", icon: "javascript" },
     { name: "Node.js", icon: "nodejs" },
     { name: "React", icon: "react" },
+    { name: "Vue.js", icon: "vue" },
     { name: "Astro", icon: "astro" },
     { name: "Tailwind CSS", icon: "tailwindcss" },
+    { name: "Codex", icon: "codex" },
   ],
 ];
 
@@ -40,7 +50,7 @@ const repeats = 4;
   {rows.map((row, rowIndex) => (
     <div
       class:list={["marquee", { "marquee-reverse": rowIndex === 1 }]}
-      style={`--marquee-duration: ${rowIndex === 1 ? "76s" : "96s"}`}
+      style={`--marquee-duration: ${rowIndex === 1 ? "96s" : "185s"}`}
     >
       <div class="marquee-track">
         {Array.from({ length: repeats }).flatMap((_, copyIndex) =>
@@ -50,15 +60,19 @@ const repeats = 4;
               aria-hidden={copyIndex > 0 ? "true" : undefined}
             >
               <img
-                class="tech-logo"
-                src={`/tech/${tech.icon}.svg`}
+                class:list={["tech-logo", tech.wide && "tech-logo--wide"]}
+                src={`/tech/${tech.icon}${tech.ext ?? ".svg"}`}
                 alt=""
                 width="32"
                 height="32"
                 loading={copyIndex === 0 ? "eager" : "lazy"}
                 decoding="async"
               />
-              <span class="tech-name">{tech.name}</span>
+              <span
+                class:list={["tech-name", tech.wide && "tech-name--wordmark"]}
+              >
+                {tech.name}
+              </span>
             </div>
           ))
         )}
@@ -135,6 +149,13 @@ const repeats = 4;
     transition: transform 0.25s ease;
   }
 
+  /* Wordmark logos (e.g. DUBBO) keep their wide aspect instead of being
+     squeezed into the square icon box. */
+  .tech-logo--wide {
+    width: auto;
+    height: 1.05rem;
+  }
+
   .tech-name {
     font-family: var(--font-firacode), ui-monospace, monospace;
     font-size: 0.78rem;
@@ -142,6 +163,16 @@ const repeats = 4;
     color: color-mix(in srgb, var(--color-foreground) 62%, transparent);
     white-space: nowrap;
     transition: color 0.2s ease;
+  }
+
+  /* A wordmark logo already spells the name, so keep the label for screen
+     readers only. */
+  .tech-name--wordmark {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 
   .marquee-item:hover .tech-logo {
@@ -179,6 +210,11 @@ const repeats = 4;
     .tech-logo {
       width: 1.85rem;
       height: 1.85rem;
+    }
+
+    .tech-logo--wide {
+      width: auto;
+      height: 1.2rem;
     }
 
     .tech-name {
