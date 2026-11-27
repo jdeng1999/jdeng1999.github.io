@@ -2,9 +2,9 @@
 /**
  * CodeGlitch — canvas of continuously morphing characters, inspired by the
  * "LetterGlitch" visual. The character field is clipped to the site's 邓 mark
- * (sampled from the favicon) with a soft, ragged dissolve. Rendered with plain
- * canvas (no framework) and wired to the site theme tokens, so it follows
- * light/dark and accent changes.
+ * (sampled from a dedicated glyph asset) with a soft, ragged dissolve.
+ * Rendered with plain canvas (no framework) and wired to the site theme
+ * tokens, so it follows light/dark and accent changes.
  */
 interface Props {
   class?: string;
@@ -44,10 +44,11 @@ const { class: className = "" } = Astro.props;
   const FONT_SIZE = 11;
   const GLITCH_INTERVAL = 55;
 
-  // The browser-tab mark is the shape reference: its gold glyph on a
-  // transparent canvas is sampled as a coverage mask.
-  const GLYPH_SRC = "/apple-touch-icon.png";
-  const GLYPH_INK = { x: 10, y: 18, w: 159, h: 155 };
+  // The 邓 mark is sampled as a per-cell coverage mask. The dedicated mark
+  // asset is the reference glyph silhouette, so the code field traces the
+  // calligraphic strokes without depending on the favicon artwork.
+  const GLYPH_SRC = "/code-glyph-deng.png";
+  const GLYPH_INK = { x: 2, y: 2, w: 465, h: 462 };
   const GLYPH_FIT = 0.94;
   const GLYPH_STRETCH = 1.3;
 
