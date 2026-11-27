@@ -537,10 +537,340 @@ const showGrain = SITE.backdropEffects.grain;
   };
   document.addEventListener("astro:after-swap", restoreLangScrollEarly);
 
+  // Language switches are route changes like any other, but the default
+  // full-page cross-fade makes them feel like a page replacement and pays for
+  // a full-page snapshot. Bypass the browser view transition for this
+  // navigation only; the incoming content settles with its own short entrance.
+  const localeOf = (pathname: string) =>
+    pathname === "/zh" || pathname.startsWith("/zh/")
+      ? "zh"
+      : pathname === "/es" || pathname.startsWith("/es/")
+        ? "es"
+        : "en";
+
+  let nativeStartViewTransition: typeof document.startViewTransition | null =
+    null;
+  let langVtToken = 0;
+  let pendingLangRoll = false;
+
+  const restoreLangViewTransition = () => {
+    if (!nativeStartViewTransition) return;
+    document.startViewTransition = nativeStartViewTransition;
+    nativeStartViewTransition = null;
+  };
+
+  const bypassLangViewTransition = () => {
+    if (nativeStartViewTransition || !document.startViewTransition) return;
+    const native = document.startViewTransition;
+    nativeStartViewTransition = native;
+    const token = ++langVtToken;
+
+    document.startViewTransition = ((
+      options:
+        (() => Promise<void> | void) | { update?: () => Promise<void> | void }
+    ) => {
+      const updateCallback =
+        typeof options === "function" ? options : options?.update;
+      const update = Promise.resolve().then(() => updateCallback?.());
+      // Match the shape Astro's router expects from a ViewTransition. There is
+      // no animation, so update/ready/finished settle together.
+      return {
+        updateCallbackDone: update,
+        ready: update,
+        finished: update.catch(() => {}),
+        skipTransition() {},
+        types: new Set(),
+      } as unknown as ViewTransition;
+    }) as typeof document.startViewTransition;
+
+    // Restore as soon as the swap has happened; the timeout covers a
+    // navigation that is aborted before it can swap.
+    window.setTimeout(() => {
+      if (token === langVtToken) restoreLangViewTransition();
+    }, 1500);
+  };
+
+  document.addEventListener("astro:before-preparation", event => {
+    const wantsRoll = document.documentElement.dataset.langRollRequest === "1";
+    delete document.documentElement.dataset.langRollRequest;
+    if (localeOf(event.from.pathname) === localeOf(event.to.pathname)) {
+      pendingLangRoll = false;
+      delete document.documentElement.dataset.langSwitching;
+      // Only a language switch keeps the header mounted. Ordinary route
+      // changes keep their existing header re-render and active-nav updates.
+      document
+        .querySelector("#main-header")
+        ?.removeAttribute("data-astro-transition-persist");
+      return;
+    }
+    pendingLangRoll = wantsRoll;
+    document.documentElement.dataset.langSwitching = "1";
+    window.setTimeout(() => {
+      if (document.documentElement.dataset.langSwitching === "1") {
+        delete document.documentElement.dataset.langSwitching;
+      }
+    }, 2000);
+    bypassLangViewTransition();
+  });
+
+  // One finishing callback per chip. Storing it on a WeakMap instead of
+  // stacking `transitionend` listeners on the persisted element prevents a
+  // stale listener from ending a later roll early.
+  const langRollFinishers = new WeakMap<HTMLElement, () => void>();
+
+  document.addEventListener("transitionend", event => {
+    if (event.propertyName !== "transform") return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (!target.matches("[data-lang-current]")) return;
+    const roll = target.closest<HTMLElement>("[data-lang-roll]");
+    if (!roll) return;
+    langRollFinishers.get(roll)?.();
+  });
+
+  const finalizeLangChip = (roll: HTMLElement) => {
+    const nextCurrent = roll.dataset.langNextCurrent;
+    const nextNext = roll.dataset.langNextNext;
+    if (nextCurrent === undefined && nextNext === undefined) return;
+
+    if (nextCurrent !== undefined) {
+      const currentText = roll.querySelector<HTMLElement>(
+        "[data-lang-current]"
+      );
+      if (currentText) currentText.textContent = nextCurrent;
+    }
+    if (nextNext !== undefined) {
+      const upcomingText = roll.querySelector<HTMLElement>(
+        ".lang-roll-item--next"
+      );
+      if (upcomingText) upcomingText.textContent = nextNext;
+    }
+
+    const items = roll.querySelectorAll<HTMLElement>(".lang-roll-item");
+    items.forEach(item => (item.style.transition = "none"));
+    roll.classList.remove("is-switching");
+    // Apply the no-transition state before restoring the roll transition.
+    void roll.offsetHeight;
+    items.forEach(item => (item.style.transition = ""));
+
+    delete roll.dataset.switchStart;
+    delete roll.dataset.langNextCurrent;
+    delete roll.dataset.langNextNext;
+    delete roll.dataset.langRollActive;
+    langRollFinishers.delete(roll);
+  };
+
+  const startLangRoll = () => {
+    const wantsRoll = pendingLangRoll;
+    pendingLangRoll = false;
+
+    const header = document.querySelector("#main-header");
+    if (!header) return;
+
+    const isVisible = (el: HTMLElement) => {
+      if (!el.getClientRects().length) return false;
+      const style = getComputedStyle(el);
+      return (
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        style.opacity !== "0"
+      );
+    };
+
+    header.querySelectorAll<HTMLElement>("[data-lang-roll]").forEach(roll => {
+      if (roll.dataset.langNextCurrent === undefined) return;
+
+      // Finalize immediately when this visit did not request a roll (for
+      // example a restored page or a leftover state), so the chip can never
+      // keep the previous locale's code. A roll already running owns its own
+      // finalization.
+      if (!wantsRoll) {
+        if (
+          roll.dataset.langRollActive === "1" ||
+          roll.classList.contains("is-switching")
+        ) {
+          return;
+        }
+        finalizeLangChip(roll);
+        return;
+      }
+
+      // Only animate the chip the user can actually see; finalize the hidden
+      // counterpart immediately so it cannot hold the click guard open.
+      if (!isVisible(roll)) {
+        finalizeLangChip(roll);
+        return;
+      }
+
+      // Guard against a second language tap while the entrance frame settles.
+      roll.dataset.langRollActive = "1";
+
+      // Let the incoming page paint once, then add the roll class so the
+      // browser registers a real before/after transform change. Adding it
+      // inside the page-load task can be collapsed into the initial style.
+      window.setTimeout(() => {
+        if (roll.dataset.langRollActive !== "1") return;
+
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          // The chip may have started a newer roll in the meantime; only the
+          // registered callback may finish the current one.
+          if (langRollFinishers.get(roll) !== finish) return;
+          done = true;
+          finalizeLangChip(roll);
+        };
+        langRollFinishers.set(roll, finish);
+
+        roll.classList.add("is-switching");
+        roll.dataset.switchStart = String(performance.now());
+
+        // Fallback for environments where the transition cannot run; the
+        // original roll is 550ms, so this still leaves it room to finish.
+        window.setTimeout(finish, 900);
+      }, 32);
+    });
+  };
+
+  document.addEventListener("astro:after-swap", () => {
+    restoreLangViewTransition();
+    startLangRoll();
+  });
+
+  const syncHeaderForLocale = (currentHeader: Element, nextHeader: Element) => {
+    const currentRolls = Array.from(
+      currentHeader.querySelectorAll<HTMLElement>("[data-lang-roll]")
+    );
+    const nextRolls = Array.from(
+      nextHeader.querySelectorAll<HTMLElement>("[data-lang-roll]")
+    );
+
+    // The persisted header keeps its nodes, listeners, focus and open state.
+    // Copy only the locale-dependent text and link targets from the incoming
+    // header; never classes, expanded flags or other interactive state.
+    const syncNode = (current: Node, next: Node) => {
+      if (current.nodeType === Node.TEXT_NODE) {
+        if (
+          next.nodeType === Node.TEXT_NODE &&
+          current.nodeValue !== next.nodeValue
+        ) {
+          current.nodeValue = next.nodeValue;
+        }
+        return;
+      }
+
+      if (
+        current.nodeType !== Node.ELEMENT_NODE ||
+        next.nodeType !== Node.ELEMENT_NODE
+      ) {
+        return;
+      }
+
+      const currentEl = current as Element;
+      const nextEl = next as Element;
+      if (currentEl.tagName !== nextEl.tagName) return;
+      if (currentEl.tagName === "SCRIPT" || currentEl.tagName === "STYLE") {
+        return;
+      }
+
+      // The language roll and the sound state label own their text updates.
+      if (currentEl.matches("[data-lang-roll], [data-sound-label]")) return;
+
+      if (currentEl.tagName === "A") {
+        for (const attr of ["href", "hreflang", "data-lang-toggle"]) {
+          const value = nextEl.getAttribute(attr);
+          if (value === null) currentEl.removeAttribute(attr);
+          else currentEl.setAttribute(attr, value);
+        }
+      }
+
+      const skipAria =
+        currentEl.id === "theme-btn" ||
+        currentEl.id === "theme-btn-mobile" ||
+        currentEl.id === "menu-btn";
+      for (const attr of [
+        "aria-label",
+        "title",
+        "data-label-open",
+        "data-label-close",
+        "data-label-on",
+        "data-label-off",
+      ]) {
+        if (attr === "aria-label" && skipAria) continue;
+        const value = nextEl.getAttribute(attr);
+        if (value === null) currentEl.removeAttribute(attr);
+        else currentEl.setAttribute(attr, value);
+      }
+
+      const currentChildren = currentEl.childNodes;
+      const nextChildren = nextEl.childNodes;
+      const count = Math.min(currentChildren.length, nextChildren.length);
+      for (let i = 0; i < count; i++) {
+        syncNode(currentChildren[i]!, nextChildren[i]!);
+      }
+    };
+
+    syncNode(currentHeader, nextHeader);
+
+    // The CN/EN roll itself is started on the persisted header after the swap
+    // (see startLangRoll). Store the incoming chip texts so the final frame can
+    // snap to them; when no roll was requested, apply them immediately.
+    currentRolls.forEach((roll, index) => {
+      const nextRoll = nextRolls[index];
+      if (!nextRoll) return;
+
+      roll.dataset.langNextCurrent =
+        nextRoll
+          .querySelector<HTMLElement>("[data-lang-current]")
+          ?.textContent?.trim() ?? "";
+      roll.dataset.langNextNext =
+        nextRoll
+          .querySelector<HTMLElement>(".lang-roll-item--next")
+          ?.textContent?.trim() ?? "";
+
+      if (!pendingLangRoll) finalizeLangChip(roll);
+    });
+  };
+
+  document.addEventListener("astro:before-swap", event => {
+    if (localeOf(event.from.pathname) === localeOf(event.to.pathname)) {
+      return;
+    }
+
+    const header = document.querySelector("#main-header");
+    const nextHeader = event.newDocument.querySelector("#main-header");
+    if (header && nextHeader) {
+      syncHeaderForLocale(header, nextHeader);
+    }
+
+    // The footer music card is persisted across route changes so playback can
+    // continue. Refresh its markup from the incoming page so its labels follow
+    // the new locale; the player re-initialises from the shared audio state.
+    const musicPlayer = document.querySelector("#site-music-player");
+    const nextMusicPlayer =
+      event.newDocument.querySelector("#site-music-player");
+    if (musicPlayer && nextMusicPlayer) {
+      musicPlayer.innerHTML = nextMusicPlayer.innerHTML;
+    }
+  });
+
   document.addEventListener("astro:page-load", () => {
     if (langCleanup) langCleanup.abort();
     langCleanup = new AbortController();
     const { signal } = langCleanup;
+
+    // Start the CN/EN roll once the incoming page has run its own load work;
+    // this keeps the animation from being swallowed by the route swap.
+    startLangRoll();
+
+    // The language swap restores the scroll position right after the DOM
+    // update; ignore any scroll-close side effects on the persisted header
+    // while that settles.
+    if (document.documentElement.dataset.langSwitching === "1") {
+      window.setTimeout(() => {
+        delete document.documentElement.dataset.langSwitching;
+      }, 600);
+    }
 
     const pathname = window.location.pathname;
 

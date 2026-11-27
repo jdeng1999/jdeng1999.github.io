@@ -1,4 +1,5 @@
 import { navigate } from "astro:transitions/client";
+import { prefetch } from "astro:prefetch";
 import {
   SOUND_KEY,
   SOUND_LEVEL_KEY,
@@ -216,6 +217,13 @@ function setupMobileNav() {
   const labelClose = menuBtn.getAttribute("data-label-close") || "Close Menu";
   const menuLanguageKey = MENU_LANGUAGE_KEY;
 
+  // The header persists across language switches; keep the state-managed
+  // trigger label in the current language without resetting the menu state.
+  menuBtn.setAttribute(
+    "aria-label",
+    mobileMenu.classList.contains("is-open") ? labelClose : labelOpen
+  );
+
   // The dimming backdrop must start below the sticky header, otherwise it
   // darkens the header band and the sheet no longer looks fused with it.
   const syncMenuTop = () => {
@@ -286,7 +294,9 @@ function setupMobileNav() {
     } catch {
       /* storage can be unavailable */
     }
-    if (reopenAfterLanguage) openMenu(true);
+    if (reopenAfterLanguage && !mobileMenu.classList.contains("is-open")) {
+      openMenu(true);
+    }
   }
 }
 
@@ -353,8 +363,17 @@ function setupMorePopover() {
     { signal }
   );
 
-  // Close popover on scroll
-  window.addEventListener("scroll", closePopover, { passive: true, signal });
+  // Close popover on scroll. A language switch restores the scroll position
+  // on the incoming page; that synthetic scroll must not close a popover the
+  // user had open (the header itself is persisted).
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (document.documentElement.dataset.langSwitching === "1") return;
+      closePopover();
+    },
+    { passive: true, signal }
+  );
 
   // Close popover when focus leaves the container
   morePopover.addEventListener(
@@ -386,53 +405,144 @@ function setupLanguageRoll() {
     "(prefers-reduced-motion: reduce)"
   ).matches;
 
-  document
-    .querySelectorAll<HTMLAnchorElement>("a[data-lang-toggle]")
-    .forEach(link => {
-      link.addEventListener(
-        "click",
-        event => {
-          if (event.defaultPrevented) return;
-          if (
-            event.button !== 0 ||
-            event.metaKey ||
-            event.ctrlKey ||
-            event.shiftKey ||
-            event.altKey
-          ) {
-            return;
-          }
+  const links = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>("a[data-lang-toggle]")
+  );
+  if (!links.length) return;
 
-          // Keep the mobile menu open across the language navigation.
-          if (document.querySelector("#mobile-menu.is-open")) {
-            try {
-              sessionStorage.setItem(MENU_LANGUAGE_KEY, "1");
-            } catch {
-              /* storage can be unavailable */
-            }
-          }
+  let switching = false;
+  let resetTimer = 0;
 
-          if (reduceMotion) return;
+  const clearRoll = () => {
+    document.querySelectorAll<HTMLElement>("[data-lang-roll]").forEach(item => {
+      const targetCurrent = item.dataset.langNextCurrent;
+      const targetNext = item.dataset.langNextNext;
+      const current = item.querySelector<HTMLElement>("[data-lang-current]");
+      const upcoming = item.querySelector<HTMLElement>(".lang-roll-item--next");
 
-          const roll = link.querySelector<HTMLElement>("[data-lang-roll]");
-          if (!roll) return;
-          if (roll.classList.contains("is-switching")) {
-            event.preventDefault();
-            return;
-          }
+      if (targetCurrent !== undefined || targetNext !== undefined) {
+        if (current && targetCurrent !== undefined) {
+          current.textContent = targetCurrent;
+        }
+        if (upcoming && targetNext !== undefined) {
+          upcoming.textContent = targetNext;
+        }
+        const items = item.querySelectorAll<HTMLElement>(".lang-roll-item");
+        items.forEach(el => (el.style.transition = "none"));
+        item.classList.remove("is-switching");
+        void item.offsetHeight;
+        items.forEach(el => (el.style.transition = ""));
+      } else {
+        item.classList.remove("is-switching");
+      }
 
-          event.preventDefault();
-          document
-            .querySelectorAll<HTMLElement>("[data-lang-roll]")
-            .forEach(item => item.classList.add("is-switching"));
-
-          window.setTimeout(() => {
-            void navigate(link.href);
-          }, 520);
-        },
-        { signal }
-      );
+      delete item.dataset.switchStart;
+      delete item.dataset.langNextCurrent;
+      delete item.dataset.langNextNext;
+      delete item.dataset.langRollActive;
     });
+    delete document.documentElement.dataset.langRollRequest;
+  };
+
+  links.forEach(link => {
+    const href = link.href;
+
+    // Warm the counterpart page before the click so the route swap does not
+    // wait for a cold HTML request. `prefetch` already respects data-saver
+    // mode and slow connections.
+    const warm = () => prefetch(href);
+    link.addEventListener("pointerenter", warm, { signal });
+    link.addEventListener("focus", warm, { signal });
+    link.addEventListener("pointerdown", warm, { signal });
+
+    link.addEventListener(
+      "click",
+      event => {
+        if (event.defaultPrevented) return;
+        if (
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        ) {
+          return;
+        }
+
+        // Keep a rapid second tap from starting another language navigation.
+        // The roll can outlive the route swap now that the header persists,
+        // so the class itself is part of the guard.
+        if (
+          switching ||
+          document.querySelector(
+            "[data-lang-roll].is-switching, [data-lang-roll][data-lang-roll-active]"
+          )
+        ) {
+          event.preventDefault();
+          return;
+        }
+        switching = true;
+
+        if (document.querySelector("#mobile-menu.is-open")) {
+          try {
+            sessionStorage.setItem(MENU_LANGUAGE_KEY, "1");
+          } catch {
+            /* storage can be unavailable */
+          }
+        }
+
+        event.preventDefault();
+
+        // The header persists across the route swap, so the CN/EN roll starts
+        // on the incoming document (after the swap) instead of racing it.
+        if (!reduceMotion) {
+          document.documentElement.dataset.langRollRequest = "1";
+        }
+
+        // Start the route change immediately; the chip roll is feedback while
+        // the prefetched document is prepared, not a gate in front of it.
+        void navigate(href).catch(() => {
+          switching = false;
+          window.clearTimeout(resetTimer);
+          clearRoll();
+        });
+
+        // If the navigation is interrupted (offline, aborted), release the
+        // guard so the toggle keeps working.
+        resetTimer = window.setTimeout(() => {
+          switching = false;
+          clearRoll();
+        }, 2500);
+      },
+      { signal }
+    );
+  });
+
+  // The language link can also be opened from the mobile menu; prefetch as
+  // soon as that menu is invoked instead of only on hover/focus.
+  document
+    .querySelectorAll<HTMLElement>("[aria-controls='mobile-menu']")
+    .forEach(button =>
+      button.addEventListener("click", () => prefetch(links[0]!.href), {
+        signal,
+      })
+    );
+
+  // Quietly warm the counterpart page once the current page has settled.
+  const warmAfterIdle = () => prefetch(links[0]!.href);
+  const requestIdle = (
+    window as Window & {
+      requestIdleCallback?: (
+        callback: () => void,
+        options?: { timeout?: number }
+      ) => number;
+    }
+  ).requestIdleCallback;
+  if (requestIdle) {
+    requestIdle(warmAfterIdle, { timeout: 1800 });
+  } else {
+    window.setTimeout(warmAfterIdle, 900);
+  }
 }
 
 export function initHeader() {
