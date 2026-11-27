@@ -275,20 +275,12 @@ const showGrain = SITE.backdropEffects.grain;
       (function () {
         const storedTheme = localStorage.getItem("theme");
         const themeMode =
-          storedTheme === "light" ||
-          storedTheme === "dark" ||
-          storedTheme === "system"
+          storedTheme === "light" || storedTheme === "dark"
             ? storedTheme
-            : "system";
-        const resolvedTheme =
-          themeMode === "system"
-            ? window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light"
-            : themeMode;
+            : "dark";
 
         // Set theme immediately to prevent flash
-        document.firstElementChild?.setAttribute("data-theme", resolvedTheme);
+        document.firstElementChild?.setAttribute("data-theme", themeMode);
         document.firstElementChild?.setAttribute("data-theme-mode", themeMode);
 
         // Restore the chosen accent before paint as well

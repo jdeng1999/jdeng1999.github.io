@@ -4,15 +4,14 @@ import { soundGain } from "@/scripts/sound";
 const THEME = "theme";
 const LIGHT = "light";
 const DARK = "dark";
-const SYSTEM = "system";
 
-type ThemeMode = typeof LIGHT | typeof DARK | typeof SYSTEM;
+type ThemeMode = typeof LIGHT | typeof DARK;
 
 // Order the dial cycles through, matching the slot angles in header.css.
-const THEME_ORDER: ThemeMode[] = [LIGHT, DARK, SYSTEM];
+const THEME_ORDER: ThemeMode[] = [LIGHT, DARK];
 
 const isThemeMode = (value: string | null): value is ThemeMode =>
-  value === LIGHT || value === DARK || value === SYSTEM;
+  value === LIGHT || value === DARK;
 
 function getPreferredMode(): ThemeMode {
   try {
@@ -21,41 +20,33 @@ function getPreferredMode(): ThemeMode {
   } catch {
     /* storage can be unavailable */
   }
-  return SYSTEM;
+  return DARK;
 }
 
-const resolveMode = (mode: ThemeMode): string =>
-  mode === SYSTEM
-    ? window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? DARK
-      : LIGHT
-    : mode;
-
-// Use existing theme value from inline script if available, otherwise detect
+// Use existing theme value from inline script if available, otherwise default
 let themeValue: ThemeMode =
   (window.theme?.themeValue as ThemeMode | undefined) ?? getPreferredMode();
 if (!isThemeMode(themeValue)) themeValue = getPreferredMode();
 
 /**
  * Rotates the theme dial so the icon for `mode` swings into the button, the
- * way a rotary switch clicks into place. Each step advances one slot forward,
- * so repeated clicks keep spinning the same direction.
+ * way a rotary switch clicks into place. The two slots are 120° apart in
+ * header.css, so switching modes alternates between them and a return trip
+ * swings the wheel back the same way.
  */
 function rotateThemeDials(mode: ThemeMode): void {
-  const count = THEME_ORDER.length;
   const index = THEME_ORDER.indexOf(mode);
   if (index < 0) return;
 
-  const stepAngle = 360 / count;
+  const stepAngle = 120;
 
   document.querySelectorAll<HTMLElement>("[data-theme-dial]").forEach(dial => {
     const stored = dial.dataset.dialStep;
     const previous = stored === undefined ? index : Number(stored);
-    // Always spin forward, so a mode change reads as a wheel click.
-    const step = previous + ((((index - previous) % count) + count) % count);
+    const step = index;
 
     // The first paint and repeat renders jump into place; only a real mode
-    // change (one slot forward) plays the swing.
+    // change plays the swing.
     const instant = stored === undefined || step === previous;
     if (instant) dial.setAttribute("data-instant", "");
 
@@ -80,7 +71,7 @@ function rotateThemeDials(mode: ThemeMode): void {
 }
 
 /* Short blip when the mode changes, mirroring the header's sound-effects
-   toggle: rising for light, falling for dark, a flat tick for system. */
+   toggle: rising for light, falling for dark. */
 let themeAudio: AudioContext | null = null;
 
 function playThemeCue(mode: ThemeMode): void {
@@ -99,8 +90,7 @@ function playThemeCue(mode: ThemeMode): void {
 
     const ctx = themeAudio;
     const now = ctx.currentTime;
-    const [from, to] =
-      mode === LIGHT ? [640, 990] : mode === DARK ? [640, 420] : [560, 720];
+    const [from, to] = mode === LIGHT ? [640, 990] : [640, 420];
 
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -153,9 +143,8 @@ function syncThemeColor(delay = 340): void {
 
 function reflectPreference(): void {
   const root = document.firstElementChild;
-  const resolvedTheme = resolveMode(themeValue);
 
-  root?.setAttribute("data-theme", resolvedTheme);
+  root?.setAttribute("data-theme", themeValue);
   root?.setAttribute("data-theme-mode", themeValue);
 
   const label = themeValue;
@@ -202,8 +191,7 @@ function setThemeFeature(): void {
 
   // now this script can find and listen for clicks on the control
   const toggleTheme = () => {
-    themeValue =
-      themeValue === LIGHT ? DARK : themeValue === DARK ? SYSTEM : LIGHT;
+    themeValue = themeValue === LIGHT ? DARK : LIGHT;
     window.theme?.setTheme(themeValue);
     setPreference();
     playThemeCue(themeValue);
@@ -266,11 +254,3 @@ document.addEventListener("astro:before-swap", event => {
       ?.setAttribute("content", bgColor);
   }
 });
-
-// sync with system changes when the "system" mode is active
-window
-  .matchMedia("(prefers-color-scheme: dark)")
-  .addEventListener("change", () => {
-    if (themeValue !== SYSTEM) return;
-    reflectPreference();
-  });

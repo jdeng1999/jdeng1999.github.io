@@ -242,10 +242,6 @@
   --slot-angle: 120deg;
 }
 
-.theme-dial-slot[data-theme-icon="system"] {
-  --slot-angle: 240deg;
-}
-
 .theme-dial-slot[data-active] {
   opacity: 1;
 }
