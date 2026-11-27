@@ -364,6 +364,10 @@ const showGrain = SITE.backdropEffects.grain;
 
     <slot />
 
+    <!-- Persisted host for the expanded music carousel, so a locale switch can
+         keep an open dialog mounted while the rest of the page is replaced. -->
+    <div id="np-expand-host" transition:persist></div>
+
     <SearchModal />
     <ShortcutsDialog />
     <Tooltip transition:persist />
@@ -726,7 +730,7 @@ const showGrain = SITE.backdropEffects.grain;
         roll.dataset.switchStart = String(performance.now());
 
         // Fallback for environments where the transition cannot run; the
-        // original roll is 550ms, so this still leaves it room to finish.
+        // original roll is 400ms, so this still leaves it room to finish.
         window.setTimeout(finish, 900);
       }, 32);
     });
@@ -843,14 +847,35 @@ const showGrain = SITE.backdropEffects.grain;
       syncHeaderForLocale(header, nextHeader);
     }
 
-    // The footer music card is persisted across route changes so playback can
-    // continue. Refresh its markup from the incoming page so its labels follow
-    // the new locale; the player re-initialises from the shared audio state.
+    // The footer music card persists across route changes so playback and the
+    // card deck keep their state. A locale switch only needs the translated
+    // labels: replacing the markup would rebuild the cards and reset their
+    // layout, transforms and audio bindings mid-switch.
     const musicPlayer = document.querySelector("#site-music-player");
     const nextMusicPlayer =
       event.newDocument.querySelector("#site-music-player");
     if (musicPlayer && nextMusicPlayer) {
-      musicPlayer.innerHTML = nextMusicPlayer.innerHTML;
+      const currentRoot = musicPlayer.querySelector("[data-np]");
+      const nextData = nextMusicPlayer.querySelector("[data-np-data]");
+      if (currentRoot && nextData?.textContent) {
+        const nextDataEl = musicPlayer.querySelector("[data-np-data]");
+        if (nextDataEl) nextDataEl.textContent = nextData.textContent;
+
+        try {
+          const payload = JSON.parse(nextData.textContent) as {
+            labels?: unknown;
+          };
+          if (payload.labels) {
+            currentRoot.dispatchEvent(
+              new CustomEvent("blog-music:labels", {
+                detail: payload.labels,
+              })
+            );
+          }
+        } catch {
+          /* keep the current labels if the incoming payload is malformed */
+        }
+      }
     }
   });
 

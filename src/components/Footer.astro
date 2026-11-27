@@ -360,6 +360,18 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
     }
   }
 
+  /* Reserve a stable middle column for the credits. Without it, the width of
+     the translated credits changes the two 1fr columns and resizes the music
+     card on very wide screens. */
+  @media (min-width: 1800px) {
+    .footer-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(16.5rem, auto) minmax(
+          0,
+          1fr
+        );
+    }
+  }
+
   @media (min-width: 1280px) {
     .footer-connect {
       align-self: flex-start;

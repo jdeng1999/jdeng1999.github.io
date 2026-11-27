@@ -16,6 +16,8 @@ type MusicTrack = {
 };
 
 type MusicLabels = {
+  eyebrow: string;
+  enjoy: string;
   open: string;
   play: string;
   pause: string;
@@ -117,6 +119,14 @@ let apiPromise: Promise<SpotifyIframeApi> | null = null;
 let mediaKeysCleanup: AbortController | null = null;
 
 const MUSIC_STATE_KEY = "jdeng:music-state";
+
+const localeOfPath = (pathname: string) =>
+  pathname === "/zh" || pathname.startsWith("/zh/")
+    ? "zh"
+    : pathname === "/es" || pathname.startsWith("/es/")
+      ? "es"
+      : "en";
+
 type PlayMode = "order" | "repeat" | "shuffle";
 type StoredMusicState = {
   trackIndex: number;
@@ -425,7 +435,7 @@ const initNowPlaying = () => {
   const lifecycle = new AbortController();
   globalPlayer.lifecycle = lifecycle;
 
-  const labels = data.labels;
+  let labels = data.labels;
   const tracks = data.tracks;
   const visibleCount = Math.min(tracks.length, 4);
   let expandedDialog: HTMLDialogElement | null = null;
@@ -2405,7 +2415,14 @@ const initNowPlaying = () => {
       { capture: true }
     );
 
-    document.body.appendChild(dialog);
+    const host = document.getElementById("np-expand-host");
+    const persistId = host?.getAttribute("data-astro-transition-persist");
+    if (host && persistId) {
+      dialog.setAttribute("data-astro-transition-persist", persistId);
+      host.replaceWith(dialog);
+    } else {
+      document.body.appendChild(dialog);
+    }
   };
 
   const measureExpanded = () => {
@@ -3104,13 +3121,80 @@ const initNowPlaying = () => {
   measureDeck();
   renderDeck();
 
+  // Locale switches update only the text and accessible labels of the
+  // persisted player. Replacing the markup would recreate the deck, reset its
+  // transforms and interrupt playback, so labels are applied in place.
+  const applyMusicLabels = (next: Partial<MusicLabels>) => {
+    labels = { ...labels, ...next };
+
+    const setLabel = (node: HTMLElement | null, value: string) => {
+      if (node && node.textContent !== value) node.textContent = value;
+    };
+    const setLabelAttr = (node: Element | null, value: string) => {
+      if (node && node.getAttribute("aria-label") !== value) {
+        node.setAttribute("aria-label", value);
+      }
+    };
+
+    const applyToCard = (card: HTMLElement) => {
+      setLabel(
+        card.querySelector<HTMLElement>("[data-np-eyebrow]"),
+        labels.eyebrow
+      );
+      setLabel(card.querySelector<HTMLElement>(".np-enjoy"), labels.enjoy);
+      setLabelAttr(card.querySelector("[data-np-link]"), labels.open);
+      setLabelAttr(card.querySelector("[data-np-seek]"), labels.seek);
+      setLabelAttr(card.querySelector("[data-np-prev]"), labels.previous);
+      setLabelAttr(card.querySelector("[data-np-next]"), labels.next);
+      setLabelAttr(card.querySelector("[data-np-restart]"), labels.restart);
+    };
+
+    if (root.getAttribute("aria-label") !== labels.eyebrow) {
+      root.setAttribute("aria-label", labels.eyebrow);
+    }
+
+    deckCards.forEach(applyToCard);
+    expandedCards.forEach(({ el }) => applyToCard(el));
+    if (expandedFly) applyToCard(expandedFly);
+
+    // Play/pause and mode labels depend on the live state, so repaint them
+    // from the new labels instead of hard-coding the server defaults.
+    deckCards.forEach(paintCardState);
+    expandedCards.forEach(({ el }) => paintCardState(el));
+    setMode(playMode);
+
+    // Keep the inline JSON in sync in case the player is ever initialised
+    // again (for example by a full reload or a page without persistence).
+    const dataEl = (
+      root.closest<HTMLElement>("#site-music-player") ?? root
+    ).querySelector<HTMLScriptElement>("[data-np-data]");
+    if (dataEl) dataEl.textContent = JSON.stringify({ tracks, labels });
+  };
+
+  root.addEventListener("blog-music:labels", event => {
+    const next = (event as CustomEvent<Partial<MusicLabels>>).detail;
+    if (next) applyMusicLabels(next);
+  });
+
+  applyMusicLabels({});
+
   let stageObserver: ResizeObserver | null = null;
   let warmObserver: IntersectionObserver | null = null;
 
   document.addEventListener(
     "astro:before-swap",
-    () => {
+    event => {
       saveMusicState(true);
+
+      // A locale switch only changes the surrounding page. Keep the mounted
+      // player, deck transforms, open carousel and audio listeners untouched so
+      // playback and the card layout survive the swap.
+      if (
+        localeOfPath(event.from.pathname) !== localeOfPath(event.to.pathname)
+      ) {
+        return;
+      }
+
       clearExpandedTimers();
       if (deckFrame) {
         cancelAnimationFrame(deckFrame);
@@ -3158,6 +3242,27 @@ const initNowPlaying = () => {
     },
     { signal: lifecycle.signal }
   );
+
+  document.addEventListener("astro:after-swap", () => {
+    if (!root.isConnected || !expandedOpen) return;
+    document.body.style.overflow = "hidden";
+
+    // Persisting the dialog through the page swap can drop it from the top
+    // layer in some browsers even though it is still `open`; restore the
+    // modal state without rebuilding the carousel.
+    if (
+      expandedDialog &&
+      expandedDialog.open &&
+      !expandedDialog.matches(":modal")
+    ) {
+      try {
+        expandedDialog.close();
+        expandedDialog.showModal();
+      } catch {
+        /* the dialog may already be gone */
+      }
+    }
+  });
 
   if ("ResizeObserver" in window) {
     stageObserver = new ResizeObserver(() => {
