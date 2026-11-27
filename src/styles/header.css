@@ -239,7 +239,7 @@
 }
 
 .theme-dial-slot[data-theme-icon="dark"] {
-  --slot-angle: 120deg;
+  --slot-angle: 180deg;
 }
 
 .theme-dial-slot[data-active] {
@@ -325,7 +325,9 @@
 /* ─── Language code roll (CN / EN) ─── */
 .lang-roll {
   position: relative;
-  display: inline-block;
+  display: inline-grid;
+  align-items: center;
+  justify-items: center;
   overflow: hidden;
   height: 1.18em;
   line-height: 1.18;
@@ -333,16 +335,17 @@
 }
 
 .lang-roll-item {
+  grid-area: 1 / 1;
   display: block;
   transition: transform 0.55s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
+/*
+ * Both codes share one grid cell, so the chip is always as wide as the wider
+ * code. CN and EN have slightly different widths; without this the chip would
+ * resize when the roll finishes and nudge the theme icon beside it.
+ */
 .lang-roll-item--next {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transform: translateY(110%);
 }
 

@@ -30,23 +30,24 @@ if (!isThemeMode(themeValue)) themeValue = getPreferredMode();
 
 /**
  * Rotates the theme dial so the icon for `mode` swings into the button, the
- * way a rotary switch clicks into place. The two slots are 120° apart in
- * header.css, so switching modes alternates between them and a return trip
- * swings the wheel back the same way.
+ * way a rotary switch clicks into place. Each step advances one slot forward,
+ * so repeated clicks keep spinning the same direction.
  */
 function rotateThemeDials(mode: ThemeMode): void {
+  const count = THEME_ORDER.length;
   const index = THEME_ORDER.indexOf(mode);
   if (index < 0) return;
 
-  const stepAngle = 120;
+  const stepAngle = 360 / count;
 
   document.querySelectorAll<HTMLElement>("[data-theme-dial]").forEach(dial => {
     const stored = dial.dataset.dialStep;
     const previous = stored === undefined ? index : Number(stored);
-    const step = index;
+    // Always spin forward, so a mode change reads as a wheel click.
+    const step = previous + ((((index - previous) % count) + count) % count);
 
     // The first paint and repeat renders jump into place; only a real mode
-    // change plays the swing.
+    // change (one slot forward) plays the swing.
     const instant = stored === undefined || step === previous;
     if (instant) dial.setAttribute("data-instant", "");
 
@@ -185,7 +186,20 @@ if (window.theme) {
 // Ensure theme is reflected (in case body wasn't ready when inline script ran)
 reflectPreference();
 
+const initializedThemeButtons = new WeakSet<Element>();
+
 function setThemeFeature(): void {
+  const themeBtn = document.querySelector("#theme-btn");
+  const themeBtnMobile = document.querySelector("#theme-btn-mobile");
+  const buttons = [themeBtn, themeBtnMobile].filter(
+    (button): button is Element => button !== null
+  );
+
+  // A persisted header keeps the same theme buttons across a language switch.
+  // Re-initialising them would replace the nodes and re-run the dial setup,
+  // which makes the icon jitter even though the theme did not change.
+  if (!buttons.some(button => !initializedThemeButtons.has(button))) return;
+
   // set on load so screen readers can get the latest value on the button
   reflectPreference();
 
@@ -197,20 +211,12 @@ function setThemeFeature(): void {
     playThemeCue(themeValue);
   };
 
-  const themeBtn = document.querySelector("#theme-btn");
-  const themeBtnMobile = document.querySelector("#theme-btn-mobile");
-
-  // Remove previous listeners to avoid duplicates on view transitions
-  const freshBtn = themeBtn?.cloneNode(true) as Element | null;
-  if (themeBtn && freshBtn) {
-    themeBtn.replaceWith(freshBtn);
-    freshBtn.addEventListener("click", toggleTheme);
-  }
-
-  const freshBtnMobile = themeBtnMobile?.cloneNode(true) as Element | null;
-  if (themeBtnMobile && freshBtnMobile) {
-    themeBtnMobile.replaceWith(freshBtnMobile);
-    freshBtnMobile.addEventListener("click", toggleTheme);
+  for (const button of buttons) {
+    // Ordinary route changes render fresh buttons; language switches keep the
+    // bound nodes. Track both so a listener is never added twice.
+    if (initializedThemeButtons.has(button)) continue;
+    initializedThemeButtons.add(button);
+    button.addEventListener("click", toggleTheme);
   }
 }
 
