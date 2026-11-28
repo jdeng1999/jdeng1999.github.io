@@ -26,6 +26,12 @@ const { class: className = "" } = Astro.props;
 
 <script>
   type RGB = { r: number; g: number; b: number };
+  type PaletteTargets = Partial<{
+    accent: string;
+    border: string;
+    muted: string;
+    background: string;
+  }>;
   type Letter = {
     char: string;
     color: RGB;
@@ -92,6 +98,7 @@ const { class: className = "" } = Astro.props;
     let resizeFrame = 0;
     let lastWidth = 0;
     let lastHeight = 0;
+    let paletteFrame = 0;
 
     const parseColor = (value: string): RGB | null => {
       const input = value.trim();
@@ -121,10 +128,12 @@ const { class: className = "" } = Astro.props;
       return null;
     };
 
-    const readPalette = () => {
+    const readPalette = (targets: PaletteTargets = {}) => {
       const styles = window.getComputedStyle(document.documentElement);
-      const found = ["--accent", "--border", "--muted"]
-        .map(token => parseColor(styles.getPropertyValue(token)))
+      const value = (token: keyof PaletteTargets) =>
+        targets[token] ?? styles.getPropertyValue(`--${token}`);
+      const found = (["accent", "border", "muted"] as const)
+        .map(token => parseColor(value(token)))
         .filter((color): color is RGB => Boolean(color));
 
       palette = found.length
@@ -138,7 +147,7 @@ const { class: className = "" } = Astro.props;
       // The glyph's interior needs ink that actually contrasts with the page:
       // on dark that is the bright accent/border pair, on light it is the
       // darker accent (the pale border/muted stay in the dissolve halo).
-      const bg = parseColor(styles.getPropertyValue("--background"));
+      const bg = parseColor(value("background"));
       const luminance = (c: RGB) => {
         const channel = (value: number) => {
           const v = value / 255;
@@ -166,6 +175,39 @@ const { class: className = "" } = Astro.props;
       } else {
         paletteBright = palette.slice(0, Math.max(1, palette.length - 1));
       }
+    };
+
+    /**
+     * The palette transitions run on <html> for 300ms. Reading the computed
+     * variables from the mutation callback returns the outgoing theme, but the
+     * running transition keyframes already expose the incoming end values.
+     * Read those targets so the canvas can repaint with the new palette now.
+     */
+    const readPaletteTargets = (): PaletteTargets => {
+      const targets: PaletteTargets = {};
+      const keys = ["accent", "border", "muted", "background"] as const;
+      const animations = document.documentElement.getAnimations?.() ?? [];
+
+      for (const animation of animations) {
+        const prop = (animation as CSSTransition).transitionProperty;
+        if (!prop?.startsWith("--")) continue;
+
+        const key = prop.slice(2) as (typeof keys)[number];
+        if (!keys.includes(key)) continue;
+
+        try {
+          const effect = animation.effect as KeyframeEffect | null;
+          const frames = effect?.getKeyframes?.();
+          const last = frames?.[frames.length - 1] as
+            Record<string, unknown> | undefined;
+          const value = last?.[prop];
+          if (typeof value === "string") targets[key] = value;
+        } catch {
+          /* keyframes can be unavailable during an interrupted transition */
+        }
+      }
+
+      return targets;
     };
 
     const randomGlyph = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
@@ -468,20 +510,40 @@ const { class: className = "" } = Astro.props;
     );
     intersection.observe(root);
 
-    const themeObserver = new MutationObserver(() => {
-      readPalette();
+    const applyPalette = (targets: PaletteTargets = {}) => {
+      readPalette(targets);
 
+      // Keep each character's zone, alpha and layer. Pull a colour from the
+      // incoming palette and repaint immediately so the code rain cannot keep
+      // a stale or half-blended theme while the page palette transitions.
       for (const letter of letters) {
         letter.target = randomColor(letter.zone);
-        letter.progress = reduced ? 1 : 0;
-        if (reduced) letter.color = { ...letter.target };
+        letter.color = { ...letter.target };
+        letter.progress = 1;
       }
 
-      if (reduced) draw();
+      draw();
+    };
+
+    const themeObserver = new MutationObserver(() => {
+      window.cancelAnimationFrame(paletteFrame);
+
+      // getAnimations() flushes style, so the palette transitions and their
+      // end keyframes are available synchronously. This avoids reading the
+      // outgoing computed colours from the just-changed theme.
+      const targets = readPaletteTargets();
+      if (Object.keys(targets).length) {
+        applyPalette(targets);
+        return;
+      }
+
+      // No palette transition (instant change or reduced motion): read the
+      // settled values on the next frame.
+      paletteFrame = window.requestAnimationFrame(() => applyPalette());
     });
     themeObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["data-theme"],
+      attributeFilter: ["data-theme", "data-accent"],
     });
 
     const onMotionChange = () => {
@@ -504,6 +566,7 @@ const { class: className = "" } = Astro.props;
       disposed = true;
       stop();
       window.cancelAnimationFrame(resizeFrame);
+      window.cancelAnimationFrame(paletteFrame);
       resizeObserver.disconnect();
       intersection.disconnect();
       themeObserver.disconnect();
