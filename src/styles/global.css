@@ -5,11 +5,11 @@
 
 :root,
 html[data-theme="light"] {
-  --background: #f2f5ec;
-  --foreground: #353538;
+  --background: #f7f8fa;
+  --foreground: #31343a;
   --accent: #1158d1;
-  --muted: #bbc789;
-  --border: #7cadff;
+  --muted: #c9ccd2;
+  --border: #d8dce2;
   --featured-color: #b56007;
   --gallery-color: #2837d9;
 }

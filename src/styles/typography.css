@@ -328,6 +328,12 @@
     @apply bg-(--shiki-dark-bg) text-(--shiki-dark) [&_span]:text-(--shiki-dark);
   }
 
+  /* Keep light code surfaces on the pearl palette instead of a stark pure
+     white; the Shiki theme inline variable otherwise wins. */
+  html[data-theme="light"] .astro-code {
+    --shiki-light-bg: #fbfcfd !important;
+  }
+
   /* Styles for Shiki transformers */
   /* https://shiki.style/packages/transformers */
   .astro-code {

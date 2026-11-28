@@ -110,6 +110,7 @@ if (SITE.showCoverImages) {
       ],
 
     // Featured generic posts styling
+    !isGallery && featured && "featured-card",
     !isGallery &&
       featured && [
         "featured-card-shadow border-featured/30 bg-featured/5",
@@ -282,6 +283,26 @@ if (SITE.showCoverImages) {
   .featured-card-shadow {
     box-shadow: 0 0 20px -5px
       color-mix(in srgb, var(--featured-color) 15%, transparent);
+  }
+
+  /* A warm featured accent is welcome, but the old 5% tint read as a cream
+     card. In the pearl-white theme keep the surface neutral and let the
+     border, tags and shadow carry the featured identity. */
+  html[data-theme="light"] .featured-card {
+    background-color: color-mix(
+      in srgb,
+      var(--featured-color) 2%,
+      color-mix(in srgb, var(--muted) 8%, var(--background))
+    );
+  }
+
+  html[data-theme="light"] .featured-card:hover,
+  html[data-theme="light"] .featured-card:focus-within {
+    background-color: color-mix(
+      in srgb,
+      var(--featured-color) 4%,
+      color-mix(in srgb, var(--muted) 8%, var(--background))
+    );
   }
 
   .gallery-card-shadow {
