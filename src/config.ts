@@ -24,7 +24,6 @@ export const SITE = {
     suffix: "$", // terminal symbol on the right
   },
   backdropEffects: {
-    cursorGlow: true, // cursor tracking with soft halo
     grain: true, // background visual noise layer
   },
   editPost: {

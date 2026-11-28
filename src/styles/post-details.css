@@ -477,8 +477,7 @@ body.reading-mode-active [data-pagefind-ignore],
 body.reading-mode-active .progress-container,
 body.reading-mode-active
   div.relative.mt-12.mb-8.flex.items-center.justify-center.gap-4,
-body.reading-mode-active div.my-6.flex.items-center.gap-3,
-body.reading-mode-active .site-cursor-glow {
+body.reading-mode-active div.my-6.flex.items-center.gap-3 {
   display: none !important;
 }
 

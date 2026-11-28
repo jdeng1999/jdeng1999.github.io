@@ -122,7 +122,6 @@ const finalStructuredData =
           }
         : null);
 
-const showCursorGlow = SITE.backdropEffects.cursorGlow;
 const showGrain = SITE.backdropEffects.grain;
 ---
 
@@ -351,14 +350,13 @@ const showGrain = SITE.backdropEffects.grain;
     </script>
   </head>
   <body>
-    <!-- Global decorative backdrop (grid, glow, cursor glow, noise) -->
+    <!-- Global decorative backdrop (grid, noise) -->
     <div
       class="site-backdrop pointer-events-none"
       aria-hidden="true"
       transition:persist
     >
       <div class="site-grid"></div>
-      {showCursorGlow && <div class="site-cursor-glow"></div>}
       {showGrain && <div class="site-grain"></div>}
     </div>
 
@@ -421,39 +419,6 @@ const showGrain = SITE.backdropEffects.grain;
     );
   }
 
-  .site-cursor-glow {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 800px;
-    height: 800px;
-    margin-left: -400px;
-    margin-top: -400px;
-    transform: translate(var(--site-cx, 50vw), var(--site-cy, 50vh))
-      translateZ(0);
-    background: radial-gradient(
-      circle,
-      color-mix(in oklab, var(--accent) 8%, transparent) 0%,
-      color-mix(in oklab, var(--accent) 3%, transparent) 40%,
-      transparent 70%
-    );
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    pointer-events: none;
-    contain: paint;
-  }
-
-  .site-cursor-glow.active {
-    opacity: 1;
-    will-change: transform;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .site-cursor-glow {
-      transition: none;
-    }
-  }
-
   .site-grain {
     position: absolute;
     inset: 0;
@@ -466,60 +431,6 @@ const showGrain = SITE.backdropEffects.grain;
     contain: paint;
   }
 </style>
-
-{showCursorGlow && <script>
-  let cursorCleanup: AbortController | null = null;
-
-  document.addEventListener("astro:page-load", () => {
-    // Cleanup previous listeners
-    if (cursorCleanup) cursorCleanup.abort();
-    cursorCleanup = new AbortController();
-    const { signal } = cursorCleanup;
-
-    // Skip on touch devices and respect reduced-motion preference.
-    if (
-      window.matchMedia("(pointer: coarse), (prefers-reduced-motion: reduce)")
-        .matches
-    ) {
-      return;
-    }
-
-    const cursorGlow = document.querySelector<HTMLElement>(".site-cursor-glow");
-    let ticking = false;
-    let isActive = false;
-
-    if (!cursorGlow) return;
-
-    document.addEventListener(
-      "mousemove",
-      (e: MouseEvent) => {
-        if (ticking) return;
-
-        ticking = true;
-        window.requestAnimationFrame(() => {
-          cursorGlow.style.setProperty("--site-cx", `${e.clientX}px`);
-          cursorGlow.style.setProperty("--site-cy", `${e.clientY}px`);
-          if (!isActive) {
-            cursorGlow.classList.add("active");
-            isActive = true;
-          }
-          ticking = false;
-        });
-      },
-      { signal, passive: true }
-    );
-
-    document.addEventListener(
-      "mouseleave",
-      () => {
-        if (!isActive) return;
-        cursorGlow.classList.remove("active");
-        isActive = false;
-      },
-      { signal }
-    );
-  });
-</script>}
 
 <script>
   let langCleanup: AbortController | null = null;
